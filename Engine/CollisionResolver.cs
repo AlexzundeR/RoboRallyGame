@@ -69,7 +69,7 @@ public sealed class CollisionResolver
             if (map.IsInBounds(intent.To))
             {
                 var tile = map.GetTile(intent.To);
-                if (tile.Type != TileType.Wall && tile.Type != TileType.Pit)
+                if (tile.Type != TileType.Wall)
                 {
                     intent.Robot.Position = intent.To;
                     return CollisionResult.Success;

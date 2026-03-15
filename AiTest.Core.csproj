@@ -12,6 +12,7 @@
     <Compile Include="Models/**/*.cs" />
     <Compile Include="Entities/**/*.cs" />
     <Compile Include="Engine/**/*.cs" />
+    <Compile Include="Upgrades/**/*.cs" />
   </ItemGroup>
 
 </Project>

@@ -2,6 +2,8 @@ namespace AiTest.Core.Engine;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Upgrades;
+using AiTest.Core.Upgrades;
 
 public enum LaserPriorityMode
 {
@@ -17,6 +19,7 @@ public sealed class LaserShot
     public Direction Direction { get; init; }
     public int Priority { get; init; }
     public bool IsRobotLaser { get; init; }
+    public bool IsRearLaser { get; init; }
     public List<Position> Path { get; init; } = new();
 }
 
@@ -39,6 +42,11 @@ public sealed class LaserResolver
             if (!robot.IsAlive)
                 continue;
             
+            var laserStrategy = GetLaserStrategy(player);
+            var fireDirections = laserStrategy.GetFireDirections(robot, robot.Direction).ToList();
+            var fireRearLaser = laserStrategy.ShouldFireRearLaser(robot);
+            var damageBonus = laserStrategy.GetDamageBonus(robot);
+            
             var tile = map.GetTile(robot.Position);
             
             if (tile.HasBoardLaser)
@@ -54,18 +62,53 @@ public sealed class LaserResolver
                 });
             }
             
-            shots.Add(new LaserShot
+            foreach (var dir in fireDirections)
             {
-                Source = robot,
-                From = robot.Position,
-                Direction = robot.Direction,
-                Priority = GetPriority(robot, _mode),
-                IsRobotLaser = true,
-                Path = CalculatePath(robot.Position, robot.Direction, map)
-            });
+                shots.Add(new LaserShot
+                {
+                    Source = robot,
+                    From = robot.Position,
+                    Direction = dir,
+                    Priority = GetPriority(robot, _mode),
+                    IsRobotLaser = true,
+                    Path = CalculatePath(robot.Position, dir, map)
+                });
+            }
+            
+            if (fireRearLaser)
+            {
+                var rearDir = robot.Direction.TurnAround();
+                if (!fireDirections.Contains(rearDir))
+                {
+                    shots.Add(new LaserShot
+                    {
+                        Source = robot,
+                        From = robot.Position,
+                        Direction = rearDir,
+                        Priority = GetPriority(robot, _mode),
+                        IsRobotLaser = true,
+                        IsRearLaser = true,
+                        Path = CalculatePath(robot.Position, rearDir, map)
+                    });
+                }
+            }
         }
         
         return shots;
+    }
+    
+    private ILaserStrategy GetLaserStrategy(Player player)
+    {
+        var strategies = new List<ILaserStrategy> { DefaultLaserStrategy.Instance };
+        
+        foreach (var upgrade in player.AllUpgrades)
+        {
+            var strategy = upgrade.GetLaserStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
+        }
+        
+        return new CompositeLaserStrategy(strategies);
     }
     
     public void Fire(List<LaserShot> shots, IReadOnlyList<Player> players)

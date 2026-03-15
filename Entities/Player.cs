@@ -1,6 +1,7 @@
 namespace AiTest.Core.Entities;
 
 using AiTest.Core.Models;
+using AiTest.Core.Upgrades;
 
 public enum RegisterIndex
 {
@@ -66,7 +67,11 @@ public sealed class Player
     public Robot Robot { get; set; } = new();
     public ProgramCard?[] Registers { get; } = new ProgramCard?[5];
     public List<ProgramCard> Hand { get; } = new();
+    public List<UpgradeEffect> PermanentUpgrades { get; } = new();
+    public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
     public int Priority { get; set; }
+
+    public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
 
     public void DealCards(IEnumerable<ProgramCard> cards)
     {
@@ -93,4 +98,20 @@ public sealed class Player
 
     public void AddEnergy(int amount) => Robot.Energy = Math.Min(Robot.Energy + amount, 10);
     public void SpendEnergy(int amount) => Robot.Energy = Math.Max(Robot.Energy - amount, 0);
+
+    public void AddUpgrade(UpgradeEffect upgrade)
+    {
+        if (upgrade.Type == AiTest.Core.Upgrades.UpgradeType.Permanent)
+            PermanentUpgrades.Add(upgrade);
+        else
+            TemporaryUpgrades.Add(upgrade);
+    }
+
+    public void RemoveUpgrade(UpgradeEffect upgrade)
+    {
+        PermanentUpgrades.Remove(upgrade);
+        TemporaryUpgrades.Remove(upgrade);
+    }
+
+    public void ClearTemporaryUpgrades() => TemporaryUpgrades.Clear();
 }

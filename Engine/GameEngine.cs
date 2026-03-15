@@ -2,6 +2,50 @@ namespace AiTest.Core.Engine;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Upgrades;
+
+public interface IDealer
+{
+    void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck);
+}
+
+public sealed class RandomDealer : IDealer
+{
+    private readonly Random _random = new();
+    
+    public void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck)
+    {
+        foreach (var player in players)
+        {
+            var hand = deck.OrderBy(_ => _random.Next()).Take(9).ToList();
+            player.DealCards(hand);
+        }
+    }
+}
+
+public sealed class FixedDealer : IDealer
+{
+    private readonly IReadOnlyList<IReadOnlyList<ProgramCard>> _hands;
+    private int _currentHand;
+    
+    public FixedDealer(params IReadOnlyList<ProgramCard>[] hands)
+    {
+        _hands = hands;
+        _currentHand = 0;
+    }
+    
+    public void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck)
+    {
+        foreach (var player in players)
+        {
+            var hand = _currentHand < _hands.Count 
+                ? _hands[_currentHand].ToList() 
+                : deck.Take(9).ToList();
+            player.DealCards(hand);
+            _currentHand++;
+        }
+    }
+}
 
 public enum GamePhase
 {
@@ -76,6 +120,20 @@ public sealed class GameEngine : IGameEngine
     private readonly Random _random = new();
     private readonly CollisionResolver _collisionResolver = new();
     private readonly LaserResolver _laserResolver = new();
+    private IDealer _dealer;
+
+    public GameEngine() : this(new RandomDealer()) { }
+    
+    public GameEngine(IDealer dealer)
+    {
+        _dealer = dealer;
+    }
+
+    public IDealer Dealer
+    {
+        get => _dealer;
+        set => _dealer = value ?? throw new ArgumentNullException(nameof(value));
+    }
 
     public GameState State { get; } = new();
 
@@ -121,6 +179,9 @@ public sealed class GameEngine : IGameEngine
             if (registerIndex < player.Robot.LockedRegisters)
                 continue;
 
+            var cardExecutionStrategy = GetCardExecutionStrategy(player);
+            var movementStrategy = GetMovementStrategy(player);
+            
             var card = player.GetRegister(registerIndex);
             if (card == null)
                 continue;
@@ -131,18 +192,23 @@ public sealed class GameEngine : IGameEngine
                     player.Robot.RotateLeft();
                 else
                     player.Robot.RotateRight();
+                
+                cardExecutionStrategy.ExecuteRotation(player.Robot);
                 continue;
             }
             
             if (card is UTurnCard)
             {
                 player.Robot.Rotate180();
+                cardExecutionStrategy.ExecuteRotation(player.Robot);
                 continue;
             }
 
             if (card is MoveCard moveCard)
             {
-                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces);
+                var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) 
+                    + cardExecutionStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
+                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
                 
                 moveIntents.Add(new MoveIntent
                 {
@@ -167,6 +233,34 @@ public sealed class GameEngine : IGameEngine
         }
     }
 
+    private ICardExecutionStrategy GetCardExecutionStrategy(Player player)
+    {
+        var strategies = new List<ICardExecutionStrategy> { DefaultCardExecutionStrategy.Instance };
+        
+        foreach (var upgrade in player.AllUpgrades)
+        {
+            var strategy = upgrade.GetCardExecutionStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
+        }
+        
+        return new CompositeCardExecutionStrategy(strategies);
+    }
+
+    private IMovementStrategy GetMovementStrategy(Player player)
+    {
+        var strategies = new List<IMovementStrategy> { DefaultMovementStrategy.Instance };
+        
+        foreach (var upgrade in player.AllUpgrades)
+        {
+            var strategy = upgrade.GetMovementStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
+        }
+        
+        return new CompositeMovementStrategy(strategies);
+    }
+
     private Position CalculateCardTarget(Robot robot, ProgramCard card)
     {
         return card switch
@@ -180,6 +274,11 @@ public sealed class GameEngine : IGameEngine
 
     private Position CalculateMoveTarget(Robot robot, int spaces)
     {
+        return CalculateMoveTarget(robot, spaces, DefaultMovementStrategy.Instance);
+    }
+
+    private Position CalculateMoveTarget(Robot robot, int spaces, IMovementStrategy movementStrategy)
+    {
         var pos = robot.Position;
         for (int i = 0; i < spaces; i++)
         {
@@ -189,10 +288,12 @@ public sealed class GameEngine : IGameEngine
                 var tile = State.Map.GetTile(next);
                 if (tile.Type == TileType.Wall || tile.Type == TileType.Pit)
                     break;
+                if (!movementStrategy.CanEnterTile(robot, State.Map, next))
+                    break;
                 pos = next;
             }
         }
-        return pos;
+        return movementStrategy.CalculateMove(robot, State.Map, pos);
     }
 
     public void ProcessBoardElements()
@@ -207,11 +308,15 @@ public sealed class GameEngine : IGameEngine
             if (!player.Robot.IsAlive)
                 continue;
 
+            var conveyorStrategy = GetConveyorStrategy(player);
+            var ignoreConveyors = conveyorStrategy.ShouldIgnoreConveyors(player.Robot);
+            var ignorePits = conveyorStrategy.ShouldIgnorePits(player.Robot);
+            
             var tile = State.Map.GetTile(player.Robot.Position);
 
             switch (tile.Type)
             {
-                case TileType.Pit:
+                case TileType.Pit when !ignorePits:
                     HandlePit(player);
                     break;
                 case TileType.GearCW:
@@ -220,12 +325,12 @@ public sealed class GameEngine : IGameEngine
                 case TileType.GearCCW:
                     player.Robot.RotateLeft();
                     break;
-                case TileType.ConveyorCW:
-                case TileType.ExpressConveyorCW:
+                case TileType.ConveyorCW when !ignoreConveyors:
+                case TileType.ExpressConveyorCW when !ignoreConveyors:
                     MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCW ? 2 : 1);
                     break;
-                case TileType.ConveyorCCW:
-                case TileType.ExpressConveyorCCW:
+                case TileType.ConveyorCCW when !ignoreConveyors:
+                case TileType.ExpressConveyorCCW when !ignoreConveyors:
                     MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCCW ? 2 : 1);
                     break;
                 case TileType.Checkpoint:
@@ -233,6 +338,20 @@ public sealed class GameEngine : IGameEngine
                     break;
             }
         }
+    }
+
+    private IConveyorStrategy GetConveyorStrategy(Player player)
+    {
+        var strategies = new List<IConveyorStrategy> { DefaultConveyorStrategy.Instance };
+        
+        foreach (var upgrade in player.AllUpgrades)
+        {
+            var strategy = upgrade.GetConveyorStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
+        }
+        
+        return new CompositeConveyorStrategy(strategies);
     }
 
     public void FireLasers()
@@ -344,12 +463,7 @@ public sealed class GameEngine : IGameEngine
     private void DealCardsToAllPlayers()
     {
         var deck = CreateDeck();
-        
-        foreach (var player in State.Players)
-        {
-            var hand = deck.OrderBy(_ => _random.Next()).Take(9).ToList();
-            player.DealCards(hand);
-        }
+        _dealer.Deal(State.Players, deck);
     }
 
     private List<ProgramCard> CreateDeck()
