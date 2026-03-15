@@ -1,0 +1,257 @@
+# .NET gitignore - https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+# Uncomment if you have tasks that create the project's static files in wwwroot
+#wwwroot/
+
+# Visual Studio 2017 auto generated files
+GeneratedFiles/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Build Results of an ATL Project
+[Dd]ebugPS/
+[Rr]eleasePS/
+dlldata.c
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.cs
+*.log
+*.vspscc
+*.vssscc
+.builds
+
+# Visual Studio Trace Logs
+*.tsslog
+
+# Visual Studio Cache Files
+*.[Cc]ache
+*.profdata
+*.stackdump
+
+# NuGet
+*.nupkg
+# NuGet Symbols
+*.snupkg
+# Package directories
+packages/
+# except build, which is useful as its globally consistent
+!packages/build/
+# NuGet v3's project.json files introduces more files
+project.json
+
+# Test Results
+TestResults/
+# vstest.console logs
+*vstest*.log
+*.trx
+
+# UWP Executables
+*.appx
+*.appxbundle
+*.appxupload
+
+# Windows Store app package directories
+AppPackages/
+BundleArtifacts/
+Package.appxmanifest
+
+# Windows Image Tool
+*.wim
+
+# .NET
+# Visual Studio has created the following files during build
+# Delete these lines to prevent them from being recreated
+*.dll
+*.exe
+*.pdb
+*.dll.mdb
+*.exe.mdb
+*.dll.code
+*.exe.code
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+
+# Visual Studio Code
+.vscode/
+
+# Fleet
+.fleet/
+
+# Azure Pipelines
+.azurepipelines/
+*.azurepipelines.*
+
+# CI
+.azureipelines*
+.azure-pipelines*
+
+# Rider
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+.idea/
+
+# dotnet tools
+*.toolset
+.tools/
+global.json
+
+# .NET
+*.dll
+*.exe
+*.pdb
+*.dll.mdb
+*.exe.mdb
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+packages/
+project.json
+
+# Test Results
+TestResults/
+*vstest*.log
+
+# Secrets
+*.pfx
+*.key
+*.snk
+*.secret
+appsettings.*.json
+appsettings.local.json
+appsettings.Development.json
+!appsettings.json
+
+# ReSharper
+_ReSharper*/
+*.ReSharper.user
+*.ReSharper.cache
+
+# NCrunch
+*.ncrunch*
+*.crunch*.user.xml
+
+# Mighty Moose
+*.htmldoc*
+
+# Web publish
+publish/
+PublishProfiles/
+*.pubxml
+
+# SonarQube
+.sonar/
+
+# CodeRush
+.cr/
+
+# Mac
+.DS_Store
