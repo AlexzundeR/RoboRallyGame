@@ -64,6 +64,7 @@ public interface IGameEngine
     void StartGame();
     void ExecuteRegister(int registerIndex);
     void ProcessBoardElements();
+    void FireLasers();
     void NextRegister();
     void NextRound();
     bool IsGameOver();
@@ -73,6 +74,8 @@ public interface IGameEngine
 public sealed class GameEngine : IGameEngine
 {
     private readonly Random _random = new();
+    private readonly CollisionResolver _collisionResolver = new();
+    private readonly LaserResolver _laserResolver = new();
 
     public GameState State { get; } = new();
 
@@ -101,6 +104,15 @@ public sealed class GameEngine : IGameEngine
 
     public void ExecuteRegister(int registerIndex)
     {
+        Phase1_CardExecution(registerIndex);
+        Phase2_BoardElements();
+        Phase3_Lasers();
+    }
+
+    private void Phase1_CardExecution(int registerIndex)
+    {
+        var moveIntents = new List<MoveIntent>();
+        
         foreach (var player in State.Players)
         {
             if (!player.Robot.IsAlive || player.Robot.NeedsReboot)
@@ -110,13 +122,85 @@ public sealed class GameEngine : IGameEngine
                 continue;
 
             var card = player.GetRegister(registerIndex);
-            card?.Execute(player.Robot, State.Map);
-        }
+            if (card == null)
+                continue;
 
-        ProcessBoardElements();
+            if (card is TurnCard turnCard)
+            {
+                if (turnCard.IsLeft)
+                    player.Robot.RotateLeft();
+                else
+                    player.Robot.RotateRight();
+                continue;
+            }
+            
+            if (card is UTurnCard)
+            {
+                player.Robot.Rotate180();
+                continue;
+            }
+
+            if (card is MoveCard moveCard)
+            {
+                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces);
+                
+                moveIntents.Add(new MoveIntent
+                {
+                    Robot = player.Robot,
+                    From = player.Robot.Position,
+                    To = targetPos,
+                    Direction = player.Robot.Direction,
+                    Priority = moveCard.Priority,
+                    RegisterIndex = registerIndex,
+                    Type = MoveType.Normal
+                });
+            }
+        }
+        
+        if (moveIntents.Count > 0)
+        {
+            var resolver = new CollisionResolver();
+            foreach (var intent in moveIntents)
+                resolver.AddIntent(intent);
+            
+            resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
+        }
+    }
+
+    private Position CalculateCardTarget(Robot robot, ProgramCard card)
+    {
+        return card switch
+        {
+            MoveCard m => CalculateMoveTarget(robot, m.Spaces),
+            TurnCard t => robot.Position,
+            UTurnCard => robot.Position,
+            _ => robot.Position
+        };
+    }
+
+    private Position CalculateMoveTarget(Robot robot, int spaces)
+    {
+        var pos = robot.Position;
+        for (int i = 0; i < spaces; i++)
+        {
+            var next = pos.Move(robot.Direction);
+            if (State.Map.IsInBounds(next))
+            {
+                var tile = State.Map.GetTile(next);
+                if (tile.Type == TileType.Wall || tile.Type == TileType.Pit)
+                    break;
+                pos = next;
+            }
+        }
+        return pos;
     }
 
     public void ProcessBoardElements()
+    {
+        Phase2_BoardElements();
+    }
+
+    private void Phase2_BoardElements()
     {
         foreach (var player in State.Players)
         {
@@ -148,12 +232,18 @@ public sealed class GameEngine : IGameEngine
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
                     break;
             }
-
-            if (tile.HasBoardLaser)
-            {
-                FireBoardLaser(player);
-            }
         }
+    }
+
+    public void FireLasers()
+    {
+        Phase3_Lasers();
+    }
+
+    private void Phase3_Lasers()
+    {
+        var shots = _laserResolver.PrepareShots(State.Map, State.Players);
+        _laserResolver.Fire(shots, State.Players);
     }
 
     private void HandlePit(Player player)
@@ -196,25 +286,6 @@ public sealed class GameEngine : IGameEngine
                 }
             }
         }
-    }
-
-    private void FireBoardLaser(Player player)
-    {
-        foreach (var other in State.Players)
-        {
-            if (other.Id == player.Id || !other.Robot.IsAlive)
-                continue;
-
-            if (IsInLaserPath(player.Robot.Position, other.Robot.Position))
-            {
-                other.Robot.TakeDamage(1);
-            }
-        }
-    }
-
-    private bool IsInLaserPath(Position laserPos, Position targetPos)
-    {
-        return laserPos.X == targetPos.X || laserPos.Y == targetPos.Y;
     }
 
     public void NextRegister()
