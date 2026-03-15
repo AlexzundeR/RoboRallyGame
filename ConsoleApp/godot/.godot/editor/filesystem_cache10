@@ -1,0 +1,8 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1773616399
+icon.svg::CompressedTexture2D::6354663463586761063::1773613338::1773615994::1::::<><><>0<>0<>e8b041e82d16d81ccb0c5a0b8b3c39a0<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+main.tscn::PackedScene::-1::1773614687::0::1::::<><><>0<>0<><>::res://scripts/GameManager.cs
+::res://scenes/::1773613252
+::res://scripts/::1773615994
+GameManager.cs::CSharpScript::7866872499961884314::1773616350::0::1::::<>Node2D<><>0<>0<><>::
+test.gd::GDScript::5860987499815604733::1773614448::0::1::::<>Node2D<><>0<>0<><>::
