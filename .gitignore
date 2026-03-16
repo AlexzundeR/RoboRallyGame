@@ -255,3 +255,22 @@ PublishProfiles/
 
 # Mac
 .DS_Store
+
+# Godot
+.godot/
+*.import
+export_presets.cfg
+*.pck
+*.zip
+*.mp3
+*.ogg
+*.wav
+*.png.import
+*.jpg.import
+*.svg.import
+*.webp.import
+
+# Godot Mono
+.godot/mono/
+*.dll.mdb
+*.pdb.mdb

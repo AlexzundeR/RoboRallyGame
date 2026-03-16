@@ -1,2 +1,0 @@
-﻿62411
-C:/Program Files (x86)/godot/Godot_v4.6.1-stable_mono_win64.exe
