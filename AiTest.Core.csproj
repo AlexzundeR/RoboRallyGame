@@ -13,6 +13,7 @@
     <Compile Include="Entities/**/*.cs" />
     <Compile Include="Engine/**/*.cs" />
     <Compile Include="Upgrades/**/*.cs" />
+    <Compile Include="Config/**/*.cs" />
   </ItemGroup>
 
 </Project>
