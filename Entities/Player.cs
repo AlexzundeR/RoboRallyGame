@@ -60,6 +60,18 @@ public sealed class UTurnCard : ProgramCard
     }
 }
 
+public sealed class BackUpCard : ProgramCard
+{
+    public override void Execute(Robot robot, GameMap map)
+    {
+        var newPos = robot.Position.Move(robot.Direction.TurnAround());
+        if (map.IsInBounds(newPos) && map.GetTile(newPos).Type != TileType.Wall)
+        {
+            robot.Move(newPos);
+        }
+    }
+}
+
 public sealed class Player
 {
     public int Id { get; init; }
@@ -69,7 +81,6 @@ public sealed class Player
     public List<ProgramCard> Hand { get; } = new();
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
-    public int Priority { get; set; }
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
 

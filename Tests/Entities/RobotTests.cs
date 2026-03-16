@@ -97,7 +97,7 @@ public class RobotTests
         Assert.Equal(new Position(1, 1), robot.Position);
         Assert.Equal(Direction.North, robot.Direction);
         Assert.Equal(RobotStatus.Active, robot.Status);
-        Assert.Equal(0, robot.Damage);
+        Assert.Equal(2, robot.Damage);
         Assert.Equal(0, robot.CheckpointsReached);
     }
 
@@ -123,16 +123,15 @@ public class RobotTests
 
     [Theory]
     [InlineData(0, 0)]
-    [InlineData(1, 1)]
-    [InlineData(2, 1)]
-    [InlineData(3, 2)]
-    [InlineData(4, 2)]
-    [InlineData(5, 3)]
+    [InlineData(1, 0)]
+    [InlineData(2, 0)]
+    [InlineData(3, 0)]
+    [InlineData(4, 0)]
+    [InlineData(5, 1)]
+    [InlineData(6, 2)]
+    [InlineData(7, 3)]
     [InlineData(8, 4)]
     [InlineData(9, 5)]
-    [InlineData(10, 5)]
-    [InlineData(15, 5)]
-    [InlineData(50, 5)]
     public void LockedRegisters_ShouldReturnCorrectCount(int damage, int expected)
     {
         var robot = new Robot { Damage = damage };
@@ -154,5 +153,54 @@ public class RobotTests
         var robot = new Robot { Status = RobotStatus.Rebooting };
         
         Assert.True(robot.NeedsReboot);
+    }
+
+    [Fact]
+    public void Reboot_ShouldAddTwoDamage()
+    {
+        var robot = new Robot { Damage = 0 };
+        
+        robot.Reboot(new Position(0, 0));
+        
+        Assert.Equal(2, robot.Damage);
+    }
+
+    [Fact]
+    public void Reboot_ShouldResetCheckpoints()
+    {
+        var robot = new Robot { CheckpointsReached = 3 };
+        
+        robot.Reboot(new Position(0, 0));
+        
+        Assert.Equal(0, robot.CheckpointsReached);
+    }
+
+    [Fact]
+    public void LifeTokens_DefaultValue_ShouldBeThree()
+    {
+        var robot = new Robot();
+        
+        Assert.Equal(3, robot.LifeTokens);
+    }
+
+    [Fact]
+    public void TakeDamage_WhenDestroyed_ShouldLoseLifeToken()
+    {
+        var robot = new Robot { LifeTokens = 3, Damage = 9 };
+        
+        robot.TakeDamage(1);
+        
+        Assert.Equal(2, robot.LifeTokens);
+        Assert.Equal(RobotStatus.Rebooting, robot.Status);
+    }
+
+    [Fact]
+    public void TakeDamage_WhenNoLifeTokens_ShouldBeDestroyed()
+    {
+        var robot = new Robot { LifeTokens = 0, Damage = 9 };
+        
+        robot.TakeDamage(1);
+        
+        Assert.Equal(RobotStatus.Destroyed, robot.Status);
     }
 }

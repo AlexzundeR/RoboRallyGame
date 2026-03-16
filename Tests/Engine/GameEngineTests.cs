@@ -138,6 +138,24 @@ public class GameEngineTests
     }
 
     [Fact]
+    public void ExecuteRegister_BackUpCard_ShouldMoveBackward()
+    {
+        var engine = CreateEngine();
+        engine.AddPlayer("Player1");
+        engine.StartGame();
+        
+        var player = engine.State.Players[0];
+        player.Robot.Position = new Position(5, 5);
+        player.Robot.Direction = Direction.North;
+        var backUpCard = new BackUpCard { Priority = 500 };
+        player.SetRegister(0, backUpCard);
+        
+        engine.ExecuteRegister(0);
+        
+        Assert.Equal(new Position(5, 6), player.Robot.Position);
+    }
+
+    [Fact]
     public void ProcessBoardElements_Gear_ShouldRotateRobot()
     {
         var engine = CreateEngine();
@@ -306,5 +324,64 @@ public class GameEngineTests
         
         Assert.True(engine.IsGameOver());
         Assert.Equal(player, engine.GetWinner());
+    }
+
+    [Fact]
+    public void DealCards_WithDamage_ShouldDealFewerCards()
+    {
+        var dealer = new RandomDealer();
+        var deck = CreateDefaultDeck();
+        
+        var player = new Player { Id = 1, Robot = new Robot { Damage = 5 } };
+        
+        dealer.Deal(new[] { player }, deck);
+        
+        Assert.Equal(4, player.Hand.Count);
+    }
+
+    [Fact]
+    public void DealCards_With9Damage_ShouldDealNoCards()
+    {
+        var dealer = new RandomDealer();
+        var deck = CreateDefaultDeck();
+        
+        var player = new Player { Id = 1, Robot = new Robot { Damage = 9 } };
+        
+        dealer.Deal(new[] { player }, deck);
+        
+        Assert.Equal(0, player.Hand.Count);
+    }
+
+    [Fact]
+    public void DealCards_With0Damage_ShouldDeal9Cards()
+    {
+        var dealer = new RandomDealer();
+        var deck = CreateDefaultDeck();
+        
+        var player = new Player { Id = 1, Robot = new Robot { Damage = 0 } };
+        
+        dealer.Deal(new[] { player }, deck);
+        
+        Assert.Equal(9, player.Hand.Count);
+    }
+
+    private static List<ProgramCard> CreateDefaultDeck()
+    {
+        var deck = new List<ProgramCard>();
+        for (int i = 0; i < 18; i++)
+            deck.Add(new MoveCard { Priority = 100 + i, Spaces = 1 });
+        for (int i = 0; i < 12; i++)
+            deck.Add(new MoveCard { Priority = 200 + i, Spaces = 2 });
+        for (int i = 0; i < 6; i++)
+            deck.Add(new MoveCard { Priority = 300 + i, Spaces = 3 });
+        for (int i = 0; i < 18; i++)
+            deck.Add(new TurnCard { Priority = 50 + i * 10, IsLeft = true });
+        for (int i = 0; i < 18; i++)
+            deck.Add(new TurnCard { Priority = 60 + i * 10, IsLeft = false });
+        for (int i = 0; i < 6; i++)
+            deck.Add(new UTurnCard { Priority = 400 + i });
+        for (int i = 0; i < 6; i++)
+            deck.Add(new BackUpCard { Priority = 500 + i });
+        return deck;
     }
 }

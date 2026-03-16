@@ -18,11 +18,12 @@ public sealed class Robot
     public Direction Direction { get; set; } = Direction.North;
     public int Damage { get; set; }
     public int Energy { get; set; } = 3;
+    public int LifeTokens { get; set; } = 3;
     public RobotStatus Status { get; set; } = RobotStatus.Active;
     public int CheckpointsReached { get; set; }
     public bool IsAlive => Status != RobotStatus.Destroyed;
 
-    public int LockedRegisters => Math.Min((Damage + 1) / 2, 5);
+    public int LockedRegisters => Damage >= 5 ? Math.Min(Damage - 4, 5) : 0;
     public bool IsPowerDown => Status == RobotStatus.PowerDown;
     public bool NeedsReboot => Status == RobotStatus.Rebooting;
 
@@ -31,8 +32,16 @@ public sealed class Robot
         Damage += amount;
         if (Damage >= 10)
         {
-            Status = RobotStatus.Rebooting;
-            Damage = 0;
+            if (LifeTokens > 0)
+            {
+                LifeTokens--;
+                Status = RobotStatus.Rebooting;
+                Damage = 0;
+            }
+            else
+            {
+                Status = RobotStatus.Destroyed;
+            }
         }
     }
 
@@ -50,7 +59,7 @@ public sealed class Robot
         Position = spawnPos;
         Direction = Direction.North;
         Status = RobotStatus.Active;
-        Damage = 0;
+        Damage = 2;
         CheckpointsReached = 0;
     }
 

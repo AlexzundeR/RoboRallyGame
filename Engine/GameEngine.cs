@@ -9,6 +9,24 @@ public interface IDealer
     void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck);
 }
 
+public static class CardDealerHelper
+{
+    public static int GetCardCountForDamage(int damage) => damage switch
+    {
+        0 => 9,
+        1 => 8,
+        2 => 7,
+        3 => 6,
+        4 => 5,
+        5 => 4,
+        6 => 3,
+        7 => 2,
+        8 => 1,
+        9 => 0,
+        _ => 0
+    };
+}
+
 public sealed class RandomDealer : IDealer
 {
     private readonly Random _random = new();
@@ -17,7 +35,8 @@ public sealed class RandomDealer : IDealer
     {
         foreach (var player in players)
         {
-            var hand = deck.OrderBy(_ => _random.Next()).Take(9).ToList();
+            var cardCount = CardDealerHelper.GetCardCountForDamage(player.Robot.Damage);
+            var hand = deck.OrderBy(_ => _random.Next()).Take(cardCount).ToList();
             player.DealCards(hand);
         }
     }
@@ -38,9 +57,10 @@ public sealed class FixedDealer : IDealer
     {
         foreach (var player in players)
         {
+            var cardCount = CardDealerHelper.GetCardCountForDamage(player.Robot.Damage);
             var hand = _currentHand < _hands.Count 
-                ? _hands[_currentHand].ToList() 
-                : deck.Take(9).ToList();
+                ? _hands[_currentHand].Take(cardCount).ToList() 
+                : deck.Take(cardCount).ToList();
             player.DealCards(hand);
             _currentHand++;
         }
@@ -201,6 +221,25 @@ public sealed class GameEngine : IGameEngine
             {
                 player.Robot.Rotate180();
                 cardExecutionStrategy.ExecuteRotation(player.Robot);
+                continue;
+            }
+
+            if (card is BackUpCard)
+            {
+                var targetPos = player.Robot.Position.Move(player.Robot.Direction.TurnAround());
+                if (State.Map.IsInBounds(targetPos) && State.Map.GetTile(targetPos).Type != TileType.Wall)
+                {
+                    moveIntents.Add(new MoveIntent
+                    {
+                        Robot = player.Robot,
+                        From = player.Robot.Position,
+                        To = targetPos,
+                        Direction = player.Robot.Direction,
+                        Priority = card.Priority,
+                        RegisterIndex = registerIndex,
+                        Type = MoveType.Normal
+                    });
+                }
                 continue;
             }
 
@@ -470,23 +509,26 @@ public sealed class GameEngine : IGameEngine
     {
         var deck = new List<ProgramCard>();
 
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 18; i++)
             deck.Add(new MoveCard { Priority = 100 + i, Spaces = 1 });
         
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 12; i++)
             deck.Add(new MoveCard { Priority = 200 + i, Spaces = 2 });
         
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 6; i++)
             deck.Add(new MoveCard { Priority = 300 + i, Spaces = 3 });
 
-        for (int i = 0; i < 6; i++)
-            deck.Add(new TurnCard { Priority = 150 + i, IsLeft = true });
+        for (int i = 0; i < 18; i++)
+            deck.Add(new TurnCard { Priority = 50 + i * 10, IsLeft = true });
         
-        for (int i = 0; i < 6; i++)
-            deck.Add(new TurnCard { Priority = 250 + i, IsLeft = false });
+        for (int i = 0; i < 18; i++)
+            deck.Add(new TurnCard { Priority = 60 + i * 10, IsLeft = false });
 
-        for (int i = 0; i < 2; i++)
-            deck.Add(new UTurnCard { Priority = 350 + i });
+        for (int i = 0; i < 6; i++)
+            deck.Add(new UTurnCard { Priority = 400 + i });
+
+        for (int i = 0; i < 6; i++)
+            deck.Add(new BackUpCard { Priority = 500 + i });
 
         return deck;
     }
