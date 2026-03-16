@@ -232,27 +232,27 @@ public partial class GameUI : CanvasLayer
         _phaseLabel.AddThemeColorOverride("font_color", programming ? Colors.Yellow : Colors.Green);
     }
 
-    public void UpdateRegisterPrompt(int currentRegister)
+    public void UpdateRegisterPrompt(int currentRegister, string playerName)
     {
         var nextReg = currentRegister < 5 ? currentRegister : 0;
-        _registerLabel!.Text = $"Select card for register {nextReg + 1}/5 (keys 1-9)";
+        _registerLabel!.Text = $"{playerName}: Select card for register {nextReg + 1}/5 (keys 1-9)";
     }
 
-    public void UpdateExecutionPrompt(int currentRegister)
+    public void UpdateExecutionPrompt(int currentRegister, string playerName)
     {
-        _registerLabel!.Text = $"Executing register {currentRegister + 1}/5";
+        _registerLabel!.Text = $"{playerName}: Executing register {currentRegister + 1}/5";
     }
 
-    public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming)
+    public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex)
     {
-        _p1RegistersLabel!.Text = $"Registers: {FormatRegisters(p1, currentRegister, programming)}";
+        _p1RegistersLabel!.Text = $"P1: {FormatRegisters(p1, currentRegister, programming, currentPlayerIndex == 0)}";
         _p1StatusLabel!.Text = FormatPlayerStatus(p1);
 
-        _p2RegistersLabel!.Text = $"Registers: {FormatRegisters(p2, currentRegister, programming)}";
+        _p2RegistersLabel!.Text = $"P2: {FormatRegisters(p2, currentRegister, programming, currentPlayerIndex == 1)}";
         _p2StatusLabel!.Text = FormatPlayerStatus(p2);
     }
 
-    private string FormatRegisters(Player player, int currentRegister, bool programming)
+    private string FormatRegisters(Player player, int currentRegister, bool programming, bool isCurrentPlayer)
     {
         var registers = new List<string>();
         for (int i = 0; i < 5; i++)
@@ -260,14 +260,17 @@ public partial class GameUI : CanvasLayer
             var prefix = "";
             var suffix = "";
 
-            if (!programming && i == currentRegister)
+            if (isCurrentPlayer)
             {
-                prefix = "▶";
-                suffix = "◀";
-            }
-            else if (programming && i == currentRegister)
-            {
-                prefix = "▼";
+                if (!programming && i == currentRegister)
+                {
+                    prefix = "▶";
+                    suffix = "◀";
+                }
+                else if (programming && i == currentRegister)
+                {
+                    prefix = "▼";
+                }
             }
 
             var card = player.GetRegister(i);

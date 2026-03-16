@@ -16,6 +16,7 @@ public partial class GameManager : Node2D
     private const int MapHeight = 12;
 
     private int _currentRegister;
+    private int _currentPlayerIndex;
     private bool _programmingPhase = true;
     private int _roundNumber = 1;
 
@@ -116,8 +117,17 @@ public partial class GameManager : Node2D
         {
             if (Input.IsActionJustPressed("ui_accept"))
             {
-                _programmingPhase = false;
-                _currentRegister = 0;
+                if (_currentPlayerIndex < _engine.State.Players.Count - 1)
+                {
+                    _currentPlayerIndex++;
+                    _currentRegister = 0;
+                }
+                else
+                {
+                    _programmingPhase = false;
+                    _currentRegister = 0;
+                    _currentPlayerIndex = 0;
+                }
                 return;
             }
 
@@ -126,7 +136,7 @@ public partial class GameManager : Node2D
                 string actionName = $"ui_{i + 1}";
                 if (Input.IsActionJustPressed(actionName))
                 {
-                    var player = _engine.State.Players[0];
+                    var player = _engine.State.Players[_currentPlayerIndex];
                     var card = player.Hand.ElementAtOrDefault(i);
                     if (card != null && _currentRegister < 5)
                     {
@@ -135,7 +145,17 @@ public partial class GameManager : Node2D
 
                         if (_currentRegister >= 5)
                         {
-                            _programmingPhase = false;
+                            if (_currentPlayerIndex < _engine.State.Players.Count - 1)
+                            {
+                                _currentPlayerIndex++;
+                                _currentRegister = 0;
+                            }
+                            else
+                            {
+                                _programmingPhase = false;
+                                _currentRegister = 0;
+                                _currentPlayerIndex = 0;
+                            }
                         }
                     }
                 }
@@ -159,18 +179,29 @@ public partial class GameManager : Node2D
     {
         if (_engine == null || _currentRegister >= 5) return;
 
-        var currentCard = _engine.State.Players[0].GetRegister(_currentRegister);
+        var currentPlayer = _engine.State.Players[_currentPlayerIndex];
+        var currentCard = currentPlayer.GetRegister(_currentRegister);
         var priority = currentCard?.Priority ?? 0;
         _gameUI!.PriorityText = $"Priority: {priority}";
 
         _engine.ExecuteRegister(_currentRegister);
-        _currentRegister++;
-
-        if (_currentRegister >= 5)
+        
+        if (_currentPlayerIndex < _engine.State.Players.Count - 1)
         {
-            _currentRegister = 0;
-            _programmingPhase = true;
-            _roundNumber++;
+            _currentPlayerIndex++;
+        }
+        else
+        {
+            _currentPlayerIndex = 0;
+            _currentRegister++;
+
+            if (_currentRegister >= 5)
+            {
+                _currentRegister = 0;
+                _programmingPhase = true;
+                _currentPlayerIndex = 0;
+                _roundNumber++;
+            }
         }
     }
 
@@ -183,15 +214,17 @@ public partial class GameManager : Node2D
 
         if (_programmingPhase)
         {
-            _gameUI.UpdateRegisterPrompt(_currentRegister);
+            var playerName = _engine.State.Players[_currentPlayerIndex].Name;
+            _gameUI.UpdateRegisterPrompt(_currentRegister, playerName);
         }
         else
         {
-            _gameUI.UpdateExecutionPrompt(_currentRegister);
+            var playerName = _engine.State.Players[_currentPlayerIndex].Name;
+            _gameUI.UpdateExecutionPrompt(_currentRegister, playerName);
         }
 
         var p1 = _engine.State.Players[0];
         var p2 = _engine.State.Players[1];
-        _gameUI.UpdatePlayerInfo(p1, p2, _currentRegister, _programmingPhase);
+        _gameUI.UpdatePlayerInfo(p1, p2, _currentRegister, _programmingPhase, _currentPlayerIndex);
     }
 }
