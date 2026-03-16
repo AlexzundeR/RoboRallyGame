@@ -87,6 +87,68 @@ RoboRally - это игра-перегонка по лаборатории, гд
 - **Ямы** - уничтожают роботов (нужен HoverUnit)
 - **Апгрейды** - дают специальные способности
 
+## Апгрейды (Upgrades)
+
+### Доступные апгрейды
+
+| Апгрейд | Тип | Описание |
+|---------|-----|---------|
+| Double Barrel Laser | Permanent | Стреляет в 3 направлениях (вперёд, влево, вправо) |
+| Rear Laser | Permanent | Стреляет назад |
+| Hover Unit | Permanent | Игнорирует конвейеры и ямы |
+| Power Slide | Permanent | +1 дополнительное движение за ход |
+| Drifting | Permanent | (в разработке) |
+| Spiky | Permanent | Наносит 1 урон при столкновении |
+| Deflector Shield | Permanent | Блокирует 1 урон от лазера |
+| Brakes | Permanent | Останавливается перед стеной/роботом |
+| Boink | Temporary | Отталкивает атакующего на 2 клетки |
+| Overclocked | Temporary | Повторяет последний регистр |
+
+### Типы апгрейдов
+
+- **Permanent (Постоянный)** - остаётся навсегда
+- **Temporary (Временный)** - действует 1 раунд
+
+### Архитектура Strategy Pattern
+
+Апгрейды используют паттерн "Стратегия" для модульности:
+
+```csharp
+// Базовый класс
+public abstract class UpgradeEffect
+{
+    IMovementStrategy? GetMovementStrategy();
+    ILaserStrategy? GetLaserStrategy();
+    IDamageStrategy? GetDamageStrategy();
+    IConveyorStrategy? GetConveyorStrategy();
+    ICardExecutionStrategy? GetCardExecutionStrategy();
+}
+```
+
+### Интерфейсы стратегий
+
+| Интерфейс | Описание |
+|-----------|---------|
+| `IMovementStrategy` | Управление движением |
+| `ILaserStrategy` | Стрельба лазером |
+| `IDamageStrategy` | Обработка повреждений |
+| `IConveyorStrategy` | Взаимодействие с конвейерами |
+| `ICardExecutionStrategy` | Выполнение карт |
+
+### Фазы срабатывания (TriggerPhase)
+
+| Фаза | Описание |
+|-------|----------|
+| BeforeCard | Перед выполнением карты |
+| AfterCard | После выполнения карты |
+| BeforeMovement | Перед движением |
+| AfterMovement | После движения |
+| BeforeLaser | Перед лазером |
+| AfterLaser | После лазера |
+| OnDamage | При получении урона |
+| OnHit | При попадании |
+| OnMove | При перемещении |
+
 ## Соответствие сущностей
 
 ### Модель → Правила
