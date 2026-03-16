@@ -14,23 +14,29 @@ AiTest/
 └── .gitignore
 ```
 
-## Запуск и сборка
+## Сборка и проверка
 
-### Godot проект
-
-1. Открыть папку `GodotGame/` в Godot 4.6 Mono
-2. Нажать F5 для запуска
-
-### Сборка из командной строки
+### Полная проверка (рекомендуется)
 
 ```bash
-# Сборка Godot проекта
+# 1. Сборка движка
+dotnet build
+
+# 2. Очистка и сборка Godot проекта
+rm -rf GodotGame/.godot
+godot --headless --path GodotGame --build-solutions
+```
+
+### Только dotnet (быстрая проверка C#)
+```bash
 cd GodotGame && dotnet build
+```
 
-# Сборка движка
-dotnet build AiTest.Core.csproj
+### Запуск в Godot
+Открыть папку `GodotGame/` в Godot 4.6 Mono и нажать F5
 
-# Запуск тестов
+### Запуск тестов
+```bash
 dotnet test
 ```
 
@@ -80,8 +86,7 @@ ui_1, ui_2, ..., ui_9
 ## Зависимости
 
 - .NET 8.0 SDK
-- Godot 4.6 Mono
-- GodotSharp 4.6.1 (встроен в Godot)
+- Godot 4.6 Mono (C:\Program Files (x86)\godot\Godot_v4.6.1-stable_mono_win64.exe)
 
 ## Тесты
 
