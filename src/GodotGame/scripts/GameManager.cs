@@ -114,8 +114,7 @@ public partial class GameManager : Node2D
 		_robotRenderer = new RobotRenderer { Name = "RobotLayer" };
 		AddChild(_robotRenderer);
 
-		_gameUI = new GameUI { Name = "UILayer" };
-		AddChild(_gameUI);
+		_gameUI = GetNode<GameUI>("UILayer/GameUI");
 	}
 
 	private void CreateTestLevel()
