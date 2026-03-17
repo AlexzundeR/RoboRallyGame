@@ -5,45 +5,66 @@ using AiTest.Core.Models;
 
 namespace AiTest.Godot;
 
-public partial class GameUI : CanvasLayer
-{
-	[Export] private Label? _roundLabel;
-	[Export] private Label? _phaseLabel;
-	[Export] private Label? _priorityLabel;
-	[Export] private Label? _registerLabel;
-	[Export] private Label? _helpLabel;
-	[Export] private Button? _infoButton;
-	[Export] private PanelContainer? _statusModal;
-	[Export] private Button? _closeButton;
-
-	[Export] private Label? _p1Header;
-	[Export] private Label? _p1Hand;
-	[Export] private Label? _p1Registers;
-	[Export] private Label? _p1Status;
-	[Export] private Label? _p2Header;
-	[Export] private Label? _p2Hand;
-	[Export] private Label? _p2Registers;
-	[Export] private Label? _p2Status;
-
-	private bool _modalVisible = false;
-
-	public string PriorityText
+	public partial class GameUI : CanvasLayer
 	{
-		set
+		private Label? _roundLabel;
+		private Label? _phaseLabel;
+		private Label? _priorityLabel;
+		private Label? _registerLabel;
+		private Label? _helpLabel;
+		private Button? _infoButton;
+		private PanelContainer? _statusModal;
+		private Button? _closeButton;
+
+		private Label? _p1Header;
+		private Label? _p1Hand;
+		private Label? _p1Registers;
+		private Label? _p1Status;
+		private Label? _p2Header;
+		private Label? _p2Hand;
+		private Label? _p2Registers;
+		private Label? _p2Status;
+
+		private bool _modalVisible = false;
+
+		public string PriorityText
 		{
-			if (_priorityLabel != null)
-				_priorityLabel.Text = value;
+			set
+			{
+				if (_priorityLabel != null)
+					_priorityLabel.Text = value;
+			}
 		}
-	}
 
-	public override void _Ready()
-	{
-		if (_infoButton != null)
-			_infoButton.Pressed += OnInfoPressed;
+		public override void _Ready()
+		{
+			_roundLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/RoundLabel");
+			_phaseLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/PhaseLabel");
+			_priorityLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/PriorityLabel");
+			_registerLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/RegisterLabel");
+			_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
+			_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
+			_statusModal = GetNode<PanelContainer>("StatusModal");
 
-		if (_closeButton != null)
-			_closeButton.Pressed += OnInfoPressed;
-	}
+			_p1Header = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Header");
+			_p1Hand = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Hand");
+			_p1Registers = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Registers");
+			_p1Status = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Status");
+
+			_p2Header = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Header");
+			_p2Hand = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Hand");
+			_p2Registers = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Registers");
+			_p2Status = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Status");
+
+			GD.Print("[GameUI] Labels found: round=" + (_roundLabel != null) + 
+				", p1Hand=" + (_p1Hand != null) + ", p2Hand=" + (_p2Hand != null));
+
+			if (_infoButton != null)
+				_infoButton.Pressed += OnInfoPressed;
+
+			if (_closeButton != null)
+				_closeButton.Pressed += OnInfoPressed;
+		}
 
 	private void OnInfoPressed()
 	{
