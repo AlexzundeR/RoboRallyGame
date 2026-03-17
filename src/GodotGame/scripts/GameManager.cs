@@ -166,8 +166,6 @@ public partial class GameManager : Node2D
 
 		var p1 = _runner.Engine.State.Players[0];
 		var p2 = _runner.Engine.State.Players[1];
-		
-		GD.Print($"[GameManager] UpdateUI: P1 hand count={p1.Hand.Count}, P2 hand count={p2.Hand.Count}");
 
 		_gameUI.UpdateRound(_roundNumber);
 		_gameUI.UpdatePhase(_phaseType == GamePhaseType.Programming);

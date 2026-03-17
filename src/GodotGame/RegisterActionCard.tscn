@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://b8k2ejdkiuv3e"]
+
+[ext_resource type="Script" uid="uid://d4h4ug77rmguc" path="res://scripts/RegisterActionCard.cs" id="1_cek63"]
+[ext_resource type="LabelSettings" uid="uid://claytem52hudb" path="res://base_label_settings.tres" id="2_7207c"]
+[ext_resource type="Theme" uid="uid://b6r2nueb3lvf0" path="res://card_theme.tres" id="3_cp0df"]
+
+[sub_resource type="Animation" id="Animation_7207c"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Background:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(0.31802896, 0.3180284, 0.31802815, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_cp0df"]
+resource_name = "card_hover_animation"
+length = 0.3
+markers = [{
+"color": Color(1, 1, 1, 1),
+"name": &"new_marker",
+"time": 0.01375
+}, {
+"color": Color(1, 1, 1, 1),
+"name": &"new_marker_2",
+"time": 0.9
+}]
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Background:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(0.31802896, 0.3180284, 0.31802815, 1), Color(0.82646406, 0.8264642, 0.826464, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_o36f0"]
+_data = {
+&"RESET": SubResource("Animation_7207c"),
+&"card_hover_animation": SubResource("Animation_cp0df")
+}
+
+[node name="RegisterActionCard" type="PanelContainer" unique_id=324777393]
+offset_right = 40.0
+offset_bottom = 56.0
+scale = Vector2(2.7999992, 2.2799988)
+script = ExtResource("1_cek63")
+CardTheme = ExtResource("3_cp0df")
+
+[node name="Background" type="ColorRect" parent="." unique_id=490924791]
+layout_mode = 2
+color = Color(0.31802896, 0.3180284, 0.31802815, 1)
+
+[node name="GridContainer" type="GridContainer" parent="." unique_id=1461160790]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+
+[node name="Number" type="Label" parent="GridContainer" unique_id=392418106]
+layout_mode = 2
+size_flags_horizontal = 3
+label_settings = ExtResource("2_7207c")
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Symbol" type="Label" parent="GridContainer" unique_id=435667108]
+layout_mode = 2
+size_flags_horizontal = 3
+label_settings = ExtResource("2_7207c")
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Priority" type="Label" parent="GridContainer" unique_id=569618920]
+layout_mode = 2
+size_flags_horizontal = 3
+label_settings = ExtResource("2_7207c")
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=481862786]
+libraries/ = SubResource("AnimationLibrary_o36f0")
+
+[node name="Border" type="Panel" parent="." unique_id=975535347]
+layout_mode = 2
+theme = ExtResource("3_cp0df")

@@ -12,6 +12,12 @@ public enum RegisterIndex
     Five = 4
 }
 
+public class ProgramCardPlace
+{
+    public required ProgramCard Card {get; init;}
+    public bool IsEmpty {get; init;}
+}
+
 public abstract class ProgramCard
 {
     public int Priority { get; init; }
@@ -71,7 +77,7 @@ public sealed class BackUpCard : ProgramCard
         }
     }
 }
-
+//ToDo: закрыть все мутирующие дейтсвия с полями, переделать на методы, особенно работу с массивами
 public sealed class Player
 {
     public int Id { get; init; }

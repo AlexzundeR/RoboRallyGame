@@ -61,8 +61,6 @@ public class ProgrammingPhase : IGamePhase
 			return;
 		}
 
-		GD.Print($"[ProgrammingPhase] HandleInput: CurrentRegister={CurrentRegister}, SelectedRegister={_selectedRegister}");
-
 		if (CurrentRegister >= 5) 
 		{
 			GD.Print("[ProgrammingPhase] HandleInput: all 5 registers filled, ignoring key inputs");
@@ -109,8 +107,18 @@ public class ProgrammingPhase : IGamePhase
 		{
 			var card = player.Hand[cardIndex];
 			
-			player.Registers[registerIndex] = card;
-			player.Hand.RemoveAt(cardIndex);
+			//ToDo: прямой доступ к полям.Переделать на доменные методы
+			var cardInReg = player.Registers[registerIndex];
+			if (cardInReg == null){
+				player.Registers[registerIndex] = card;
+				player.Hand.RemoveAt(cardIndex);
+			}
+			else
+			{
+				player.Registers[registerIndex] = card;
+				player.Hand.RemoveAt(cardIndex);
+				player.Hand.Add(card);
+			}
 			
 			_dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, registerIndex));
 			

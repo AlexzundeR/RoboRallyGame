@@ -5,69 +5,68 @@ using AiTest.Core.Models;
 
 namespace AiTest.Godot;
 
-	public partial class GameUI : CanvasLayer
+public partial class GameUI : CanvasLayer
+{
+	private Label? _roundLabel;
+	private Label? _phaseLabel;
+	private Label? _priorityLabel;
+	private Label? _registerLabel;
+	private Label? _actionPrompt;
+	private Label? _helpLabel;
+	private Button? _infoButton;
+	private PanelContainer? _statusModal;
+	private Button? _closeButton;
+
+	private Label? _p1Header;
+	private Label? _p1Status;
+
+	[Export] public PackedScene PlayerRegisterActionCard;
+
+	private BoxContainer? _p1HandCardholder;
+	private BoxContainer? _p1RegistersCardholder;
+	private Label? _p2Header;
+	private Label? _p2Hand;
+	private Label? _p2Registers;
+	private Label? _p2Status;
+
+	private bool _modalVisible = false;
+
+	public string PriorityText
 	{
-		private Label? _roundLabel;
-		private Label? _phaseLabel;
-		private Label? _priorityLabel;
-		private Label? _registerLabel;
-		private Label? _actionPrompt;
-		private Label? _helpLabel;
-		private Button? _infoButton;
-		private PanelContainer? _statusModal;
-		private Button? _closeButton;
-
-		private Label? _p1Header;
-		private Label? _p1Hand;
-		private Label? _p1Registers;
-		private Label? _p1Status;
-		private Label? _p2Header;
-		private Label? _p2Hand;
-		private Label? _p2Registers;
-		private Label? _p2Status;
-
-		private bool _modalVisible = false;
-
-		public string PriorityText
+		set
 		{
-			set
-			{
-				if (_priorityLabel != null)
-					_priorityLabel.Text = value;
-			}
+			if (_priorityLabel != null)
+				_priorityLabel.Text = value;
 		}
+	}
 
-		public override void _Ready()
-		{
-			_roundLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/RoundLabel");
-			_phaseLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/PhaseLabel");
-			_priorityLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/PriorityLabel");
-			_registerLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/RegisterLabel");
-			_actionPrompt = GetNode<Label>("TopPanel/HBox/MiddlePanel/ActionPrompt");
-			_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
-			_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
-			_statusModal = GetNode<PanelContainer>("StatusModal");
+	public override void _Ready()
+	{
+		_roundLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/RoundLabel");
+		_phaseLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/PhaseLabel");
+		_priorityLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/PriorityLabel");
+		_registerLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/RegisterLabel");
+		_actionPrompt = GetNode<Label>("TopPanel/HBox/MiddlePanel/ActionPrompt");
+		_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
+		_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
+		_statusModal = GetNode<PanelContainer>("StatusModal");
 
-			_p1Header = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Header");
-			_p1Hand = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Hand");
-			_p1Registers = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Registers");
-			_p1Status = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Status");
+		_p1Header = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Header");
+		_p1Status = GetNode<Label>("BottomPanel/HBox/Player1Panel/P1Status");
+		_p1HandCardholder = GetNode<BoxContainer>("BottomPanel/HBox/Player1Panel/P1HandRow/HandCardholder");
+		_p1RegistersCardholder = GetNode<BoxContainer>("BottomPanel/HBox/Player1Panel/P1RegistersRow/RegistersCardholder");
 
-			_p2Header = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Header");
-			_p2Hand = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Hand");
-			_p2Registers = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Registers");
-			_p2Status = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Status");
+		_p2Header = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Header");
+		_p2Hand = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Hand");
+		_p2Registers = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Registers");
+		_p2Status = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Status");
 
-			GD.Print("[GameUI] Labels found: round=" + (_roundLabel != null) + 
-				", p1Hand=" + (_p1Hand != null) + ", p2Hand=" + (_p2Hand != null) +
-				", closeBtn=" + (_closeButton != null) + ", modal=" + (_statusModal != null));
+		if (_infoButton != null)
+			_infoButton.Pressed += OnInfoPressed;
 
-			if (_infoButton != null)
-				_infoButton.Pressed += OnInfoPressed;
-
-			if (_closeButton != null)
-				_closeButton.Pressed += OnInfoPressed;
-		}
+		if (_closeButton != null)
+			_closeButton.Pressed += OnInfoPressed;
+	}
 
 	private void OnInfoPressed()
 	{
@@ -96,7 +95,7 @@ namespace AiTest.Godot;
 
 		var nextReg = currentRegister < 5 ? currentRegister + 1 : 5;
 		_registerLabel.Text = $"{playerName}: Register [{selectedRegister + 1}]/5";
-		
+
 		if (_actionPrompt != null)
 		{
 			_actionPrompt.Text = $"🎯 {playerName.ToUpper()}: ←→ SELECT REGISTER | 1-9 SELECT CARD";
@@ -117,12 +116,16 @@ namespace AiTest.Godot;
 
 	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
 	{
-		if (_p1Hand != null)
-			_p1Hand.Text = $"Hand: {FormatHand(p1, currentPlayerIndex == 0 && programming)}";
-		if (_p1Registers != null)
-			_p1Registers.Text = $"Regs: {FormatRegisters(p1, currentRegister, programming, currentPlayerIndex == 0, selectedRegister)}";
+		if (_p1RegistersCardholder != null)
+		{
+			RedrawRegisters(p1, currentRegister, programming, currentPlayerIndex == 0, selectedRegister);
+		}
 		if (_p1Status != null)
 			_p1Status.Text = FormatPlayerStatus(p1);
+		if (_p1HandCardholder != null)
+		{
+			RedrawHand(p1, currentPlayerIndex == 0 && programming);
+		}
 
 		if (_p2Hand != null)
 			_p2Hand.Text = $"Hand: {FormatHand(p2, currentPlayerIndex == 1 && programming)}";
@@ -150,6 +153,75 @@ namespace AiTest.Godot;
 			}
 		}
 		return string.Join("", cards);
+	}
+
+	private void RedrawHand(Player player, bool isCurrentPlayer)
+	{
+		foreach (var card in _p1HandCardholder.GetChildren())
+		{
+			_p1HandCardholder.RemoveChild(card);
+		}
+
+		for (int i = 0; i < 9; i++)
+		{
+			var card = PlayerRegisterActionCard.Instantiate<RegisterActionCard>();
+
+			if (i < player.Hand.Count)
+			{
+				var symbol = GetCardSymbol(player.Hand[i]);
+				var priority = player.Hand[i].Priority;
+				var number = i + 1;
+
+				card.SetCardData(symbol, priority, number);
+			}
+			else
+			{
+				card.SetEmpty();
+			}
+
+			_p1HandCardholder.AddChild(card);
+		}
+	}
+
+	private void RedrawRegisters(Player player, int currentRegister, bool programming, bool isCurrentPlayer, int selectedRegister = 0)
+	{
+		foreach (var card in _p1RegistersCardholder.GetChildren())
+		{
+			_p1RegistersCardholder.RemoveChild(card);
+		}
+
+		for (int i = 0; i < 5; i++)
+		{
+			var card = PlayerRegisterActionCard.Instantiate<RegisterActionCard>();
+
+			if (!programming && i == currentRegister ||
+			 programming && i == selectedRegister)
+			{
+				card.SetSelected(true);
+			}
+			
+			if (!programming || !isCurrentPlayer)
+			{
+				card.SetFixed(true);
+			}
+
+			var registerCard = player.GetRegister(i);
+			if (registerCard == null)
+			{
+				card.SetEmpty();
+			}
+			else
+			{
+				var symbol = GetCardSymbol(registerCard);
+				var priority = registerCard.Priority;
+				var number = i + 1;
+
+				card.SetCardData(symbol, priority, number);
+			}
+
+
+			_p1RegistersCardholder.AddChild(card);
+		}
 	}
 
 	private string FormatRegisters(Player player, int currentRegister, bool programming, bool isCurrentPlayer, int selectedRegister = 0)
