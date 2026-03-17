@@ -54,6 +54,11 @@ public class ExecutionPhase : IGamePhase
         ExecuteCurrentRegister();
     }
 
+    public void SimulateExecute()
+    {
+        ExecuteCurrentRegister();
+    }
+
     private void ExecuteCurrentRegister()
     {
         if (_runner == null || _dispatcher == null) return;

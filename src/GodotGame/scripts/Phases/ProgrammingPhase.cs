@@ -94,6 +94,19 @@ public class ProgrammingPhase : IGamePhase
         }
     }
 
+    public void SimulateKeyPress(int keyNumber)
+    {
+        if (keyNumber >= 1 && keyNumber <= 9)
+        {
+            SelectCard(keyNumber - 1);
+        }
+    }
+
+    public void SimulateConfirm()
+    {
+        ConfirmPlayer();
+    }
+
     public void OnExit()
     {
     }

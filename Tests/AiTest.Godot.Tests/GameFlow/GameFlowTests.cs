@@ -517,32 +517,23 @@ public class GameFlowTests
 
         programmingPhase.OnEnter();
 
-        var p1HandCount = runner.Engine.State.Players[0].Hand.Count;
-        var p2HandCount = runner.Engine.State.Players[1].Hand.Count;
-
-        for (int reg = 0; reg < 5; reg++)
+        for (int reg = 1; reg <= 5; reg++)
         {
-            if (reg < p1HandCount)
-            {
-                programmingPhase.SelectCard(reg);
-            }
+            programmingPhase.SimulateKeyPress(reg);
         }
-        programmingPhase.ConfirmPlayer();
+        programmingPhase.SimulateConfirm();
 
-        for (int reg = 0; reg < 5; reg++)
+        for (int reg = 1; reg <= 5; reg++)
         {
-            if (reg < p2HandCount)
-            {
-                programmingPhase.SelectCard(reg);
-            }
+            programmingPhase.SimulateKeyPress(reg);
         }
-        programmingPhase.ConfirmPlayer();
+        programmingPhase.SimulateConfirm();
 
         executionPhase.OnEnter();
 
         for (int i = 0; i < 10; i++)
         {
-            executionPhase.ExecuteRegister();
+            executionPhase.SimulateExecute();
         }
 
         Assert.Contains(events, e => e.StartsWith("Phase:Programming"));
