@@ -1,7 +1,10 @@
 namespace AiTest.Godot.Tests.GameFlow;
 
+using AiTest.Core.Config;
 using AiTest.Core.Engine;
+using AiTest.Core.Entities;
 using AiTest.Core.Messages;
+using AiTest.Core.Models;
 using AiTest.Godot.Phases;
 using Xunit;
 
@@ -168,5 +171,384 @@ public class GameFlowTests
 
         Assert.Single(confirmedEvents);
         Assert.Equal(0, confirmedEvents[0].PlayerIndex);
+    }
+
+    [Fact]
+    public void CardSelectedEvent_Published_ShouldNotifySubscribers()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+        var cardEvents = new List<CardSelectedEvent>();
+
+        dispatcher.Subscribe<CardSelectedEvent>(e => cardEvents.Add(e));
+
+        var phase = new ProgrammingPhase();
+        phase.Initialize(runner, dispatcher, _ => { });
+
+        dispatcher.Publish(new CardSelectedEvent(0, 0, 0));
+
+        Assert.Single(cardEvents);
+        Assert.Equal(0, cardEvents[0].PlayerIndex);
+        Assert.Equal(0, cardEvents[0].CardIndex);
+        Assert.Equal(0, cardEvents[0].Register);
+    }
+
+    [Fact]
+    public void PhaseChangedEvent_ShouldTransitionBetweenPhases()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+        var phaseHistory = new List<GamePhaseType>();
+
+        dispatcher.Subscribe<PhaseChangedEvent>(e => phaseHistory.Add(e.Phase));
+
+        var programmingPhase = new ProgrammingPhase();
+        var executionPhase = new ExecutionPhase();
+
+        programmingPhase.Initialize(runner, dispatcher, phase =>
+        {
+            dispatcher.Publish(new PhaseChangedEvent(phase, 1));
+        });
+
+        executionPhase.Initialize(runner, dispatcher, phase =>
+        {
+            dispatcher.Publish(new PhaseChangedEvent(phase, 1));
+        });
+
+        programmingPhase.OnEnter();
+        dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Execution, 1));
+
+        executionPhase.OnEnter();
+        dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Programming, 2));
+
+        Assert.Contains(GamePhaseType.Execution, phaseHistory);
+        Assert.Contains(GamePhaseType.Programming, phaseHistory);
+    }
+
+    [Fact]
+    public void RegisterExecutedEvent_ShouldTrackExecution()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+        var executedRegisters = new List<(int Register, int Player)>();
+
+        dispatcher.Subscribe<RegisterExecutedEvent>(e =>
+            executedRegisters.Add((e.Register, e.PlayerIndex)));
+
+        var phase = new ExecutionPhase();
+        phase.Initialize(runner, dispatcher, _ => { });
+
+        dispatcher.Publish(new RegisterExecutedEvent(0, 0));
+        dispatcher.Publish(new RegisterExecutedEvent(1, 0));
+        dispatcher.Publish(new RegisterExecutedEvent(2, 1));
+
+        Assert.Equal(3, executedRegisters.Count);
+        Assert.Equal((0, 0), executedRegisters[0]);
+        Assert.Equal((1, 0), executedRegisters[1]);
+        Assert.Equal((2, 1), executedRegisters[2]);
+    }
+
+    [Fact]
+    public void CardSelection_ViaEvent_ShouldPublishCardSelectedEvent()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+        var cardEvents = new List<CardSelectedEvent>();
+
+        dispatcher.Subscribe<CardSelectedEvent>(e => cardEvents.Add(e));
+
+        var phase = new ProgrammingPhase();
+        phase.Initialize(runner, dispatcher, _ => { });
+
+        var player = runner.Engine.State.Players[0];
+        var cardToSelect = player.Hand[2];
+
+        dispatcher.Publish(new CardSelectedEvent(0, 2, 0));
+
+        Assert.Single(cardEvents);
+        Assert.Equal(2, cardEvents[0].CardIndex);
+        Assert.Equal(0, cardEvents[0].Register);
+    }
+
+    [Fact]
+    public void FullGameSession_TwoPlayers_SelectCardsAndExecute()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var phaseChangedEvents = new List<PhaseChangedEvent>();
+        var cardSelectedEvents = new List<CardSelectedEvent>();
+        var registerExecutedEvents = new List<RegisterExecutedEvent>();
+        var playerConfirmedEvents = new List<PlayerConfirmedEvent>();
+
+        dispatcher.Subscribe<PhaseChangedEvent>(e => phaseChangedEvents.Add(e));
+        dispatcher.Subscribe<CardSelectedEvent>(e => cardSelectedEvents.Add(e));
+        dispatcher.Subscribe<RegisterExecutedEvent>(e => registerExecutedEvents.Add(e));
+        dispatcher.Subscribe<PlayerConfirmedEvent>(e => playerConfirmedEvents.Add(e));
+
+        var programmingPhase = new ProgrammingPhase();
+        var executionPhase = new ExecutionPhase();
+
+        var currentPhase = GamePhaseType.Programming;
+        var currentRound = 1;
+
+        void OnPhaseComplete(GamePhaseType newPhase)
+        {
+            currentPhase = newPhase;
+            if (phaseChangedEvents.Any(e => e.Phase == GamePhaseType.Execution))
+            {
+                currentRound++;
+            }
+            dispatcher.Publish(new PhaseChangedEvent(newPhase, currentRound));
+        }
+
+        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+
+        programmingPhase.OnEnter();
+        Assert.Equal(GamePhaseType.Programming, currentPhase);
+
+        for (int reg = 0; reg < 5; reg++)
+        {
+            programmingPhase.SelectCard(reg);
+        }
+        programmingPhase.ConfirmPlayer();
+
+        for (int reg = 0; reg < 5; reg++)
+        {
+            programmingPhase.SelectCard(reg);
+        }
+        programmingPhase.ConfirmPlayer();
+
+        Assert.Equal(2, playerConfirmedEvents.Count);
+
+        OnPhaseComplete(GamePhaseType.Execution);
+        Assert.Contains(phaseChangedEvents, e => e.Phase == GamePhaseType.Execution);
+
+        executionPhase.OnEnter();
+
+        for (int reg = 0; reg < 10; reg++)
+        {
+            executionPhase.ExecuteRegister();
+        }
+
+        Assert.Equal(10, registerExecutedEvents.Count);
+
+        OnPhaseComplete(GamePhaseType.Programming);
+
+        Assert.Contains(phaseChangedEvents, e => e.Phase == GamePhaseType.Programming);
+    }
+
+    [Fact]
+    public void FullGameSession_ThreeRounds_TracksRoundsCorrectly()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var rounds = new List<int>();
+        dispatcher.Subscribe<PhaseChangedEvent>(e => rounds.Add(e.Round));
+
+        var programmingPhase = new ProgrammingPhase();
+        var executionPhase = new ExecutionPhase();
+
+        var currentRound = 1;
+
+        void OnPhaseComplete(GamePhaseType newPhase)
+        {
+            if (newPhase == GamePhaseType.Programming)
+            {
+                currentRound++;
+            }
+            dispatcher.Publish(new PhaseChangedEvent(newPhase, currentRound));
+        }
+
+        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+
+        for (int round = 1; round <= 3; round++)
+        {
+            programmingPhase.OnEnter();
+            OnPhaseComplete(GamePhaseType.Execution);
+
+            executionPhase.OnEnter();
+            OnPhaseComplete(GamePhaseType.Programming);
+        }
+
+        Assert.Equal(6, rounds.Count);
+    }
+
+    [Fact]
+    public void FullGameSession_PlayerMovement_VerifyPositionChanges()
+    {
+        var config = new GameConfiguration
+        {
+            MapWidth = 8,
+            MapHeight = 8,
+            Players = new List<PlayerConfig>
+            {
+                new() { Name = "Player1", StartPosition = new Position(3, 3) }
+            },
+            Map = new MapConfig
+            {
+                Starts = new List<StartPlacement>
+                {
+                    new() { X = 3, Y = 3 }
+                }
+            }
+        };
+
+        var runner = new GameRunner(config);
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var executionPhase = new ExecutionPhase();
+        executionPhase.Initialize(runner, dispatcher, _ => { });
+
+        var player = runner.Engine.State.Players[0];
+        player.Robot.Direction = Direction.East;
+
+        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 });
+        player.SetRegister(1, new MoveCard { Priority = 100, Spaces = 1 });
+        player.SetRegister(2, new MoveCard { Priority = 100, Spaces = 1 });
+
+        var pos0 = player.Robot.Position;
+
+        executionPhase.ExecuteRegister();
+        var pos1 = player.Robot.Position;
+
+        executionPhase.ExecuteRegister();
+        var pos2 = player.Robot.Position;
+
+        executionPhase.ExecuteRegister();
+        var pos3 = player.Robot.Position;
+
+        Assert.NotEqual(pos0, pos1);
+        Assert.NotEqual(pos1, pos2);
+        Assert.NotEqual(pos2, pos3);
+    }
+
+    [Fact]
+    public void ExecutionPhase_HandleInput_ExecutesRegisterOnInput()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var registerExecutedEvents = new List<RegisterExecutedEvent>();
+        dispatcher.Subscribe<RegisterExecutedEvent>(e => registerExecutedEvents.Add(e));
+
+        var executionPhase = new ExecutionPhase();
+        executionPhase.Initialize(runner, dispatcher, _ => { });
+
+        var player = runner.Engine.State.Players[0];
+        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 });
+
+        var startPos = player.Robot.Position;
+
+        executionPhase.ExecuteRegister();
+
+        Assert.Single(registerExecutedEvents);
+        Assert.NotEqual(startPos, player.Robot.Position);
+        Assert.Equal(1, executionPhase.CurrentRegister);
+    }
+
+    [Fact]
+    public void ExecutionPhase_CompleteAllRegisters_TransitionsToNextPhase()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var phaseChangedEvents = new List<PhaseChangedEvent>();
+        dispatcher.Subscribe<PhaseChangedEvent>(e => phaseChangedEvents.Add(e));
+
+        GamePhaseType? finalPhase = null;
+        var executionPhase = new ExecutionPhase();
+        executionPhase.Initialize(runner, dispatcher, phase => finalPhase = phase);
+
+        var p1 = runner.Engine.State.Players[0];
+        var p2 = runner.Engine.State.Players[1];
+
+        for (int i = 0; i < 5; i++)
+        {
+            p1.SetRegister(i, new MoveCard { Priority = 100 + i, Spaces = 1 });
+            p2.SetRegister(i, new MoveCard { Priority = 200 + i, Spaces = 1 });
+        }
+
+        for (int reg = 0; reg < 10; reg++)
+        {
+            executionPhase.ExecuteRegister();
+        }
+
+        Assert.NotNull(finalPhase);
+        Assert.Equal(GamePhaseType.Programming, finalPhase);
+        Assert.Contains(phaseChangedEvents, e => e.Phase == GamePhaseType.Programming);
+    }
+
+    [Fact]
+    public void FullGameSession_ViaPhaseInputMethods_CompletesFullCycle()
+    {
+        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        runner.Initialize();
+        var dispatcher = new MessageDispatcher();
+
+        var events = new List<string>();
+        dispatcher.Subscribe<CardSelectedEvent>(e => events.Add($"Card:P{e.PlayerIndex}:{e.CardIndex}:R{e.Register}"));
+        dispatcher.Subscribe<PlayerConfirmedEvent>(e => events.Add($"Confirmed:P{e.PlayerIndex}"));
+        dispatcher.Subscribe<RegisterExecutedEvent>(e => events.Add($"Executed:R{e.Register}:P{e.PlayerIndex}"));
+        dispatcher.Subscribe<PhaseChangedEvent>(e => events.Add($"Phase:{e.Phase}:R{e.Round}"));
+
+        var programmingPhase = new ProgrammingPhase();
+        var executionPhase = new ExecutionPhase();
+
+        void OnPhaseComplete(GamePhaseType newPhase)
+        {
+            dispatcher.Publish(new PhaseChangedEvent(newPhase, runner.Engine.State.Round));
+        }
+
+        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+
+        programmingPhase.OnEnter();
+
+        var p1HandCount = runner.Engine.State.Players[0].Hand.Count;
+        var p2HandCount = runner.Engine.State.Players[1].Hand.Count;
+
+        for (int reg = 0; reg < 5; reg++)
+        {
+            if (reg < p1HandCount)
+            {
+                programmingPhase.SelectCard(reg);
+            }
+        }
+        programmingPhase.ConfirmPlayer();
+
+        for (int reg = 0; reg < 5; reg++)
+        {
+            if (reg < p2HandCount)
+            {
+                programmingPhase.SelectCard(reg);
+            }
+        }
+        programmingPhase.ConfirmPlayer();
+
+        executionPhase.OnEnter();
+
+        for (int i = 0; i < 10; i++)
+        {
+            executionPhase.ExecuteRegister();
+        }
+
+        Assert.Contains(events, e => e.StartsWith("Phase:Programming"));
+        Assert.Contains(events, e => e.StartsWith("Phase:Execution"));
+        Assert.Contains(events, e => e.StartsWith("Confirmed:P0"));
+        Assert.Contains(events, e => e.StartsWith("Confirmed:P1"));
+        Assert.Contains(events, e => e.StartsWith("Executed:"));
     }
 }

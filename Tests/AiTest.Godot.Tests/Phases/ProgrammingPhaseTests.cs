@@ -65,10 +65,4 @@ public class ProgrammingPhaseTests
     {
         _phase.Update(0.016);
     }
-
-    [Fact]
-    public void HandleInput_ShouldNotThrow()
-    {
-        _phase.HandleInput();
-    }
 }

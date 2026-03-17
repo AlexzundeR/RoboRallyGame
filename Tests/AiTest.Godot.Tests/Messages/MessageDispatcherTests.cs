@@ -87,6 +87,99 @@ public class MessageDispatcherTests
     }
 
     [Fact]
+    public void Send_SelectCardCommand_ShouldExecuteHandler()
+    {
+        var dispatcher = new MessageDispatcher();
+        SelectCardCommand? received = null;
+
+        dispatcher.Register<SelectCardCommand>(cmd => received = cmd);
+        dispatcher.Send(new SelectCardCommand(3));
+
+        Assert.NotNull(received);
+        Assert.Equal(3, received.CardIndex);
+    }
+
+    [Fact]
+    public void Send_ConfirmPlayerCommand_ShouldExecuteHandler()
+    {
+        var dispatcher = new MessageDispatcher();
+        var executed = false;
+
+        dispatcher.Register<ConfirmPlayerCommand>(_ => executed = true);
+        dispatcher.Send(new ConfirmPlayerCommand());
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public void Send_ExecuteRegisterCommand_ShouldExecuteHandler()
+    {
+        var dispatcher = new MessageDispatcher();
+        var executed = false;
+
+        dispatcher.Register<ExecuteRegisterCommand>(_ => executed = true);
+        dispatcher.Send(new ExecuteRegisterCommand());
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public void Publish_CardSelectedEvent_ShouldNotifySubscriber()
+    {
+        var dispatcher = new MessageDispatcher();
+        var events = new List<CardSelectedEvent>();
+
+        dispatcher.Subscribe<CardSelectedEvent>(e => events.Add(e));
+        dispatcher.Publish(new CardSelectedEvent(0, 5, 2));
+
+        Assert.Single(events);
+        Assert.Equal(0, events[0].PlayerIndex);
+        Assert.Equal(5, events[0].CardIndex);
+        Assert.Equal(2, events[0].Register);
+    }
+
+    [Fact]
+    public void Publish_PlayerConfirmedEvent_ShouldNotifySubscriber()
+    {
+        var dispatcher = new MessageDispatcher();
+        var events = new List<PlayerConfirmedEvent>();
+
+        dispatcher.Subscribe<PlayerConfirmedEvent>(e => events.Add(e));
+        dispatcher.Publish(new PlayerConfirmedEvent(1));
+
+        Assert.Single(events);
+        Assert.Equal(1, events[0].PlayerIndex);
+    }
+
+    [Fact]
+    public void Publish_RegisterExecutedEvent_ShouldNotifySubscriber()
+    {
+        var dispatcher = new MessageDispatcher();
+        var events = new List<RegisterExecutedEvent>();
+
+        dispatcher.Subscribe<RegisterExecutedEvent>(e => events.Add(e));
+        dispatcher.Publish(new RegisterExecutedEvent(3, 2));
+
+        Assert.Single(events);
+        Assert.Equal(3, events[0].Register);
+        Assert.Equal(2, events[0].PlayerIndex);
+    }
+
+    [Fact]
+    public void Publish_PhaseChangedEvent_ShouldNotifySubscriber()
+    {
+        var dispatcher = new MessageDispatcher();
+        var events = new List<PhaseChangedEvent>();
+
+        dispatcher.Subscribe<PhaseChangedEvent>(e => events.Add(e));
+        dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Execution, 2));
+
+        Assert.Single(events);
+        Assert.Equal(GamePhaseType.Execution, events[0].Phase);
+        Assert.Equal(2, events[0].Round);
+    }
+
+    [Fact]
     public void Unregister_ShouldStopExecutingHandler()
     {
         var dispatcher = new MessageDispatcher();
@@ -99,6 +192,27 @@ public class MessageDispatcherTests
         dispatcher.Send(new ConfirmPlayerCommand());
 
         Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void MultipleCommandTypes_CanBeRegisteredIndependently()
+    {
+        var dispatcher = new MessageDispatcher();
+        var selectCount = 0;
+        var confirmCount = 0;
+        var executeCount = 0;
+
+        dispatcher.Register<SelectCardCommand>(_ => selectCount++);
+        dispatcher.Register<ConfirmPlayerCommand>(_ => confirmCount++);
+        dispatcher.Register<ExecuteRegisterCommand>(_ => executeCount++);
+
+        dispatcher.Send(new SelectCardCommand(0));
+        dispatcher.Send(new ConfirmPlayerCommand());
+        dispatcher.Send(new ExecuteRegisterCommand());
+
+        Assert.Equal(1, selectCount);
+        Assert.Equal(1, confirmCount);
+        Assert.Equal(1, executeCount);
     }
 
     private record TestEvent : IEvent;
