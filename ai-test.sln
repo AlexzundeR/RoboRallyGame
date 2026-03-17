@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiTest.Core.Tests", "Tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiTest.Godot.Tests", "Tests\AiTest.Godot.Tests.csproj", "{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GodotGame", "GodotGame", "{E11AEC79-FB7D-637A-149A-CE75812EAA80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,11 +63,25 @@ Global
 		{B102A7DA-956C-4208-8087-54A4D7B67CB5}.Release|x64.Build.0 = Release|Any CPU
 		{B102A7DA-956C-4208-8087-54A4D7B67CB5}.Release|x86.ActiveCfg = Release|Any CPU
 		{B102A7DA-956C-4208-8087-54A4D7B67CB5}.Release|x86.Build.0 = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|x64.Build.0 = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Debug|x86.Build.0 = Debug|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|x64.ActiveCfg = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|x64.Build.0 = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|x86.ActiveCfg = Release|Any CPU
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B102A7DA-956C-4208-8087-54A4D7B67CB5} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{E11AEC79-FB7D-637A-149A-CE75812EAA80} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
