@@ -7,112 +7,114 @@ using AiTest.Core.Entities;
 
 public interface IInputService
 {
-    bool IsActionJustPressed(string action);
+	bool IsActionJustPressed(string action);
 }
 
 public class GodotInputService : IInputService
 {
-    public bool IsActionJustPressed(string action) => Input.IsActionJustPressed(action);
+	public bool IsActionJustPressed(string action) => Input.IsActionJustPressed(action);
 }
 
 public class ProgrammingPhase : IGamePhase
 {
-    private GameRunner? _runner;
-    private IMessageDispatcher? _dispatcher;
-    private Action<GamePhaseType>? _onPhaseComplete;
-    private IInputService _inputService;
+	private GameRunner? _runner;
+	private IMessageDispatcher? _dispatcher;
+	private Action<GamePhaseType>? _onPhaseComplete;
+	private IInputService _inputService;
 
-    public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
-    public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
-    public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
+	public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
+	public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
+	public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
 
-    public ProgrammingPhase() : this(new GodotInputService()) { }
+	public ProgrammingPhase() : this(new GodotInputService()) { }
 
-    public ProgrammingPhase(IInputService inputService)
-    {
-        _inputService = inputService;
-    }
+	public ProgrammingPhase(IInputService inputService)
+	{
+		_inputService = inputService;
+	}
 
-    public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
-    {
-        _runner = runner;
-        _dispatcher = dispatcher;
-        _onPhaseComplete = onPhaseComplete;
+	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
+	{
+		_runner = runner;
+		_dispatcher = dispatcher;
+		_onPhaseComplete = onPhaseComplete;
 
-        dispatcher.Register<SelectCardCommand>(cmd => SelectCard(cmd.CardIndex));
-        dispatcher.Register<ConfirmPlayerCommand>(_ => ConfirmPlayer());
-    }
+		dispatcher.Register<SelectCardCommand>(cmd => SelectCard(cmd.CardIndex));
+		dispatcher.Register<ConfirmPlayerCommand>(_ => ConfirmPlayer());
+	}
 
-    public void OnEnter()
-    {
-    }
+	public void OnEnter()
+	{
+	}
 
-    public void Update(double delta)
-    {
-    }
+	public void Update(double delta)
+	{
+	}
 
-    public void HandleInput()
-    {
-        if (_runner == null || _dispatcher == null) return;
+	public void HandleInput()
+	{
+		if (_runner == null || _dispatcher == null) return;
 
-        for (int i = 1; i <= 9; i++)
-        {
-            string action = $"ui_{i}";
-            if (_inputService.IsActionJustPressed(action))
-            {
-                SelectCard(i - 1);
-                return;
-            }
-        }
+		if (CurrentRegister >= 5) return;
 
-        if (_inputService.IsActionJustPressed("ui_accept"))
-        {
-            ConfirmPlayer();
-        }
-    }
+		for (int i = 1; i <= 9; i++)
+		{
+			string action = $"ui_{i}";
+			if (_inputService.IsActionJustPressed(action))
+			{
+				SelectCard(i - 1);
+				return;
+			}
+		}
 
-    public void SelectCard(int cardIndex)
-    {
-        if (_runner == null || _dispatcher == null) return;
+		if (_inputService.IsActionJustPressed("ui_accept"))
+		{
+			ConfirmPlayer();
+		}
+	}
 
-        var player = _runner.Engine.State.Players[CurrentPlayerIndex];
-        
-        if (cardIndex < player.Hand.Count)
-        {
-            var card = player.Hand[cardIndex];
-            
-            player.Registers[CurrentRegister] = card;
-            player.Hand.RemoveAt(cardIndex);
-            
-            _dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, CurrentRegister));
-            
-            if (CurrentRegister < 4)
-            {
-                _runner.Engine.State.CurrentRegister++;
-            }
-        }
-    }
+	public void SelectCard(int cardIndex)
+	{
+		if (_runner == null || _dispatcher == null) return;
 
-    public void ConfirmPlayer()
-    {
-        if (_runner == null || _dispatcher == null) return;
+		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		
+		if (cardIndex < player.Hand.Count)
+		{
+			var card = player.Hand[cardIndex];
+			
+			player.Registers[CurrentRegister] = card;
+			player.Hand.RemoveAt(cardIndex);
+			
+			_dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, CurrentRegister));
+			
+			if (CurrentRegister < 4)
+			{
+				_runner.Engine.State.CurrentRegister++;
+			}
+		}
+	}
 
-        _dispatcher.Publish(new PlayerConfirmedEvent(CurrentPlayerIndex));
-        
-        if (_runner.Engine.State.CurrentPlayerIndex < _runner.Engine.State.Players.Count - 1)
-        {
-            _runner.Engine.State.CurrentPlayerIndex++;
-            _runner.Engine.State.CurrentRegister = 0;
-        }
-        else
-        {
-            _runner.Engine.State.CurrentPlayerIndex = 0;
-            _runner.Engine.State.CurrentRegister = 0;
-            _onPhaseComplete?.Invoke(GamePhaseType.Execution);
-        }
-    }
+	public void ConfirmPlayer()
+	{
+		if (_runner == null || _dispatcher == null) return;
 
-    public void OnExit()
-    {
-    }
+		_dispatcher.Publish(new PlayerConfirmedEvent(CurrentPlayerIndex));
+		
+		if (_runner.Engine.State.CurrentPlayerIndex < _runner.Engine.State.Players.Count - 1)
+		{
+			_runner.Engine.State.CurrentPlayerIndex++;
+			_runner.Engine.State.CurrentRegister = 0;
+		}
+		else
+		{
+			_runner.Engine.State.CurrentPlayerIndex = 0;
+			_runner.Engine.State.CurrentRegister = 0;
+			_onPhaseComplete?.Invoke(GamePhaseType.Execution);
+		}
+	}
+
+	public void OnExit()
+	{
+	}
 }
