@@ -504,8 +504,32 @@ public class GameFlowTests
         dispatcher.Subscribe<RegisterExecutedEvent>(e => events.Add($"Executed:R{e.Register}:P{e.PlayerIndex}"));
         dispatcher.Subscribe<PhaseChangedEvent>(e => events.Add($"Phase:{e.Phase}:R{e.Round}"));
 
-        var programmingPhase = new ProgrammingPhase();
-        var executionPhase = new ExecutionPhase();
+        var inputActions = new Queue<string>();
+        inputActions.Enqueue("ui_1");
+        inputActions.Enqueue("ui_2");
+        inputActions.Enqueue("ui_3");
+        inputActions.Enqueue("ui_4");
+        inputActions.Enqueue("ui_5");
+        inputActions.Enqueue("ui_accept");
+        inputActions.Enqueue("ui_1");
+        inputActions.Enqueue("ui_2");
+        inputActions.Enqueue("ui_3");
+        inputActions.Enqueue("ui_4");
+        inputActions.Enqueue("ui_5");
+        inputActions.Enqueue("ui_accept");
+        for (int i = 0; i < 10; i++)
+        {
+            inputActions.Enqueue("ui_accept");
+        }
+
+        var mockInputService = new MockInputService(action => 
+        {
+            if (inputActions.Count == 0) return false;
+            return inputActions.Peek() == action;
+        });
+
+        var programmingPhase = new ProgrammingPhase(mockInputService);
+        var executionPhase = new ExecutionPhase(mockInputService);
 
         void OnPhaseComplete(GamePhaseType newPhase)
         {
@@ -517,23 +541,33 @@ public class GameFlowTests
 
         programmingPhase.OnEnter();
 
-        for (int reg = 1; reg <= 5; reg++)
+        for (int i = 0; i < 6; i++)
         {
-            programmingPhase.SimulateKeyPress(reg);
+            programmingPhase.HandleInput();
+            if (inputActions.Count > 0)
+            {
+                inputActions.Dequeue();
+            }
         }
-        programmingPhase.SimulateConfirm();
 
-        for (int reg = 1; reg <= 5; reg++)
+        for (int i = 0; i < 6; i++)
         {
-            programmingPhase.SimulateKeyPress(reg);
+            programmingPhase.HandleInput();
+            if (inputActions.Count > 0)
+            {
+                inputActions.Dequeue();
+            }
         }
-        programmingPhase.SimulateConfirm();
 
         executionPhase.OnEnter();
 
         for (int i = 0; i < 10; i++)
         {
-            executionPhase.SimulateExecute();
+            executionPhase.HandleInput();
+            if (inputActions.Count > 0)
+            {
+                inputActions.Dequeue();
+            }
         }
 
         Assert.Contains(events, e => e.StartsWith("Phase:Programming"));
@@ -542,4 +576,16 @@ public class GameFlowTests
         Assert.Contains(events, e => e.StartsWith("Confirmed:P1"));
         Assert.Contains(events, e => e.StartsWith("Executed:"));
     }
+}
+
+public class MockInputService : AiTest.Godot.Phases.IInputService
+{
+    private readonly Func<string, bool> _handler;
+
+    public MockInputService(Func<string, bool> handler)
+    {
+        _handler = handler;
+    }
+
+    public bool IsActionJustPressed(string action) => _handler(action);
 }

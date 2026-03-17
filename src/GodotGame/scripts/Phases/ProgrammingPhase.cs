@@ -5,15 +5,33 @@ using AiTest.Core.Engine;
 using AiTest.Core.Messages;
 using AiTest.Core.Entities;
 
+public interface IInputService
+{
+    bool IsActionJustPressed(string action);
+}
+
+public class GodotInputService : IInputService
+{
+    public bool IsActionJustPressed(string action) => Input.IsActionJustPressed(action);
+}
+
 public class ProgrammingPhase : IGamePhase
 {
     private GameRunner? _runner;
     private IMessageDispatcher? _dispatcher;
     private Action<GamePhaseType>? _onPhaseComplete;
+    private IInputService _inputService;
 
     public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
     public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
     public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
+
+    public ProgrammingPhase() : this(new GodotInputService()) { }
+
+    public ProgrammingPhase(IInputService inputService)
+    {
+        _inputService = inputService;
+    }
 
     public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
     {
@@ -40,14 +58,14 @@ public class ProgrammingPhase : IGamePhase
         for (int i = 1; i <= 9; i++)
         {
             string action = $"ui_{i}";
-            if (Input.IsActionJustPressed(action))
+            if (_inputService.IsActionJustPressed(action))
             {
                 SelectCard(i - 1);
                 return;
             }
         }
 
-        if (Input.IsActionJustPressed("ui_accept"))
+        if (_inputService.IsActionJustPressed("ui_accept"))
         {
             ConfirmPlayer();
         }
@@ -92,19 +110,6 @@ public class ProgrammingPhase : IGamePhase
             _runner.Engine.State.CurrentRegister = 0;
             _onPhaseComplete?.Invoke(GamePhaseType.Execution);
         }
-    }
-
-    public void SimulateKeyPress(int keyNumber)
-    {
-        if (keyNumber >= 1 && keyNumber <= 9)
-        {
-            SelectCard(keyNumber - 1);
-        }
-    }
-
-    public void SimulateConfirm()
-    {
-        ConfirmPlayer();
     }
 
     public void OnExit()

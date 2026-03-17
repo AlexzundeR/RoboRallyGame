@@ -9,12 +9,20 @@ public class ExecutionPhase : IGamePhase
     private GameRunner? _runner;
     private IMessageDispatcher? _dispatcher;
     private Action<GamePhaseType>? _onPhaseComplete;
+    private IInputService _inputService;
     private bool _registerExecuted;
 
     public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
     public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
     public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
     public int CurrentPriority => _runner?.Engine.State.Players[CurrentPlayerIndex].Registers[CurrentRegister]?.Priority ?? 0;
+
+    public ExecutionPhase() : this(new GodotInputService()) { }
+
+    public ExecutionPhase(IInputService inputService)
+    {
+        _inputService = inputService;
+    }
 
     public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
     {
@@ -43,18 +51,13 @@ public class ExecutionPhase : IGamePhase
     {
         if (_runner == null || _dispatcher == null) return;
 
-        if (Input.IsActionJustPressed("ui_accept") || Input.IsActionJustPressed("ui_execute"))
+        if (_inputService.IsActionJustPressed("ui_accept") || _inputService.IsActionJustPressed("ui_execute"))
         {
             ExecuteCurrentRegister();
         }
     }
 
     public void ExecuteRegister()
-    {
-        ExecuteCurrentRegister();
-    }
-
-    public void SimulateExecute()
     {
         ExecuteCurrentRegister();
     }
