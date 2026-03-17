@@ -23,7 +23,7 @@ window/stretch/mode="canvas_items"
 
 [dotnet]
 
-project/assembly_name="AiTest RoboRally"
+project/assembly_name="AiTest.Godot"
 
 [input]
 
