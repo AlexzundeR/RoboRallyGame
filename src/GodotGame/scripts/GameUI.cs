@@ -38,11 +38,6 @@ public partial class GameUI : CanvasLayer
 
 	public override void _Ready()
 	{
-		if (_roundLabel == null)
-		{
-			CreateUI();
-		}
-		
 		if (_infoButton != null)
 			_infoButton.Pressed += OnInfoPressed;
 
