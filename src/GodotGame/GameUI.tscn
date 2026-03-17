@@ -9,11 +9,11 @@ script = ExtResource("1")
 offset_left = 10.0
 offset_top = 10.0
 offset_right = -10.0
-offset_bottom = 70.0
+offset_bottom = 75.0
 
 [node name="HBox" type="HBoxContainer" parent="TopPanel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 30
 
 [node name="LeftPanel" type="VBoxContainer" parent="TopPanel/HBox"]
 layout_mode = 2
@@ -21,7 +21,7 @@ theme_override_constants/separation = 2
 
 [node name="Title" type="Label" parent="TopPanel/HBox/LeftPanel"]
 layout_mode = 2
-text = "ROBO RALLY"
+text = "🤖 ROBO RALLY"
 horizontal_alignment = 1
 
 [node name="RoundLabel" type="Label" parent="TopPanel/HBox/LeftPanel"]
@@ -54,81 +54,97 @@ text = "Press 1-9 to select"
 
 [node name="InfoButton" type="Button" parent="TopPanel/HBox"]
 layout_mode = 2
-text = "Info"
+text = "ℹ️ Info"
 
 [node name="BottomPanel" type="PanelContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 10.0
-offset_top = -140.0
+offset_top = -160.0
 offset_right = -10.0
 offset_bottom = -10.0
 
 [node name="HBox" type="HBoxContainer" parent="BottomPanel"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 40
 
 [node name="Player1Panel" type="VBoxContainer" parent="BottomPanel/HBox"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 
 [node name="P1Header" type="Label" parent="BottomPanel/HBox/Player1Panel"]
 layout_mode = 2
-text = "PLAYER 1"
+text = "🔵 PLAYER 1"
+horizontal_alignment = 1
 
 [node name="P1Hand" type="Label" parent="BottomPanel/HBox/Player1Panel"]
 layout_mode = 2
 text = "Hand: [1][2][3][4][5][6][7][8][9]"
+horizontal_alignment = 1
 
 [node name="P1Registers" type="Label" parent="BottomPanel/HBox/Player1Panel"]
 layout_mode = 2
 text = "Regs: [---][---][---][---][---]"
+horizontal_alignment = 1
 
 [node name="P1Status" type="Label" parent="BottomPanel/HBox/Player1Panel"]
 layout_mode = 2
-text = "(0,0)  0"
+text = "(0,0) ⬆ ❤️ 0"
+horizontal_alignment = 1
 
 [node name="Player2Panel" type="VBoxContainer" parent="BottomPanel/HBox"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 
 [node name="P2Header" type="Label" parent="BottomPanel/HBox/Player2Panel"]
 layout_mode = 2
-text = "PLAYER 2"
+text = "🔴 PLAYER 2"
+horizontal_alignment = 1
 
 [node name="P2Hand" type="Label" parent="BottomPanel/HBox/Player2Panel"]
 layout_mode = 2
 text = "Hand: [1][2][3][4][5][6][7][8][9]"
+horizontal_alignment = 1
 
 [node name="P2Registers" type="Label" parent="BottomPanel/HBox/Player2Panel"]
 layout_mode = 2
 text = "Regs: [---][---][---][---][---]"
+horizontal_alignment = 1
 
 [node name="P2Status" type="Label" parent="BottomPanel/HBox/Player2Panel"]
 layout_mode = 2
-text = "(0,0)  0"
+text = "(0,0) ⬆ ❤️ 0"
+horizontal_alignment = 1
 
 [node name="StatusModal" type="PanelContainer" parent="."]
 visible = false
-offset_left = 200.0
-offset_top = 100.0
-offset_right = -200.0
-offset_bottom = -100.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
 
 [node name="VBox" type="VBoxContainer" parent="StatusModal"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 15
 
 [node name="Title" type="Label" parent="StatusModal/VBox"]
 layout_mode = 2
-text = "GAME INFO"
+text = "📋 GAME INFO"
 horizontal_alignment = 1
 
 [node name="CloseButton" type="Button" parent="StatusModal/VBox"]
 layout_mode = 2
-text = "Close"
+text = "❌ Close"
 
 [node name="ControlsLabel" type="Label" parent="StatusModal/VBox"]
 layout_mode = 2
-text = "CONTROLS:
+text = "🎮 CONTROLS
 
 1-9: Select card for register
 SPACE: Confirm / Execute
