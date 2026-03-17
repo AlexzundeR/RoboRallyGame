@@ -19,11 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\AiTest.Core\AiTest.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Phases/**/*.cs" />
+    <ProjectReference Include="..\..\src\AiTest.Core\AiTest.Core.csproj" />
   </ItemGroup>
 
 </Project>

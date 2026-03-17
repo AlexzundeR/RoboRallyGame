@@ -29,8 +29,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\GodotGame\AiTest.Godot.csproj" />
-    <ProjectReference Include="..\src\AiTest.Core\AiTest.Core.csproj" />
+    <ProjectReference Include="..\..\src\GodotGame\AiTest.Godot.csproj" />
+    <ProjectReference Include="..\..\src\AiTest.Core\AiTest.Core.csproj" />
   </ItemGroup>
 
 </Project>
