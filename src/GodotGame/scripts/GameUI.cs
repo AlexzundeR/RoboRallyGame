@@ -57,7 +57,8 @@ namespace AiTest.Godot;
 			_p2Status = GetNode<Label>("BottomPanel/HBox/Player2Panel/P2Status");
 
 			GD.Print("[GameUI] Labels found: round=" + (_roundLabel != null) + 
-				", p1Hand=" + (_p1Hand != null) + ", p2Hand=" + (_p2Hand != null));
+				", p1Hand=" + (_p1Hand != null) + ", p2Hand=" + (_p2Hand != null) +
+				", closeBtn=" + (_closeButton != null) + ", modal=" + (_statusModal != null));
 
 			if (_infoButton != null)
 				_infoButton.Pressed += OnInfoPressed;
