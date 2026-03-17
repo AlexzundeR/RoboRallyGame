@@ -114,8 +114,8 @@ public partial class GameManager : Node2D
 		_robotRenderer = new RobotRenderer { Name = "RobotLayer" };
 		AddChild(_robotRenderer);
 
-		_gameUI = new GameUI { Name = "GameUI" };
-		GetNode<CanvasLayer>("UILayer").AddChild(_gameUI);
+		_gameUI = GetNodeOrNull<GameUI>("UILayer/GameUI");
+		GD.Print("[GameManager] GameUI loaded from scene: " + (_gameUI != null));
 	}
 
 	private void CreateTestLevel()
@@ -136,7 +136,13 @@ public partial class GameManager : Node2D
 
 	private void HandleInput()
 	{
-		_currentPhase?.HandleInput();
+		if (_currentPhase == null)
+		{
+			GD.Print("[GameManager] HandleInput: _currentPhase is null, returning");
+			return;
+		}
+		
+		_currentPhase.HandleInput();
 
 		if (Input.IsActionJustPressed("ui_cancel"))
 		{
@@ -146,7 +152,11 @@ public partial class GameManager : Node2D
 
 	private void UpdateUI()
 	{
-		if (_runner == null || _gameUI == null) return;
+		if (_runner == null || _gameUI == null) 
+		{
+			GD.Print($"[GameManager] UpdateUI: runner={_runner != null}, gameUI={_gameUI != null}, returning");
+			return;
+		}
 
 		_gameUI.UpdateRound(_roundNumber);
 		_gameUI.UpdatePhase(_phaseType == GamePhaseType.Programming);

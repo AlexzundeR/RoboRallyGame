@@ -53,9 +53,17 @@ public class ProgrammingPhase : IGamePhase
 
 	public void HandleInput()
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_runner == null || _dispatcher == null) 
+		{
+			GD.Print("[ProgrammingPhase] HandleInput: runner or dispatcher is null, returning");
+			return;
+		}
 
-		if (CurrentRegister >= 5) return;
+		if (CurrentRegister >= 5) 
+		{
+			GD.Print("[ProgrammingPhase] HandleInput: all registers filled, returning");
+			return;
+		}
 
 		for (int i = 1; i <= 9; i++)
 		{

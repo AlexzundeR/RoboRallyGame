@@ -49,7 +49,11 @@ public class ExecutionPhase : IGamePhase
 
     public void HandleInput()
     {
-        if (_runner == null || _dispatcher == null) return;
+        if (_runner == null || _dispatcher == null) 
+        {
+            GD.Print("[ExecutionPhase] HandleInput: runner or dispatcher is null, returning");
+            return;
+        }
 
         if (_inputService.IsActionJustPressed("ui_accept") || _inputService.IsActionJustPressed("ui_execute"))
         {
@@ -64,7 +68,11 @@ public class ExecutionPhase : IGamePhase
 
     private void ExecuteCurrentRegister()
     {
-        if (_runner == null || _dispatcher == null) return;
+        if (_runner == null || _dispatcher == null) 
+        {
+            GD.Print("[ExecutionPhase] ExecuteCurrentRegister: runner or dispatcher is null, returning");
+            return;
+        }
 
         var state = _runner.Engine.State;
 
