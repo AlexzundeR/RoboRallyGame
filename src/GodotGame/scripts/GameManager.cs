@@ -56,6 +56,12 @@ public partial class GameManager : Node2D
 		_dispatcher.Subscribe<PlayerConfirmedEvent>(OnPlayerConfirmed);
 		_dispatcher.Subscribe<RegisterExecutedEvent>(OnRegisterExecuted);
 		_dispatcher.Subscribe<PhaseChangedEvent>(OnPhaseChanged);
+		_dispatcher.Subscribe<RegisterSelectionChangedEvent>(OnRegisterSelectionChanged);
+	}
+
+	private void OnRegisterSelectionChanged(RegisterSelectionChangedEvent e)
+	{
+		UpdateUI();
 	}
 
 	private void OnCardSelected(CardSelectedEvent e)
@@ -170,6 +176,7 @@ public partial class GameManager : Node2D
 		{
 			_gameUI.UpdateRegisterPrompt(
 				_programmingPhase.CurrentRegister,
+				_programmingPhase.SelectedRegister,
 				_programmingPhase.CurrentPlayerName
 			);
 		}
@@ -186,12 +193,17 @@ public partial class GameManager : Node2D
 			? _programmingPhase?.CurrentPlayerIndex ?? 0
 			: _executionPhase?.CurrentPlayerIndex ?? 0;
 			
+		int selectedReg = _phaseType == GamePhaseType.Programming
+			? (_programmingPhase?.SelectedRegister ?? 0)
+			: 0;
+			
 		_gameUI.UpdatePlayerInfo(p1, p2, 
 			_phaseType == GamePhaseType.Programming 
 				? (_programmingPhase?.CurrentRegister ?? 0)
 				: (_executionPhase?.CurrentRegister ?? 0),
 			_phaseType == GamePhaseType.Programming,
-			currentPlayerIdx
+			currentPlayerIdx,
+			selectedReg
 		);
 	}
 }

@@ -7,7 +7,8 @@ namespace AiTest.Godot;
 public partial class MapRenderer : Node2D
 {
     private readonly Dictionary<Position, ColorRect> _tileVisuals = new();
-    private const int TileSize = 64;
+    private const int TileSize = 48;
+    private const int MapOffsetY = 120;
 
     public void RenderMap(GameMap map)
     {
@@ -44,33 +45,33 @@ public partial class MapRenderer : Node2D
         };
     }
 
-    private void CreateTileVisual(int x, int y, Color color)
-    {
-        var tile = new ColorRect
-        {
-            Position = new Vector2(x * TileSize, y * TileSize),
-            Size = new Vector2(TileSize, TileSize),
-            Color = color
-        };
+	private void CreateTileVisual(int x, int y, Color color)
+	{
+		var tile = new ColorRect
+		{
+			Position = new Vector2(x * TileSize, y * TileSize + MapOffsetY),
+			Size = new Vector2(TileSize, TileSize),
+			Color = color
+		};
 
-        var border = new ColorRect
-        {
-            Position = new Vector2(x * TileSize + 1, y * TileSize + 1),
-            Size = new Vector2(TileSize - 2, TileSize - 2),
-            Color = new Color(color.R + 0.1f, color.G + 0.1f, color.B + 0.1f)
-        };
+		var border = new ColorRect
+		{
+			Position = new Vector2(x * TileSize + 1, y * TileSize + MapOffsetY + 1),
+			Size = new Vector2(TileSize - 2, TileSize - 2),
+			Color = new Color(color.R + 0.1f, color.G + 0.1f, color.B + 0.1f)
+		};
 
-        AddChild(tile);
-        AddChild(border);
-    }
+		AddChild(tile);
+		AddChild(border);
+	}
 
-    private void CreateCheckpointMarker(int x, int y, int number)
-    {
-        var label = new Label
-        {
-            Text = "★" + number,
-            Position = new Vector2(x * TileSize + 16, y * TileSize + 20)
-        };
+	private void CreateCheckpointMarker(int x, int y, int number)
+	{
+		var label = new Label
+		{
+			Text = "★" + number,
+			Position = new Vector2(x * TileSize + 16, y * TileSize + MapOffsetY + 20)
+		};
         label.AddThemeFontSizeOverride("font_size", 24);
         label.AddThemeColorOverride("font_color", Colors.Gold);
         AddChild(label);

@@ -9,6 +9,8 @@ public enum GamePhaseType
 
 public sealed record CardSelectedEvent(int PlayerIndex, int CardIndex, int Register) : IEvent;
 
+public sealed record RegisterSelectionChangedEvent(int SelectedRegister) : IEvent;
+
 public sealed record PlayerConfirmedEvent(int PlayerIndex) : IEvent;
 
 public sealed record RegisterExecutedEvent(int Register, int PlayerIndex) : IEvent;

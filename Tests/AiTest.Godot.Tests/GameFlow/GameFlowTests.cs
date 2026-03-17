@@ -315,13 +315,13 @@ public class GameFlowTests
 
         for (int reg = 0; reg < 5; reg++)
         {
-            programmingPhase.SelectCard(reg);
+            programmingPhase.SelectCard(reg, reg);
         }
         programmingPhase.ConfirmPlayer();
 
         for (int reg = 0; reg < 5; reg++)
         {
-            programmingPhase.SelectCard(reg);
+            programmingPhase.SelectCard(reg, reg);
         }
         programmingPhase.ConfirmPlayer();
 

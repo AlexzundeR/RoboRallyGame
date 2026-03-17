@@ -90,16 +90,16 @@ namespace AiTest.Godot;
 		_phaseLabel.AddThemeColorOverride("font_color", programming ? Colors.Yellow : Colors.Green);
 	}
 
-	public void UpdateRegisterPrompt(int currentRegister, string playerName)
+	public void UpdateRegisterPrompt(int currentRegister, int selectedRegister, string playerName)
 	{
 		if (_registerLabel == null) return;
 
 		var nextReg = currentRegister < 5 ? currentRegister + 1 : 5;
-		_registerLabel.Text = $"{playerName}: Select register {nextReg}/5";
+		_registerLabel.Text = $"{playerName}: Register [{selectedRegister + 1}]/5";
 		
 		if (_actionPrompt != null)
 		{
-			_actionPrompt.Text = $"🎯 {playerName.ToUpper()}: PRESS KEY 1-9 FOR REGISTER {nextReg}";
+			_actionPrompt.Text = $"🎯 {playerName.ToUpper()}: ←→ SELECT REGISTER | 1-9 SELECT CARD";
 		}
 	}
 
@@ -115,19 +115,19 @@ namespace AiTest.Godot;
 		}
 	}
 
-	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex)
+	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
 	{
 		if (_p1Hand != null)
 			_p1Hand.Text = $"Hand: {FormatHand(p1, currentPlayerIndex == 0 && programming)}";
 		if (_p1Registers != null)
-			_p1Registers.Text = $"Regs: {FormatRegisters(p1, currentRegister, programming, currentPlayerIndex == 0)}";
+			_p1Registers.Text = $"Regs: {FormatRegisters(p1, currentRegister, programming, currentPlayerIndex == 0, selectedRegister)}";
 		if (_p1Status != null)
 			_p1Status.Text = FormatPlayerStatus(p1);
 
 		if (_p2Hand != null)
 			_p2Hand.Text = $"Hand: {FormatHand(p2, currentPlayerIndex == 1 && programming)}";
 		if (_p2Registers != null)
-			_p2Registers.Text = $"Regs: {FormatRegisters(p2, currentRegister, programming, currentPlayerIndex == 1)}";
+			_p2Registers.Text = $"Regs: {FormatRegisters(p2, currentRegister, programming, currentPlayerIndex == 1, selectedRegister)}";
 		if (_p2Status != null)
 			_p2Status.Text = FormatPlayerStatus(p2);
 	}
@@ -140,8 +140,9 @@ namespace AiTest.Godot;
 			if (i < player.Hand.Count)
 			{
 				var symbol = GetCardSymbol(player.Hand[i]);
+				var priority = player.Hand[i].Priority;
 				var prefix = isCurrentPlayer ? $"[{i + 1}:" : "[";
-				cards.Add($"{prefix}{symbol}]");
+				cards.Add($"{prefix}{priority}:{symbol}]");
 			}
 			else
 			{
@@ -151,7 +152,7 @@ namespace AiTest.Godot;
 		return string.Join("", cards);
 	}
 
-	private string FormatRegisters(Player player, int currentRegister, bool programming, bool isCurrentPlayer)
+	private string FormatRegisters(Player player, int currentRegister, bool programming, bool isCurrentPlayer, int selectedRegister = 0)
 	{
 		var registers = new List<string>();
 		for (int i = 0; i < 5; i++)
@@ -166,14 +167,16 @@ namespace AiTest.Godot;
 					prefix = "▶";
 					suffix = "◀";
 				}
-				else if (programming && i == currentRegister)
+				else if (programming && i == selectedRegister)
 				{
 					prefix = "▼";
+					suffix = "◀";
 				}
 			}
 
 			var card = player.GetRegister(i);
-			registers.Add($"{prefix}{(card == null ? "---" : GetCardSymbol(card))}{suffix}");
+			var cardStr = card == null ? "---" : $"{card.Priority}:{GetCardSymbol(card)}";
+			registers.Add($"{prefix}{cardStr}{suffix}");
 		}
 		return $"[{string.Join("][", registers)}]";
 	}

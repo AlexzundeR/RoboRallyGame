@@ -1,9 +1,30 @@
 namespace AiTest.Godot.Tests.Phases;
 
 using AiTest.Core.Engine;
+using AiTest.Core.Entities;
 using AiTest.Core.Messages;
 using AiTest.Godot.Phases;
 using Xunit;
+
+public class MockInputService : IInputService
+{
+    private readonly Dictionary<string, bool> _actions = new();
+
+    public void SetAction(string action, bool pressed)
+    {
+        _actions[action] = pressed;
+    }
+
+    public bool IsActionJustPressed(string action)
+    {
+        if (_actions.TryGetValue(action, out var pressed) && pressed)
+        {
+            _actions[action] = false;
+            return true;
+        }
+        return false;
+    }
+}
 
 public class ProgrammingPhaseTests
 {
@@ -49,6 +70,12 @@ public class ProgrammingPhaseTests
     }
 
     [Fact]
+    public void SelectedRegister_ShouldReturnZeroByDefault()
+    {
+        Assert.Equal(0, _phase.SelectedRegister);
+    }
+
+    [Fact]
     public void OnEnter_ShouldNotThrow()
     {
         _phase.OnEnter();
@@ -64,5 +91,47 @@ public class ProgrammingPhaseTests
     public void Update_ShouldNotThrow()
     {
         _phase.Update(0.016);
+    }
+
+    [Fact]
+    public void SelectCard_ShouldPlaceCardInSelectedRegister()
+    {
+        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
+        var initialHandCount = player.Hand.Count;
+        var card = new MoveCard { Priority = 999, Spaces = 1 };
+        player.Hand.Add(card);
+        
+        _phase.SelectCard(initialHandCount, 2);
+        
+        Assert.NotNull(player.GetRegister(2));
+        Assert.Same(card, player.GetRegister(2));
+    }
+
+    [Fact]
+    public void SelectCard_ShouldAdvanceSelectedRegister()
+    {
+        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
+        var initialHandCount = player.Hand.Count;
+        player.Hand.Add(new MoveCard { Priority = 999, Spaces = 1 });
+        
+        Assert.Equal(0, _phase.SelectedRegister);
+        _phase.SelectCard(initialHandCount, 0);
+        
+        Assert.Equal(1, _phase.SelectedRegister);
+    }
+
+    [Fact]
+    public void ConfirmPlayer_ShouldResetSelectedRegister()
+    {
+        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
+        var initialHandCount = player.Hand.Count;
+        player.Hand.Add(new MoveCard { Priority = 999, Spaces = 1 });
+        
+        _phase.SelectCard(initialHandCount, 3);
+        Assert.Equal(1, _phase.SelectedRegister);
+        
+        _phase.ConfirmPlayer();
+        
+        Assert.Equal(0, _phase.SelectedRegister);
     }
 }

@@ -180,6 +180,19 @@ public class MessageDispatcherTests
     }
 
     [Fact]
+    public void Publish_RegisterSelectionChangedEvent_ShouldNotifySubscriber()
+    {
+        var dispatcher = new MessageDispatcher();
+        var events = new List<RegisterSelectionChangedEvent>();
+
+        dispatcher.Subscribe<RegisterSelectionChangedEvent>(e => events.Add(e));
+        dispatcher.Publish(new RegisterSelectionChangedEvent(2));
+
+        Assert.Single(events);
+        Assert.Equal(2, events[0].SelectedRegister);
+    }
+
+    [Fact]
     public void Unregister_ShouldStopExecutingHandler()
     {
         var dispatcher = new MessageDispatcher();
