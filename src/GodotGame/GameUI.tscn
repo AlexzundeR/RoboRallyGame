@@ -44,6 +44,11 @@ text = "Priority: -"
 layout_mode = 2
 text = "Select register 1/5"
 
+[node name="ActionPrompt" type="Label" parent="TopPanel/HBox/MiddlePanel"]
+layout_mode = 2
+text = "🎯 SELECT CARD FOR REGISTER 1"
+horizontal_alignment = 1
+
 [node name="RightPanel" type="VBoxContainer" parent="TopPanel/HBox"]
 layout_mode = 2
 theme_override_constants/separation = 4

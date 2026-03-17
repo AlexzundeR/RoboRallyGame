@@ -11,6 +11,7 @@ namespace AiTest.Godot;
 		private Label? _phaseLabel;
 		private Label? _priorityLabel;
 		private Label? _registerLabel;
+		private Label? _actionPrompt;
 		private Label? _helpLabel;
 		private Button? _infoButton;
 		private PanelContainer? _statusModal;
@@ -42,6 +43,7 @@ namespace AiTest.Godot;
 			_phaseLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/PhaseLabel");
 			_priorityLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/PriorityLabel");
 			_registerLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/RegisterLabel");
+			_actionPrompt = GetNode<Label>("TopPanel/HBox/MiddlePanel/ActionPrompt");
 			_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
 			_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
 			_statusModal = GetNode<PanelContainer>("StatusModal");
@@ -94,6 +96,11 @@ namespace AiTest.Godot;
 
 		var nextReg = currentRegister < 5 ? currentRegister + 1 : 5;
 		_registerLabel.Text = $"{playerName}: Select register {nextReg}/5";
+		
+		if (_actionPrompt != null)
+		{
+			_actionPrompt.Text = $"🎯 {playerName.ToUpper()}: PRESS KEY 1-9 FOR REGISTER {nextReg}";
+		}
 	}
 
 	public void UpdateExecutionPrompt(int currentRegister, string playerName)
@@ -101,6 +108,11 @@ namespace AiTest.Godot;
 		if (_registerLabel == null) return;
 
 		_registerLabel.Text = $"{playerName}: Executing register {currentRegister + 1}/5";
+
+		if (_actionPrompt != null)
+		{
+			_actionPrompt.Text = $"⚡ {playerName.ToUpper()}: EXECUTING REGISTER {currentRegister + 1} (PRESS SPACE)";
+		}
 	}
 
 	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex)
@@ -168,9 +180,9 @@ namespace AiTest.Godot;
 
 	private string FormatPlayerStatus(Player player)
 	{
-		var dir = GetDirectionSymbol(player.Robot.Direction);
-		var status = player.Robot.IsAlive ? "❤️" : "💀";
-		return $"({player.Robot.Position.X},{player.Robot.Position.Y}) {dir} {player.Robot.Damage} {status}";
+		var hp = player.Robot.LifeTokens;
+		var damage = player.Robot.Damage;
+		return $"❤️ HP: {hp}/3 | 💥 DMG: {damage}";
 	}
 
 	private string GetCardSymbol(ProgramCard card)
