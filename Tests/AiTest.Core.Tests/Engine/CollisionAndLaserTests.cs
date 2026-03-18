@@ -10,8 +10,8 @@ public class CollisionResolverTests
     public void Resolve_TwoRobotsMovingToSameEmptySpace_HigherPriorityWins()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(7, 5), Direction = Direction.West };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(7, 5), Direction.West);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -44,8 +44,8 @@ public class CollisionResolverTests
     public void Resolve_PushRobot_MovesPushedRobot()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(6, 5), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -69,8 +69,8 @@ public class CollisionResolverTests
     {
         var map = new GameMap(10, 10);
         map.SetTile(7, 5, Tile.Wall);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(6, 5), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -93,8 +93,8 @@ public class CollisionResolverTests
     public void Resolve_HigherPriorityMovesFirst()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(7, 5), Direction = Direction.West };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(7, 5), Direction.West);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -128,7 +128,7 @@ public class CollisionResolverTests
     {
         var map = new GameMap(10, 10);
         map.SetTile(6, 5, Tile.Pit);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -151,8 +151,8 @@ public class CollisionResolverTests
     public void Resolve_ChainPush_TwoRobotsPushed()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(6, 5), Direction = Direction.East };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.East);
         
         var resolver = new CollisionResolver();
         resolver.AddIntent(new MoveIntent
@@ -179,7 +179,7 @@ public class LaserResolverTests
     public void PrepareShots_RobotWithLaser_ShouldCreateShot()
     {
         var map = new GameMap(10, 10);
-        var robot = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
+        var robot = new Robot(1, new Position(5, 5), Direction.East);
         var player = new Player { Id = 1, Robot = robot };
         
         var resolver = new LaserResolver();
@@ -193,8 +193,8 @@ public class LaserResolverTests
     public void PrepareShots_TwoRobots_ShouldCreateTwoShots()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(5, 7), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(5, 7), Direction.North);
         
         var resolver = new LaserResolver();
         var shots = resolver.PrepareShots(map, new List<Player> 
@@ -211,7 +211,7 @@ public class LaserResolverTests
     {
         var map = new GameMap(10, 10);
         map.SetTile(5, 5, Tile.LaserH);
-        var robot = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
+        var robot = new Robot(1, new Position(5, 5), Direction.East);
         
         var resolver = new LaserResolver();
         var shots = resolver.PrepareShots(map, new List<Player> { new Player { Id = 1, Robot = robot } });
@@ -225,8 +225,8 @@ public class LaserResolverTests
     public void Fire_ShotsHitTarget_ShouldDamage()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(7, 5), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(7, 5), Direction.North);
         
         var shots = new List<LaserShot>
         {
@@ -255,8 +255,8 @@ public class LaserResolverTests
     public void Fire_MultipleShotsSameTarget_AccumulatesDamage()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(7, 5), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(7, 5), Direction.North);
         
         var shots = new List<LaserShot>
         {
@@ -295,8 +295,8 @@ public class LaserResolverTests
     {
         var map = new GameMap(10, 10);
         map.SetTile(7, 5, Tile.Wall);
-        var robot1 = new Robot { Id = 1, Position = new Position(5, 5), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(8, 5), Direction = Direction.North };
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(8, 5), Direction.North);
         
         var shots = new List<LaserShot>
         {
@@ -330,7 +330,7 @@ public class LaserResolverTests
         var resolver = new LaserResolver();
         var shots = resolver.PrepareShots(map, new List<Player> 
         { 
-            new Player { Id = 1, Robot = new Robot { Id = 1, Position = start, Direction = Direction.East } }
+            new Player { Id = 1, Robot = new Robot(1, start, Direction.East) }
         });
         
         var path = shots[0].Path;
@@ -345,8 +345,8 @@ public class LaserResolverTests
     public void Priority_ByPosition_ShouldOrderByXY()
     {
         var map = new GameMap(10, 10);
-        var robot1 = new Robot { Id = 1, Position = new Position(1, 1), Direction = Direction.East };
-        var robot2 = new Robot { Id = 2, Position = new Position(5, 5), Direction = Direction.East };
+        var robot1 = new Robot(1, new Position(1, 1), Direction.East);
+        var robot2 = new Robot(2, new Position(5, 5), Direction.East);
         
         var resolver = new LaserResolver(LaserPriorityMode.ByPosition);
         var shots = resolver.PrepareShots(map, new List<Player> 
