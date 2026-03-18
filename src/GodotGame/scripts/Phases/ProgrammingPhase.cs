@@ -106,19 +106,7 @@ public class ProgrammingPhase : IGamePhase
 		if (cardIndex < player.Hand.Count && registerIndex < 5)
 		{
 			var card = player.Hand[cardIndex];
-			
-			//ToDo: прямой доступ к полям.Переделать на доменные методы
-			var cardInReg = player.Registers[registerIndex];
-			if (cardInReg == null){
-				player.Registers[registerIndex] = card;
-				player.Hand.RemoveAt(cardIndex);
-			}
-			else
-			{
-				player.Registers[registerIndex] = card;
-				player.Hand.RemoveAt(cardIndex);
-				player.Hand.Add(card);
-			}
+			player.AssignCardToRegister(card, cardIndex, registerIndex);
 			
 			_dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, registerIndex));
 			

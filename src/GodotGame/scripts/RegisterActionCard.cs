@@ -15,30 +15,6 @@ public partial class RegisterActionCard : PanelContainer
 		return CardState.Normal;
 	}
 
-	public record CardStyles(StyleBox BorderStyle, Color BackgroundColor);
-
-	public static class CardStyleFactory
-	{
-		private const string ThemeType = "Card";
-
-		public static CardStyles Evaluate(Theme theme, CardState state)
-		{
-			string styleName = state switch
-			{
-				CardState.Selected => "selected",
-				CardState.Fixed => "fixed",
-				_ => "normal"
-			};
-
-			return new CardStyles(
-				theme.GetStylebox(styleName, ThemeType),
-				state == CardState.Empty
-					? theme.GetColor("empty_bg", ThemeType)
-					: theme.GetColor("normal_bg", ThemeType)
-			);
-		}
-	}
-
 	[Export] public string CardSymbol { get; set; }
 	[Export] public int CardPriority { get; set; } = 100;
 	[Export] public int CardNumber { get; set; } = 1;
@@ -119,4 +95,27 @@ public partial class RegisterActionCard : PanelContainer
 		IsFixed = isFixed;
 	}
 
+	public record CardStyles(StyleBox BorderStyle, Color BackgroundColor);
+
+	public static class CardStyleFactory
+	{
+		private const string ThemeType = "Card";
+
+		public static CardStyles Evaluate(Theme theme, CardState state)
+		{
+			string styleName = state switch
+			{
+				CardState.Selected => "selected",
+				CardState.Fixed => "fixed",
+				_ => "normal"
+			};
+
+			return new CardStyles(
+				theme.GetStylebox(styleName, ThemeType),
+				state == CardState.Empty
+					? theme.GetColor("empty_bg", ThemeType)
+					: theme.GetColor("normal_bg", ThemeType)
+			);
+		}
+	}
 }

@@ -107,6 +107,19 @@ public sealed class Player
         return index >= 0 && index < 5 ? Registers[index] : null;
     }
 
+    public void AssignCardToRegister(ProgramCard card, int handIndex, int registerIndex)
+    {
+        if (handIndex < 0 || handIndex >= Hand.Count || registerIndex < 0 || registerIndex >= 5)
+            return;
+
+        var cardInReg = Registers[registerIndex];
+        Hand.RemoveAt(handIndex);
+        Registers[registerIndex] = card;
+
+        if (cardInReg != null)
+            Hand.Add(cardInReg);
+    }
+
     public void ClearRegisters()
     {
         for (int i = 0; i < 5; i++)
