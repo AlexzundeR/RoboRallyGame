@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://c62by46vqsb1"]
 
 [ext_resource type="Script" uid="uid://btmj7lv5ptusv" path="res://scripts/GameUI.cs" id="1"]
-[ext_resource type="PackedScene" uid="uid://b8k2ejdkiuv3e" path="res://RegisterActionCard.tscn" id="2_qate7"]
+[ext_resource type="PackedScene" uid="uid://player_panel_scene" path="res://PlayerPanel.tscn" id="2"]
 
 [node name="GameUI" type="CanvasLayer" unique_id=376498478]
 script = ExtResource("1")
-PlayerRegisterActionCard = ExtResource("2_qate7")
+PlayerPanelScene = ExtResource("2")
 
 [node name="TopPanel" type="PanelContainer" parent="." unique_id=1110038070]
 offset_left = 10.0
@@ -23,7 +23,7 @@ theme_override_constants/separation = 2
 
 [node name="Title" type="Label" parent="TopPanel/HBox/LeftPanel" unique_id=831051908]
 layout_mode = 2
-text = "🤖 ROBO RALLY"
+text = "ROBO RALLY"
 horizontal_alignment = 1
 
 [node name="RoundLabel" type="Label" parent="TopPanel/HBox/LeftPanel" unique_id=228149678]
@@ -48,7 +48,7 @@ text = "Select register 1/5"
 
 [node name="ActionPrompt" type="Label" parent="TopPanel/HBox/MiddlePanel" unique_id=995143825]
 layout_mode = 2
-text = "🎯 SELECT CARD FOR REGISTER 1"
+text = "SELECT CARD FOR REGISTER 1"
 horizontal_alignment = 1
 
 [node name="RightPanel" type="VBoxContainer" parent="TopPanel/HBox" unique_id=700530613]
@@ -61,7 +61,7 @@ text = "Press 1-9 to select"
 
 [node name="InfoButton" type="Button" parent="TopPanel/HBox" unique_id=945882652]
 layout_mode = 2
-text = "ℹ️ Info"
+text = "Info"
 
 [node name="BottomPanel" type="PanelContainer" parent="." unique_id=693954979]
 anchors_preset = 2
@@ -75,70 +75,6 @@ offset_bottom = -10.0
 [node name="HBox" type="HBoxContainer" parent="BottomPanel" unique_id=1588527403]
 layout_mode = 2
 theme_override_constants/separation = 40
-
-[node name="Player1Panel" type="VBoxContainer" parent="BottomPanel/HBox" unique_id=238842763]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="P1Header" type="Label" parent="BottomPanel/HBox/Player1Panel" unique_id=413895547]
-layout_mode = 2
-text = "🔵 PLAYER 1"
-horizontal_alignment = 1
-
-[node name="P1HandRow" type="HBoxContainer" parent="BottomPanel/HBox/Player1Panel" unique_id=1342026666]
-layout_mode = 2
-
-[node name="P1Hand" type="Label" parent="BottomPanel/HBox/Player1Panel/P1HandRow" unique_id=1011866506]
-layout_mode = 2
-text = "Hand: "
-horizontal_alignment = 1
-
-[node name="HandCardholder" type="HBoxContainer" parent="BottomPanel/HBox/Player1Panel/P1HandRow" unique_id=1826846990]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="P1RegistersRow" type="HBoxContainer" parent="BottomPanel/HBox/Player1Panel" unique_id=900829764]
-layout_mode = 2
-
-[node name="P1Registers" type="Label" parent="BottomPanel/HBox/Player1Panel/P1RegistersRow" unique_id=1705910988]
-layout_mode = 2
-text = "Registers: "
-horizontal_alignment = 1
-
-[node name="RegistersCardholder" type="HBoxContainer" parent="BottomPanel/HBox/Player1Panel/P1RegistersRow" unique_id=304691426]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="P1Status" type="Label" parent="BottomPanel/HBox/Player1Panel" unique_id=1583220731]
-layout_mode = 2
-text = "(0,0) ⬆ ❤️ 0"
-horizontal_alignment = 1
-
-[node name="Player2Panel" type="VBoxContainer" parent="BottomPanel/HBox" unique_id=1760076757]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="P2Header" type="Label" parent="BottomPanel/HBox/Player2Panel" unique_id=1522061759]
-layout_mode = 2
-text = "🔴 PLAYER 2"
-horizontal_alignment = 1
-
-[node name="P2Hand" type="Label" parent="BottomPanel/HBox/Player2Panel" unique_id=1296331241]
-layout_mode = 2
-text = "Hand: [1][2][3][4][5][6][7][8][9]"
-horizontal_alignment = 1
-
-[node name="P2Registers" type="Label" parent="BottomPanel/HBox/Player2Panel" unique_id=1123312453]
-layout_mode = 2
-text = "Regs: [---][---][---][---][---]"
-horizontal_alignment = 1
-
-[node name="P2Status" type="Label" parent="BottomPanel/HBox/Player2Panel" unique_id=134030038]
-layout_mode = 2
-text = "(0,0) ⬆ ❤️ 0"
-horizontal_alignment = 1
 
 [node name="StatusModal" type="PanelContainer" parent="." unique_id=38284601]
 visible = false
@@ -158,16 +94,16 @@ theme_override_constants/separation = 15
 
 [node name="Title" type="Label" parent="StatusModal/VBox" unique_id=1206824381]
 layout_mode = 2
-text = "📋 GAME INFO"
+text = "GAME INFO"
 horizontal_alignment = 1
 
 [node name="CloseButton" type="Button" parent="StatusModal/VBox" unique_id=1700129405]
 layout_mode = 2
-text = "❌ Close"
+text = "Close"
 
 [node name="ControlsLabel" type="Label" parent="StatusModal/VBox" unique_id=1171831665]
 layout_mode = 2
-text = "🎮 CONTROLS
+text = "CONTROLS
 
 1-9: Select card for register
 SPACE: Confirm / Execute

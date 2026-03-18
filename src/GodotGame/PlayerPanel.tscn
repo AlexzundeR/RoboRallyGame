@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://player_panel_scene"]
+
+[ext_resource type="Script" uid="uid://uf4egoiy42jw" path="res://scripts/UI/PlayerPanel.cs" id="1"]
+
+[node name="PlayerPanel" type="PanelContainer" unique_id=1]
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=8]
+layout_mode = 2
+
+[node name="Header" type="Label" parent="VBox" unique_id=2]
+layout_mode = 2
+text = "PLAYER"
+horizontal_alignment = 1
+
+[node name="HandRow" type="HBoxContainer" parent="VBox" unique_id=3]
+layout_mode = 2
+
+[node name="HandCardholder" type="HBoxContainer" parent="VBox/HandRow" unique_id=4]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="RegistersRow" type="HBoxContainer" parent="VBox" unique_id=5]
+layout_mode = 2
+
+[node name="RegistersCardholder" type="HBoxContainer" parent="VBox/RegistersRow" unique_id=6]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Status" type="Label" parent="VBox" unique_id=7]
+layout_mode = 2
+text = "HP: 0/3 | DMG: 0"
+horizontal_alignment = 1

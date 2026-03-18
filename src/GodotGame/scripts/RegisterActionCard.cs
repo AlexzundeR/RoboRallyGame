@@ -3,17 +3,7 @@ using System;
 
 public partial class RegisterActionCard : PanelContainer
 {
-	public enum CardState { Normal, Selected, Fixed, Empty }
-
-	public CardState CurrentState => EvaluateState();
-
-	private CardState EvaluateState()
-	{
-		if (CardSymbol == null) return CardState.Empty;
-		if (IsFixed) return CardState.Fixed;
-		if (IsSelected) return CardState.Selected;
-		return CardState.Normal;
-	}
+	public bool IsEmpty => CardSymbol == null;
 
 	[Export] public string CardSymbol { get; set; }
 	[Export] public int CardPriority { get; set; } = 100;
@@ -57,7 +47,7 @@ public partial class RegisterActionCard : PanelContainer
 	{
 		if (_numberLabel == null) return;
 
-		var styles = CardStyleFactory.Evaluate(CardTheme, CurrentState);
+		var styles = CardStyleFactory.Evaluate(CardTheme, IsEmpty, IsFixed, IsSelected);
 
 		_background.Color = styles.BackgroundColor;
 		_border.AddThemeStyleboxOverride("panel", styles.BorderStyle);
@@ -74,6 +64,10 @@ public partial class RegisterActionCard : PanelContainer
 
 	internal void SetCardData(string symbol, int priority, int number)
 	{
+		if (CardSymbol != null)
+		{
+			//GD.Print($"[Card] UpdateDisplay: state={IsSelected}, Symbol={CardSymbol}");
+		}
 		CardSymbol = symbol;
 		CardPriority = priority;
 		CardNumber = number;
@@ -88,11 +82,13 @@ public partial class RegisterActionCard : PanelContainer
 	internal void SetSelected(bool isSelected)
 	{
 		IsSelected = isSelected;
+		UpdateDisplay();
 	}
 
 	internal void SetFixed(bool isFixed)
 	{
 		IsFixed = isFixed;
+		UpdateDisplay();
 	}
 
 	public record CardStyles(StyleBox BorderStyle, Color BackgroundColor);
@@ -101,18 +97,19 @@ public partial class RegisterActionCard : PanelContainer
 	{
 		private const string ThemeType = "Card";
 
-		public static CardStyles Evaluate(Theme theme, CardState state)
+		public static CardStyles Evaluate(Theme theme, bool isEmpty, bool isFixed, bool isSelected)
 		{
-			string styleName = state switch
-			{
-				CardState.Selected => "selected",
-				CardState.Fixed => "fixed",
-				_ => "normal"
-			};
+			string styleName = "normal";
+			if (isFixed && isSelected)
+				styleName = "selected_fixed";
+			else if (isFixed)
+				styleName = "fixed";
+			else if (isSelected)
+				styleName = "selected";
 
 			return new CardStyles(
 				theme.GetStylebox(styleName, ThemeType),
-				state == CardState.Empty
+				isEmpty
 					? theme.GetColor("empty_bg", ThemeType)
 					: theme.GetColor("normal_bg", ThemeType)
 			);
