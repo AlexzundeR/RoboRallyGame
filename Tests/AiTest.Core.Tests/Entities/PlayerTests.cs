@@ -45,7 +45,10 @@ public class PlayerTests
         
         player.SetRegister(0, card);
         
-        Assert.Equal(card, player.GetRegister(0));
+        var registerCard = player.GetRegister(0);
+        Assert.NotNull(registerCard);
+        Assert.Equal(card, registerCard.Card);
+        Assert.Equal(-1, registerCard.HandIndex);
     }
 
     [Fact]
@@ -79,7 +82,10 @@ public class PlayerTests
         
         player.AssignCardToRegister(0, 0);
         
-        Assert.Equal(card, player.GetRegister(0));
+        var registerCard = player.GetRegister(0);
+        Assert.NotNull(registerCard);
+        Assert.Equal(card, registerCard.Card);
+        Assert.Equal(0, registerCard.HandIndex);
         Assert.Null(player.Hand[0]);
     }
 
@@ -95,7 +101,10 @@ public class PlayerTests
         
         player.AssignCardToRegister(0, 0);
         
-        Assert.Equal(card1, player.GetRegister(0));
+        var registerCard = player.GetRegister(0);
+        Assert.NotNull(registerCard);
+        Assert.Equal(card1, registerCard.Card);
+        Assert.Equal(0, registerCard.HandIndex);
         Assert.Equal(card2, player.Hand[0]);
     }
 
@@ -114,8 +123,12 @@ public class PlayerTests
         player.AssignCardToRegister(0, 0);
         player.AssignCardToRegister(1, 1);
         
-        Assert.Equal(card1, player.GetRegister(0));
-        Assert.Equal(card2, player.GetRegister(1));
+        Assert.NotNull(player.GetRegister(0));
+        Assert.NotNull(player.GetRegister(1));
+        Assert.Equal(card1, player.GetRegister(0)!.Card);
+        Assert.Equal(0, player.GetRegister(0)!.HandIndex);
+        Assert.Equal(card2, player.GetRegister(1)!.Card);
+        Assert.Equal(1, player.GetRegister(1)!.HandIndex);
         Assert.Null(player.Hand[0]);
         Assert.Null(player.Hand[1]);
         Assert.NotNull(player.Hand[2]);

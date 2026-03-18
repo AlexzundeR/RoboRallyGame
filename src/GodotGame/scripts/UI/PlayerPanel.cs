@@ -129,8 +129,9 @@ public partial class PlayerPanel : PanelContainer
 			}
 			else
 			{
-				var symbol = GetCardSymbol(registerCard);
-				card.SetCardData(symbol, registerCard.Priority, i + 1);
+				var symbol = GetCardSymbol(registerCard.Card);
+				int displayNumber = registerCard.HandIndex >= 0 ? registerCard.HandIndex + 1 : i + 1;
+				card.SetCardData(symbol, registerCard.Card.Priority, displayNumber);
 			}
 		}
 	}

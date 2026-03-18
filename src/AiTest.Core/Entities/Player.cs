@@ -3,12 +3,14 @@ namespace AiTest.Core.Entities;
 using AiTest.Core.Cards;
 using AiTest.Core.Upgrades;
 
+public sealed record RegisterCard(ProgramCard Card, int HandIndex);
+
 public sealed class Player
 {
     public int Id { get; init; }
     public string Name { get; init; } = "Player";
     public Robot Robot { get; init; } = new();
-    public ProgramCard?[] Registers { get; } = new ProgramCard?[5];
+    public RegisterCard?[] Registers { get; } = new RegisterCard?[5];
     public ProgramCard?[] Hand { get; } = new ProgramCard?[9];
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
@@ -35,11 +37,11 @@ public sealed class Player
 
     public void SetRegister(int index, ProgramCard? card)
     {
-        if (index >= 0 && index < 5)
-            Registers[index] = card;
+        if (index >= 0 && index < 5 && card != null)
+            Registers[index] = new RegisterCard(card, -1);
     }
 
-    public ProgramCard? GetRegister(int index)
+    public RegisterCard? GetRegister(int index)
     {
         return index >= 0 && index < 5 ? Registers[index] : null;
     }
@@ -57,9 +59,9 @@ public sealed class Player
         var card = Hand[handIndex];
         if (card == null) return;
 
-        var cardInReg = Registers[registerIndex];
-        Hand[handIndex] = cardInReg;
-        Registers[registerIndex] = card;
+        var registerCard = Registers[registerIndex];
+        Hand[handIndex] = registerCard?.Card;
+        Registers[registerIndex] = new RegisterCard(card, handIndex);
     }
 
     public void ClearRegisters()

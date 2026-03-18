@@ -103,8 +103,10 @@ public class ProgrammingPhaseTests
         
         _phase.SelectCard(0, 2);
         
-        Assert.NotNull(player.GetRegister(2));
-        Assert.Same(card, player.GetRegister(2));
+        var registerCard = player.GetRegister(2);
+        Assert.NotNull(registerCard);
+        Assert.Same(card, registerCard.Card);
+        Assert.Equal(0, registerCard.HandIndex);
         Assert.Equal(initialCount - 1, player.AvailableCardCount);
     }
 

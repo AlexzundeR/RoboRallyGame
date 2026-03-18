@@ -16,7 +16,7 @@ public class ExecutionPhase : IGamePhase
     public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
     public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
     public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
-    public int CurrentPriority => _runner?.Engine.State.Players[CurrentPlayerIndex].Registers[CurrentRegister]?.Priority ?? 0;
+    public int CurrentPriority => _runner?.Engine.State.Players[CurrentPlayerIndex].Registers[CurrentRegister]?.Card.Priority ?? 0;
 
     public ExecutionPhase() : this(new GodotInputService()) { }
 

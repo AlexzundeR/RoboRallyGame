@@ -207,7 +207,7 @@ public sealed class GameEngine : IGameEngine
             if (card == null)
                 continue;
 
-            if (card is TurnCard turnCard)
+            if (card.Card is TurnCard turnCard)
             {
                 if (turnCard.IsLeft)
                     player.Robot.RotateLeft();
@@ -218,14 +218,14 @@ public sealed class GameEngine : IGameEngine
                 continue;
             }
             
-            if (card is UTurnCard)
+            if (card.Card is UTurnCard)
             {
                 player.Robot.Rotate180();
                 cardExecutionStrategy.ExecuteRotation(player.Robot);
                 continue;
             }
 
-            if (card is BackUpCard)
+            if (card.Card is BackUpCard)
             {
                 var targetPos = player.Robot.Position.Move(player.Robot.Direction.TurnAround());
                 if (State.Map.IsInBounds(targetPos) && State.Map.GetTile(targetPos).Type != TileType.Wall)
@@ -236,7 +236,7 @@ public sealed class GameEngine : IGameEngine
                         From = player.Robot.Position,
                         To = targetPos,
                         Direction = player.Robot.Direction,
-                        Priority = card.Priority,
+                        Priority = card.Card.Priority,
                         RegisterIndex = registerIndex,
                         Type = MoveType.Normal
                     });
@@ -244,7 +244,7 @@ public sealed class GameEngine : IGameEngine
                 continue;
             }
 
-            if (card is MoveCard moveCard)
+            if (card.Card is MoveCard moveCard)
             {
                 var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) 
                     + cardExecutionStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
