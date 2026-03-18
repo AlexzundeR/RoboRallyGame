@@ -1,7 +1,5 @@
 namespace AiTest.Core.Entities;
 
-using AiTest.Core.Models;
-
 public enum RobotStatus
 {
     Active,

@@ -334,15 +334,44 @@ public abstract class UpgradeEffect
 ## Структура проекта
 
 ```
-AiTest/
-├── AiTest.Core.csproj    # Игровой движок (C# .NET 8)
-├── Tests/                 # Юнит-тесты
-├── GodotGame/           # Godot визуализация (4.6 Mono)
-│   ├── project.godot
-│   ├── AiTest RoboRally.csproj
-│   └── scripts/
-│       └── GameManager.cs
-└── .gitignore
+AiTest.Core/
+├── Cards/                   # Program cards (MoveCard, TurnCard, etc.)
+│   ├── ProgramCard.cs       # Abstract base class
+│   ├── MoveCard.cs
+│   ├── TurnCard.cs
+│   ├── UTurnCard.cs
+│   ├── BackUpCard.cs
+│   └── ProgramCardPlace.cs
+├── Entities/               # Game entities
+│   ├── Player.cs           # Player entity + RegisterIndex enum
+│   └── Robot.cs           # Robot entity + RobotStatus enum
+├── Models/                # Game models
+│   ├── Direction.cs
+│   ├── GameMap.cs
+│   ├── Position.cs
+│   └── Tile.cs
+├── Engine/                # Game logic
+│   ├── CollisionResolver.cs
+│   ├── GameActions.cs
+│   ├── GameEngine.cs
+│   ├── GameRunner.cs
+│   └── LaserResolver.cs
+├── Upgrades/              # Upgrade system
+│   ├── UpgradeEffects.cs
+│   └── UpgradeStrategies.cs
+├── Messages/               # Event messages
+├── Config/                 # Configuration
+├── GlobalUsings.cs
+└── AiTest.Core.csproj
+
+Tests/
+├── AiTest.Core.Tests/
+│   └── GlobalUsings.cs
+└── AiTest.Godot.Tests/
+
+GodotGame/                  # Godot visualization
+├── project.godot
+└── scripts/
 ```
 
 ## Сборка и проверка

@@ -1,8 +1,5 @@
 namespace AiTest.Core.Entities;
 
-using AiTest.Core.Models;
-using AiTest.Core.Upgrades;
-
 public enum RegisterIndex
 {
     One = 0,
@@ -12,72 +9,6 @@ public enum RegisterIndex
     Five = 4
 }
 
-public class ProgramCardPlace
-{
-    public required ProgramCard Card {get; init;}
-    public bool IsEmpty {get; init;}
-}
-
-public abstract class ProgramCard
-{
-    public int Priority { get; init; }
-    public abstract void Execute(Robot robot, GameMap map);
-}
-
-public sealed class MoveCard : ProgramCard
-{
-    public int Spaces { get; init; }
-
-    public override void Execute(Robot robot, GameMap map)
-    {
-        for (int i = 0; i < Spaces; i++)
-        {
-            var newPos = robot.Position.Move(robot.Direction);
-            if (map.IsInBounds(newPos) && map.GetTile(newPos).Type != TileType.Wall)
-            {
-                robot.Move(newPos);
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-}
-
-public sealed class TurnCard : ProgramCard
-{
-    public bool IsLeft { get; init; }
-
-    public override void Execute(Robot robot, GameMap map)
-    {
-        if (IsLeft)
-            robot.RotateLeft();
-        else
-            robot.RotateRight();
-    }
-}
-
-public sealed class UTurnCard : ProgramCard
-{
-    public override void Execute(Robot robot, GameMap map)
-    {
-        robot.Rotate180();
-    }
-}
-
-public sealed class BackUpCard : ProgramCard
-{
-    public override void Execute(Robot robot, GameMap map)
-    {
-        var newPos = robot.Position.Move(robot.Direction.TurnAround());
-        if (map.IsInBounds(newPos) && map.GetTile(newPos).Type != TileType.Wall)
-        {
-            robot.Move(newPos);
-        }
-    }
-}
-//ToDo: закрыть все мутирующие дейтсвия с свойствами, переделать на методы, особенно работу с массивами
 public sealed class Player
 {
     public int Id { get; init; }
@@ -131,7 +62,7 @@ public sealed class Player
 
     public void AddUpgrade(UpgradeEffect upgrade)
     {
-        if (upgrade.Type == AiTest.Core.Upgrades.UpgradeType.Permanent)
+        if (upgrade.Type == UpgradeType.Permanent)
             PermanentUpgrades.Add(upgrade);
         else
             TemporaryUpgrades.Add(upgrade);
