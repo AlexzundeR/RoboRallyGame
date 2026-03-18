@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
 

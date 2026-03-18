@@ -1,9 +1,10 @@
 namespace AiTest.Core.Tests.Upgrades;
 
-using AiTest.Core.Upgrades;
+using AiTest.Core.Cards;
+using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
-using AiTest.Core.Engine;
+using AiTest.Core.Upgrades;
 
 public class UpgradeSystemTests
 {
@@ -152,7 +153,7 @@ public class UpgradeSystemTests
     {
         var upgrade = new StandardUpgrades.DoubleBarrelLaser();
         var strategy = upgrade.GetLaserStrategy();
-        var robot = new Robot { Direction = Direction.North };
+        var robot = new Robot(Direction.North);
         
         var directions = strategy.GetFireDirections(robot, Direction.North).ToList();
         
@@ -224,7 +225,7 @@ public class UpgradeSystemTests
         };
         
         var composite = new CompositeLaserStrategy(strategies);
-        var robot = new Robot { Direction = Direction.North };
+        var robot = new Robot(Direction.North);
         
         var directions = composite.GetFireDirections(robot, Direction.North).ToList();
         var fireRear = composite.ShouldFireRearLaser(robot);
@@ -257,8 +258,8 @@ public class UpgradeSystemTests
         var player = engine.State.Players[0];
         player.AddUpgrade(new StandardUpgrades.PowerSlide());
         
-        player.Robot.Position = new Position(2, 2);
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetPosition(new Position(2, 2));
+        player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
         player.SetRegister(0, moveCard);
@@ -279,8 +280,8 @@ public class UpgradeSystemTests
         var player = engine.State.Players[0];
         player.AddUpgrade(new StandardUpgrades.Brakes());
         
-        player.Robot.Position = new Position(2, 2);
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetPosition(new Position(2, 2));
+        player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 3 };
         player.SetRegister(0, moveCard);
@@ -301,8 +302,8 @@ public class UpgradeSystemTests
         var player = engine.State.Players[0];
         player.AddUpgrade(new StandardUpgrades.HoverUnit());
         
-        player.Robot.Position = new Position(2, 2);
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetPosition(new Position(2, 2));
+        player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
         player.SetRegister(0, moveCard);
@@ -323,8 +324,8 @@ public class UpgradeSystemTests
         var player = engine.State.Players[0];
         player.AddUpgrade(new StandardUpgrades.HoverUnit());
         
-        player.Robot.Position = new Position(3, 2);
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetPosition(new Position(3, 2));
+        player.Robot.SetDirection(Direction.East);
         
         engine.ProcessBoardElements();
         

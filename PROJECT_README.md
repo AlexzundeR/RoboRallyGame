@@ -335,7 +335,7 @@ public abstract class UpgradeEffect
 
 ```
 AiTest.Core/
-├── Cards/                   # Program cards (MoveCard, TurnCard, etc.)
+├── Cards/                   # ProgramCard classes
 │   ├── ProgramCard.cs       # Abstract base class
 │   ├── MoveCard.cs
 │   ├── TurnCard.cs
@@ -343,8 +343,9 @@ AiTest.Core/
 │   ├── BackUpCard.cs
 │   └── ProgramCardPlace.cs
 ├── Entities/               # Game entities
-│   ├── Player.cs           # Player entity + RegisterIndex enum
-│   └── Robot.cs           # Robot entity + RobotStatus enum
+│   ├── Robot.cs            # Robot entity
+│   ├── RobotStatus.cs      # RobotStatus enum
+│   └── Player.cs          # Player entity
 ├── Models/                # Game models
 │   ├── Direction.cs
 │   ├── GameMap.cs
@@ -361,12 +362,10 @@ AiTest.Core/
 │   └── UpgradeStrategies.cs
 ├── Messages/               # Event messages
 ├── Config/                 # Configuration
-├── GlobalUsings.cs
 └── AiTest.Core.csproj
 
 Tests/
 ├── AiTest.Core.Tests/
-│   └── GlobalUsings.cs
 └── AiTest.Godot.Tests/
 
 GodotGame/                  # Godot visualization

@@ -1,5 +1,6 @@
 namespace AiTest.Core.Tests.Engine;
 
+using AiTest.Core.Cards;
 using AiTest.Core.Config;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
@@ -129,7 +130,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.Direction = Direction.North;
+        player.Robot.SetDirection(Direction.North);
         
         player.SetRegister(0, new TurnCard { Priority = 150, IsLeft = true });
 
@@ -167,7 +168,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.Damage = 5;
+        player.Robot.AddDamage(5);
 
         runner.Engine.NextRound();
 
@@ -182,7 +183,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.Damage = 9;
+        player.Robot.AddDamage(9);
 
         runner.Engine.NextRound();
 

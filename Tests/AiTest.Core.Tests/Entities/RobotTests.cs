@@ -211,12 +211,15 @@ public class RobotTests
     public void TakeDamage_WhenNoLifeTokens_ShouldBeDestroyed()
     {
         var robot = new Robot();
-        robot.AddDamage(9);
-        robot.AddDamage(1);
-        robot.AddDamage(1);
-        robot.AddDamage(1);
         
-        robot.AddDamage(1);
+        for (int i = 0; i < 3; i++)
+        {
+            robot.AddDamage(9);
+            robot.AddDamage(1);
+            robot.Reboot(new Position(0, 0));
+        }
+        
+        robot.AddDamage(9);
         
         Assert.Equal(RobotStatus.Destroyed, robot.Status);
     }

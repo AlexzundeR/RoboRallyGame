@@ -1,5 +1,6 @@
 namespace AiTest.Core.Upgrades;
 
+using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
 

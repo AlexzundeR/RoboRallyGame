@@ -1,12 +1,6 @@
 namespace AiTest.Core.Entities;
 
-public enum RobotStatus
-{
-    Active,
-    PowerDown,
-    Rebooting,
-    Destroyed
-}
+using AiTest.Core.Models;
 
 public sealed class Robot
 {
@@ -26,6 +20,11 @@ public sealed class Robot
     public bool NeedsReboot => Status == RobotStatus.Rebooting;
 
     public Robot() { }
+
+    public Robot(Direction direction)
+    {
+        Direction = direction;
+    }
 
     public Robot(Position position, Direction direction)
     {

@@ -1,5 +1,6 @@
 namespace AiTest.Core.Tests.Engine;
 
+using AiTest.Core.Cards;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;

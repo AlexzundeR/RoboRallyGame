@@ -1,5 +1,7 @@
 namespace AiTest.Core.Engine;
 
+using AiTest.Core.Entities;
+
 public enum ActionPhase
 {
     CardExecution,

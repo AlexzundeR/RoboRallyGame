@@ -1,13 +1,7 @@
 namespace AiTest.Core.Entities;
 
-public enum RegisterIndex
-{
-    One = 0,
-    Two = 1,
-    Three = 2,
-    Four = 3,
-    Five = 4
-}
+using AiTest.Core.Cards;
+using AiTest.Core.Upgrades;
 
 public sealed class Player
 {
