@@ -169,7 +169,7 @@ public sealed class GameEngine : IGameEngine
         var startTiles = FindStartTiles();
         if (startTiles.Count > player.Id - 1)
         {
-            player.Robot.Position = startTiles[player.Id - 1];
+            player.Robot.SetPosition(startTiles[player.Id - 1]);
         }
     }
 
@@ -406,14 +406,15 @@ public sealed class GameEngine : IGameEngine
 
     private void HandlePit(Player player)
     {
-        player.Robot.Status = RobotStatus.Rebooting;
+        player.Robot.LoseLifeToken();
     }
 
     private void HandleCheckpoint(Player player, int checkpointNum)
     {
         if (checkpointNum == player.Robot.CheckpointsReached + 1)
         {
-            player.Robot.CheckpointsReached = checkpointNum;
+            for (int i = 0; i < checkpointNum; i++)
+                player.Robot.AddCheckpoint();
         }
     }
 
@@ -436,7 +437,7 @@ public sealed class GameEngine : IGameEngine
                 var targetTile = State.Map.GetTile(newPos);
                 if (targetTile.Type != TileType.Wall && targetTile.Type != TileType.Pit)
                 {
-                    player.Robot.Position = newPos;
+                    player.Robot.Move(newPos);
                 }
                 else
                 {
@@ -467,7 +468,6 @@ public sealed class GameEngine : IGameEngine
             if (player.Robot.Status == RobotStatus.PowerDown)
             {
                 player.Robot.WakeUp();
-                player.Robot.Damage = 0;
             }
             player.ClearRegisters();
         }

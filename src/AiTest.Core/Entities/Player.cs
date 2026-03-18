@@ -81,8 +81,8 @@ public sealed class BackUpCard : ProgramCard
 public sealed class Player
 {
     public int Id { get; init; }
-    public string Name { get; set; } = "Player";
-    public Robot Robot { get; set; } = new();
+    public string Name { get; init; } = "Player";
+    public Robot Robot { get; init; } = new();
     public ProgramCard?[] Registers { get; } = new ProgramCard?[5];
     public List<ProgramCard> Hand { get; } = new();
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
@@ -126,8 +126,8 @@ public sealed class Player
             Registers[i] = null;
     }
 
-    public void AddEnergy(int amount) => Robot.Energy = Math.Min(Robot.Energy + amount, 10);
-    public void SpendEnergy(int amount) => Robot.Energy = Math.Max(Robot.Energy - amount, 0);
+    public void AddEnergy(int amount) => Robot.AddEnergy(amount);
+    public void SpendEnergy(int amount) => Robot.SpendEnergy(amount);
 
     public void AddUpgrade(UpgradeEffect upgrade)
     {

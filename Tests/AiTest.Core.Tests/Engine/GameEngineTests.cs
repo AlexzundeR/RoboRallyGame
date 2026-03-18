@@ -128,7 +128,7 @@ public class GameEngineTests
         engine.AddPlayer("Player1");
         
         var player = engine.State.Players[0];
-        player.Robot.Direction = Direction.North;
+        player.Robot.SetDirection(Direction.North);
         var turnCard = new TurnCard { Priority = 150, IsLeft = true };
         player.SetRegister(0, turnCard);
         
@@ -145,8 +145,8 @@ public class GameEngineTests
         engine.StartGame();
         
         var player = engine.State.Players[0];
-        player.Robot.Position = new Position(5, 5);
-        player.Robot.Direction = Direction.North;
+        player.Robot.SetPosition(new Position(5, 5));
+        player.Robot.SetDirection(Direction.North);
         var backUpCard = new BackUpCard { Priority = 500 };
         player.SetRegister(0, backUpCard);
         
@@ -162,8 +162,8 @@ public class GameEngineTests
         engine.State.Map.SetTile(3, 3, Tile.Gear(true));
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
-        player.Robot.Position = new Position(3, 3);
-        player.Robot.Direction = Direction.North;
+        player.Robot.SetPosition(new Position(3, 3));
+        player.Robot.SetDirection(Direction.North);
         
         engine.ProcessBoardElements();
         
@@ -176,7 +176,7 @@ public class GameEngineTests
         var engine = CreateEngine();
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
-        player.Robot.Position = new Position(5, 5);
+        player.Robot.SetPosition(new Position(5, 5));
         
         engine.ProcessBoardElements();
         
@@ -190,7 +190,7 @@ public class GameEngineTests
         engine.State.Map.SetTile(3, 3, Tile.Pit);
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
-        player.Robot.Position = new Position(3, 3);
+        player.Robot.SetPosition(new Position(3, 3));
         
         engine.ProcessBoardElements();
         
@@ -212,7 +212,7 @@ public class GameEngineTests
         var engine = CreateEngine();
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
-        player.Robot.CheckpointsReached = 4;
+        player.Robot.SetCheckpointsReached(4);
         
         Assert.True(engine.IsGameOver());
     }
@@ -223,7 +223,7 @@ public class GameEngineTests
         var engine = CreateEngine();
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
-        player.Robot.CheckpointsReached = 4;
+        player.Robot.SetCheckpointsReached(4);
         
         var winner = engine.GetWinner();
         
@@ -250,8 +250,8 @@ public class GameEngineTests
         engine.AddPlayer("Player1");
         
         var player = engine.State.Players[0];
-        player.Robot.Position = new Position(2, 2);
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetPosition(new Position(2, 2));
+        player.Robot.SetDirection(Direction.East);
         
         player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 3 });
         player.SetRegister(1, new TurnCard { Priority = 150, IsLeft = true });
@@ -265,7 +265,7 @@ public class GameEngineTests
         
         Assert.Equal(Direction.North, player.Robot.Direction);
         
-        player.Robot.Position = new Position(5, 5);
+        player.Robot.SetPosition(new Position(5, 5));
         engine.ProcessBoardElements();
         
         Assert.Equal(1, player.Robot.CheckpointsReached);
@@ -279,10 +279,10 @@ public class GameEngineTests
         var p1 = engine.State.Players[0];
         var p2 = engine.State.Players[1];
         
-        p1.Robot.Position = new Position(3, 1);
-        p1.Robot.Direction = Direction.East;
-        p2.Robot.Position = new Position(5, 1);
-        p2.Robot.Direction = Direction.West;
+        p1.Robot.SetPosition(new Position(3, 1));
+        p1.Robot.SetDirection(Direction.East);
+        p2.Robot.SetPosition(new Position(5, 1));
+        p2.Robot.SetDirection(Direction.West);
         
         p1.SetRegister(0, new MoveCard { Priority = 100, Spaces = 2 });
         p2.SetRegister(0, new MoveCard { Priority = 101, Spaces = 2 });
@@ -303,10 +303,10 @@ public class GameEngineTests
         var p1 = engine.State.Players[0];
         var p2 = engine.State.Players[1];
         
-        p1.Robot.Position = new Position(2, 2);
-        p1.Robot.Direction = Direction.East;
-        p2.Robot.Position = new Position(4, 2);
-        p2.Robot.Direction = Direction.North;
+        p1.Robot.SetPosition(new Position(2, 2));
+        p1.Robot.SetDirection(Direction.East);
+        p2.Robot.SetPosition(new Position(4, 2));
+        p2.Robot.SetDirection(Direction.North);
         
         engine.ExecuteRegister(0);
         
@@ -320,7 +320,7 @@ public class GameEngineTests
         engine.AddPlayer("Player1");
         
         var player = engine.State.Players[0];
-        player.Robot.CheckpointsReached = 4;
+        player.Robot.SetCheckpointsReached(4);
         
         Assert.True(engine.IsGameOver());
         Assert.Equal(player, engine.GetWinner());
@@ -332,7 +332,9 @@ public class GameEngineTests
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
         
-        var player = new Player { Id = 1, Robot = new Robot { Damage = 5 } };
+        var robot = new Robot { Id = 1 };
+        robot.AddDamage(5);
+        var player = new Player { Id = 1, Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
         
@@ -345,7 +347,9 @@ public class GameEngineTests
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
         
-        var player = new Player { Id = 1, Robot = new Robot { Damage = 9 } };
+        var robot = new Robot { Id = 1 };
+        robot.AddDamage(9);
+        var player = new Player { Id = 1, Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
         
@@ -358,7 +362,7 @@ public class GameEngineTests
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
         
-        var player = new Player { Id = 1, Robot = new Robot { Damage = 0 } };
+        var player = new Player { Id = 1 };
         
         dealer.Deal(new[] { player }, deck);
         

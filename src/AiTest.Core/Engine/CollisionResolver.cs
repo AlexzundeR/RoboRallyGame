@@ -71,7 +71,7 @@ public sealed class CollisionResolver
                 var tile = map.GetTile(intent.To);
                 if (tile.Type != TileType.Wall)
                 {
-                    intent.Robot.Position = intent.To;
+                    intent.Robot.Move(intent.To);
                     return CollisionResult.Success;
                 }
             }
@@ -96,7 +96,7 @@ public sealed class CollisionResolver
         
         if (pushResult == CollisionResult.Success)
         {
-            intent.Robot.Position = intent.To;
+            intent.Robot.Move(intent.To);
             return CollisionResult.Pushed;
         }
         

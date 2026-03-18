@@ -22,7 +22,8 @@ public class RobotTests
     [Fact]
     public void Move_ShouldUpdatePosition()
     {
-        var robot = new Robot { Position = new Position(5, 5) };
+        var robot = new Robot();
+        robot.SetPosition(new Position(5, 5));
         
         robot.Move(new Position(6, 5));
         
@@ -33,7 +34,8 @@ public class RobotTests
     [Fact]
     public void RotateLeft_ShouldTurn90DegreesLeft()
     {
-        var robot = new Robot { Direction = Direction.North };
+        var robot = new Robot();
+        robot.SetDirection(Direction.North);
         
         robot.RotateLeft();
         
@@ -43,7 +45,8 @@ public class RobotTests
     [Fact]
     public void RotateRight_ShouldTurn90DegreesRight()
     {
-        var robot = new Robot { Direction = Direction.North };
+        var robot = new Robot();
+        robot.SetDirection(Direction.North);
         
         robot.RotateRight();
         
@@ -53,7 +56,8 @@ public class RobotTests
     [Fact]
     public void Rotate180_ShouldTurnAround()
     {
-        var robot = new Robot { Direction = Direction.North };
+        var robot = new Robot();
+        robot.SetDirection(Direction.North);
         
         robot.Rotate180();
         
@@ -63,9 +67,10 @@ public class RobotTests
     [Fact]
     public void TakeDamage_LessThan10_ShouldIncreaseDamage()
     {
-        var robot = new Robot { Damage = 5 };
+        var robot = new Robot();
+        robot.AddDamage(5);
         
-        robot.TakeDamage(3);
+        robot.AddDamage(3);
         
         Assert.Equal(8, robot.Damage);
         Assert.Equal(RobotStatus.Active, robot.Status);
@@ -74,9 +79,10 @@ public class RobotTests
     [Fact]
     public void TakeDamage_10OrMore_ShouldTriggerReboot()
     {
-        var robot = new Robot { Damage = 8 };
+        var robot = new Robot();
+        robot.AddDamage(8);
         
-        robot.TakeDamage(2);
+        robot.AddDamage(2);
         
         Assert.Equal(0, robot.Damage);
         Assert.Equal(RobotStatus.Rebooting, robot.Status);
@@ -85,12 +91,11 @@ public class RobotTests
     [Fact]
     public void Reboot_ShouldResetState()
     {
-        var robot = new Robot 
-        { 
-            Damage = 5, 
-            Status = RobotStatus.Rebooting,
-            CheckpointsReached = 2 
-        };
+        var robot = new Robot();
+        robot.AddDamage(5);
+        robot.SetStatus(RobotStatus.Rebooting);
+        robot.AddCheckpoint();
+        robot.AddCheckpoint();
         
         robot.Reboot(new Position(1, 1));
         
@@ -114,7 +119,8 @@ public class RobotTests
     [Fact]
     public void WakeUp_ShouldSetStatusToActive()
     {
-        var robot = new Robot { Status = RobotStatus.PowerDown };
+        var robot = new Robot();
+        robot.SetStatus(RobotStatus.PowerDown);
         
         robot.WakeUp();
         
@@ -134,7 +140,8 @@ public class RobotTests
     [InlineData(9, 5)]
     public void LockedRegisters_ShouldReturnCorrectCount(int damage, int expected)
     {
-        var robot = new Robot { Damage = damage };
+        var robot = new Robot();
+        robot.AddDamage(damage);
         
         Assert.Equal(expected, robot.LockedRegisters);
     }
@@ -142,7 +149,8 @@ public class RobotTests
     [Fact]
     public void IsPowerDown_WhenPoweredDown_ShouldReturnTrue()
     {
-        var robot = new Robot { Status = RobotStatus.PowerDown };
+        var robot = new Robot();
+        robot.SetStatus(RobotStatus.PowerDown);
         
         Assert.True(robot.IsPowerDown);
     }
@@ -150,7 +158,8 @@ public class RobotTests
     [Fact]
     public void NeedsReboot_WhenRebooting_ShouldReturnTrue()
     {
-        var robot = new Robot { Status = RobotStatus.Rebooting };
+        var robot = new Robot();
+        robot.SetStatus(RobotStatus.Rebooting);
         
         Assert.True(robot.NeedsReboot);
     }
@@ -158,7 +167,7 @@ public class RobotTests
     [Fact]
     public void Reboot_ShouldAddTwoDamage()
     {
-        var robot = new Robot { Damage = 0 };
+        var robot = new Robot();
         
         robot.Reboot(new Position(0, 0));
         
@@ -168,7 +177,10 @@ public class RobotTests
     [Fact]
     public void Reboot_ShouldResetCheckpoints()
     {
-        var robot = new Robot { CheckpointsReached = 3 };
+        var robot = new Robot();
+        robot.AddCheckpoint();
+        robot.AddCheckpoint();
+        robot.AddCheckpoint();
         
         robot.Reboot(new Position(0, 0));
         
@@ -186,9 +198,10 @@ public class RobotTests
     [Fact]
     public void TakeDamage_WhenDestroyed_ShouldLoseLifeToken()
     {
-        var robot = new Robot { LifeTokens = 3, Damage = 9 };
+        var robot = new Robot();
+        robot.AddDamage(9);
         
-        robot.TakeDamage(1);
+        robot.AddDamage(1);
         
         Assert.Equal(2, robot.LifeTokens);
         Assert.Equal(RobotStatus.Rebooting, robot.Status);
@@ -197,9 +210,66 @@ public class RobotTests
     [Fact]
     public void TakeDamage_WhenNoLifeTokens_ShouldBeDestroyed()
     {
-        var robot = new Robot { LifeTokens = 0, Damage = 9 };
+        var robot = new Robot();
+        robot.AddDamage(9);
+        robot.AddDamage(1);
+        robot.AddDamage(1);
+        robot.AddDamage(1);
         
-        robot.TakeDamage(1);
+        robot.AddDamage(1);
+        
+        Assert.Equal(RobotStatus.Destroyed, robot.Status);
+    }
+
+    [Fact]
+    public void AddEnergy_ShouldNotExceedMax()
+    {
+        var robot = new Robot();
+        robot.AddEnergy(8);
+        
+        robot.AddEnergy(5);
+        
+        Assert.Equal(10, robot.Energy);
+    }
+
+    [Fact]
+    public void SpendEnergy_ShouldNotGoBelowZero()
+    {
+        var robot = new Robot();
+        robot.AddEnergy(2);
+        
+        robot.SpendEnergy(5);
+        
+        Assert.Equal(0, robot.Energy);
+    }
+
+    [Fact]
+    public void AddCheckpoint_ShouldIncrement()
+    {
+        var robot = new Robot();
+        
+        robot.AddCheckpoint();
+        robot.AddCheckpoint();
+        
+        Assert.Equal(2, robot.CheckpointsReached);
+    }
+
+    [Fact]
+    public void SetDirection_ShouldUpdateDirection()
+    {
+        var robot = new Robot();
+        
+        robot.SetDirection(Direction.South);
+        
+        Assert.Equal(Direction.South, robot.Direction);
+    }
+
+    [Fact]
+    public void SetStatus_ShouldUpdateStatus()
+    {
+        var robot = new Robot();
+        
+        robot.SetStatus(RobotStatus.Destroyed);
         
         Assert.Equal(RobotStatus.Destroyed, robot.Status);
     }

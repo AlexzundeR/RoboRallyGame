@@ -112,7 +112,9 @@ public class PlayerTests
     [Fact]
     public void AddEnergy_ShouldNotExceedMax()
     {
-        var player = new Player { Robot = new Robot { Energy = 8 } };
+        var robot = new Robot();
+        robot.AddEnergy(8);
+        var player = new Player { Robot = robot };
         
         player.AddEnergy(5);
         
@@ -122,7 +124,9 @@ public class PlayerTests
     [Fact]
     public void SpendEnergy_ShouldNotGoBelowZero()
     {
-        var player = new Player { Robot = new Robot { Energy = 2 } };
+        var robot = new Robot();
+        robot.AddEnergy(2);
+        var player = new Player { Robot = robot };
         
         player.SpendEnergy(5);
         

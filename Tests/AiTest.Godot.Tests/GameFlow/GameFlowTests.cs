@@ -411,7 +411,7 @@ public class GameFlowTests
         executionPhase.Initialize(runner, dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.Direction = Direction.East;
+        player.Robot.SetDirection(Direction.East);
 
         player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 });
         player.SetRegister(1, new MoveCard { Priority = 100, Spaces = 1 });
