@@ -60,23 +60,7 @@ public sealed class Player
         if (card == null) return;
 
         var registerCard = Registers[registerIndex];
-        
-        if (registerCard != null)
-        {
-            if (registerCard.HandIndex >= 0)
-            {
-                Hand[registerCard.HandIndex] = registerCard.Card;
-            }
-            else
-            {
-                Hand[handIndex] = registerCard.Card;
-            }
-        }
-        else
-        {
-            Hand[handIndex] = null;
-        }
-        
+        Hand[handIndex] = registerCard?.Card;
         Registers[registerIndex] = new RegisterCard(card, handIndex);
     }
 
