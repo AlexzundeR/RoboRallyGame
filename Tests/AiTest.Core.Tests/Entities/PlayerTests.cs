@@ -109,6 +109,38 @@ public class PlayerTests
     }
 
     [Fact]
+    public void AssignCardToRegister_WithExistingHandCard_ShouldReturnToOldPosition()
+    {
+        var player = new Player();
+        var card1 = new MoveCard { Spaces = 1, Priority = 100 };
+        var card2 = new MoveCard { Spaces = 2, Priority = 200 };
+        var card3 = new MoveCard { Spaces = 3, Priority = 300 };
+        
+        player.Hand[0] = card1;
+        player.Hand[1] = card2;
+        
+        player.AssignCardToRegister(1, 0);
+        Assert.Equal(card2, player.GetRegister(0)!.Card);
+        Assert.Equal(1, player.GetRegister(0)!.HandIndex);
+        Assert.Null(player.Hand[1]);
+        
+        player.AssignCardToRegister(0, 1);
+        
+        var register1 = player.GetRegister(0);
+        Assert.NotNull(register1);
+        Assert.Equal(card2, register1.Card);
+        Assert.Equal(1, register1.HandIndex);
+        
+        var register2 = player.GetRegister(1);
+        Assert.NotNull(register2);
+        Assert.Equal(card1, register2.Card);
+        Assert.Equal(0, register2.HandIndex);
+        
+        Assert.Null(player.Hand[0]);
+        Assert.Null(player.Hand[1]);
+    }
+
+    [Fact]
     public void AssignCardToRegister_MultipleCards_ShouldSwapCorrectly()
     {
         var player = new Player();
