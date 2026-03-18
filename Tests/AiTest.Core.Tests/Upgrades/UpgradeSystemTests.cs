@@ -8,6 +8,14 @@ using AiTest.Core.Upgrades;
 
 public class UpgradeSystemTests
 {
+    private static Player CreateWithHand(params ProgramCard[] cards)
+    {
+        var hand = new ProgramCard?[9];
+        for (int i = 0; i < cards.Length && i < 9; i++)
+            hand[i] = cards[i];
+        return new Player(null, hand);
+    }
+
     [Fact]
     public void UpgradeEffect_ShouldHaveCorrectName()
     {
@@ -65,7 +73,7 @@ public class UpgradeSystemTests
     [Fact]
     public void Player_ShouldHaveUpgradeLists()
     {
-        var player = new Player { Id = 1 };
+        var player = new Player();
         
         Assert.NotNull(player.PermanentUpgrades);
         Assert.NotNull(player.TemporaryUpgrades);
@@ -76,7 +84,7 @@ public class UpgradeSystemTests
     [Fact]
     public void Player_AddUpgrade_ShouldAddToCorrectList()
     {
-        var player = new Player { Id = 1 };
+        var player = new Player();
         var permanent = new StandardUpgrades.DoubleBarrelLaser();
         var temporary = new StandardUpgrades.Boink();
         
@@ -90,7 +98,7 @@ public class UpgradeSystemTests
     [Fact]
     public void Player_RemoveUpgrade_ShouldRemoveFromCorrectList()
     {
-        var player = new Player { Id = 1 };
+        var player = new Player();
         var permanent = new StandardUpgrades.DoubleBarrelLaser();
         
         player.AddUpgrade(permanent);
@@ -102,7 +110,7 @@ public class UpgradeSystemTests
     [Fact]
     public void Player_ClearTemporaryUpgrades_ShouldRemoveOnlyTemporary()
     {
-        var player = new Player { Id = 1 };
+        var player = new Player();
         var permanent = new StandardUpgrades.DoubleBarrelLaser();
         var temporary = new StandardUpgrades.Boink();
         
@@ -117,7 +125,7 @@ public class UpgradeSystemTests
     [Fact]
     public void Player_AllUpgrades_ShouldCombineBothLists()
     {
-        var player = new Player { Id = 1 };
+        var player = new Player();
         var permanent = new StandardUpgrades.DoubleBarrelLaser();
         var temporary = new StandardUpgrades.Boink();
         
@@ -252,17 +260,14 @@ public class UpgradeSystemTests
     [Fact]
     public void PowerSlide_PlayerWithUpgrade_MovesExtraSpace()
     {
-        var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
-        player.AddUpgrade(new StandardUpgrades.PowerSlide());
-        
+        var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
+        var player = CreateWithHand(moveCard);
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
+        player.AssignCardToRegister(0, 0);
+        player.AddUpgrade(new StandardUpgrades.PowerSlide());
         
-        var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        player.Registers[0] = new RegisterCard(moveCard, 0);
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         engine.ExecuteRegister(0);
         
@@ -272,19 +277,15 @@ public class UpgradeSystemTests
     [Fact]
     public void Brakes_PlayerWithUpgrade_StopsAtWall()
     {
-        var engine = CreateEngine();
-        engine.State.Map.SetTile(4, 2, Tile.Wall);
-        
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
-        player.AddUpgrade(new StandardUpgrades.Brakes());
-        
+        var moveCard = new MoveCard { Priority = 100, Spaces = 3 };
+        var player = CreateWithHand(moveCard);
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
+        player.AssignCardToRegister(0, 0);
+        player.AddUpgrade(new StandardUpgrades.Brakes());
         
-        var moveCard = new MoveCard { Priority = 100, Spaces = 3 };
-        player.Registers[0] = new RegisterCard(moveCard, 0);
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
+        engine.State.Map.SetTile(4, 2, Tile.Wall);
         
         engine.ExecuteRegister(0);
         
@@ -294,19 +295,15 @@ public class UpgradeSystemTests
     [Fact]
     public void HoverUnit_PlayerWithUpgrade_IgnoresConveyor()
     {
-        var engine = CreateEngine();
-        engine.State.Map.SetTile(3, 2, Tile.Conveyor(ConveyorDirection.East));
-        
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
-        player.AddUpgrade(new StandardUpgrades.HoverUnit());
-        
+        var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
+        var player = CreateWithHand(moveCard);
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
+        player.AssignCardToRegister(0, 0);
+        player.AddUpgrade(new StandardUpgrades.HoverUnit());
         
-        var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        player.Registers[0] = new RegisterCard(moveCard, 0);
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
+        engine.State.Map.SetTile(3, 2, Tile.Conveyor(ConveyorDirection.East));
         
         engine.ExecuteRegister(0);
         
@@ -316,16 +313,13 @@ public class UpgradeSystemTests
     [Fact]
     public void HoverUnit_PlayerWithUpgrade_IgnoresPit()
     {
-        var engine = CreateEngine();
-        engine.State.Map.SetTile(3, 2, Tile.Pit);
-        
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
-        player.AddUpgrade(new StandardUpgrades.HoverUnit());
-        
+        var player = new Player();
         player.Robot.SetPosition(new Position(3, 2));
         player.Robot.SetDirection(Direction.East);
+        player.AddUpgrade(new StandardUpgrades.HoverUnit());
+        
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
+        engine.State.Map.SetTile(3, 2, Tile.Pit);
         
         engine.ProcessBoardElements();
         
@@ -355,27 +349,18 @@ public class UpgradeSystemTests
         Assert.True(strategy.ShouldRepeatLastRegister(robot));
     }
 
-    private static GameEngine CreateEngine()
+    private static GameEngine CreateEngine(GameState state)
     {
-        var hand = new List<ProgramCard>
-        {
-            new MoveCard { Priority = 100, Spaces = 1 },
-            new MoveCard { Priority = 101, Spaces = 2 },
-            new MoveCard { Priority = 102, Spaces = 3 },
-            new TurnCard { Priority = 150, IsLeft = true },
-            new TurnCard { Priority = 151, IsLeft = false },
-            new UTurnCard { Priority = 350 },
-            new MoveCard { Priority = 103, Spaces = 1 },
-            new MoveCard { Priority = 104, Spaces = 2 },
-            new MoveCard { Priority = 105, Spaces = 3 },
-        };
-        
-        var dealer = new FixedDealer(hand);
-        var engine = new GameEngine(dealer);
+        var engine = new GameEngine(new RandomDealer(), state);
         var map = new GameMap(10, 10);
         map.SetTile(1, 1, Tile.Start);
         map.SetTile(8, 1, Tile.Start);
         engine.Initialize(map);
         return engine;
+    }
+    
+    private static GameEngine CreateEngine()
+    {
+        return CreateEngine(new GameState());
     }
 }

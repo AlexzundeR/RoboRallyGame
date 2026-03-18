@@ -7,46 +7,40 @@ public sealed record RegisterCard(ProgramCard Card, int HandIndex);
 
 public sealed class Player
 {
+    private readonly RegisterCard?[] _registers;
+    private readonly ProgramCard?[] _hand;
+
     public int Id { get; init; }
     public string Name { get; init; } = "Player";
     public Robot Robot { get; init; } = new();
-    public RegisterCard?[] Registers { get; }
-    public ProgramCard?[] Hand { get; } = new ProgramCard?[9];
+    public IReadOnlyList<RegisterCard?> Registers => _registers;
+    public IReadOnlyList<ProgramCard?> Hand => _hand;
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
 
-    public Player() : this(null) { }
+    public Player() : this(null, null) { }
 
-    public Player(RegisterCard?[]? registers)
+    public Player(RegisterCard?[]? registers, ProgramCard?[]? hand)
     {
-        Registers = registers ?? new RegisterCard?[5];
-    }
-
-    public static Player CreateWithRegisters(params (ProgramCard Card, int HandIndex)[] registers)
-    {
-        var player = new Player();
-        for (int i = 0; i < registers.Length && i < 5; i++)
-        {
-            player.Registers[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
-        }
-        return player;
+        _registers = registers ?? new RegisterCard?[5];
+        _hand = hand ?? new ProgramCard?[9];
     }
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
 
-    public int AvailableCardCount => Hand.Count(c => c != null);
+    public int AvailableCardCount => _hand.Count(c => c != null);
 
     public void DealCards(IEnumerable<ProgramCard> cards)
     {
         for (int i = 0; i < 9; i++)
-            Hand[i] = null;
+            _hand[i] = null;
         
         int index = 0;
         foreach (var card in cards)
         {
             if (index < 9)
             {
-                Hand[index] = card;
+                _hand[index] = card;
                 index++;
             }
         }
@@ -54,12 +48,12 @@ public sealed class Player
 
     public RegisterCard? GetRegister(int index)
     {
-        return index >= 0 && index < 5 ? Registers[index] : null;
+        return index >= 0 && index < 5 ? _registers[index] : null;
     }
 
     public ProgramCard? GetHandCard(int index)
     {
-        return index >= 0 && index < 9 ? Hand[index] : null;
+        return index >= 0 && index < 9 ? _hand[index] : null;
     }
 
     public void AssignCardToRegister(int handIndex, int registerIndex)
@@ -67,31 +61,31 @@ public sealed class Player
         if (handIndex < 0 || handIndex >= 9 || registerIndex < 0 || registerIndex >= 5)
             return;
 
-        var card = Hand[handIndex];
+        var card = _hand[handIndex];
         if (card == null) return;
 
-        var registerCard = Registers[registerIndex];
+        var registerCard = _registers[registerIndex];
         
-        Hand[handIndex] = null;
+        _hand[handIndex] = null;
         
         if (registerCard != null)
         {
-            Hand[registerCard.HandIndex] = registerCard.Card;
+            _hand[registerCard.HandIndex] = registerCard.Card;
         }
         
-        Registers[registerIndex] = new RegisterCard(card, handIndex);
+        _registers[registerIndex] = new RegisterCard(card, handIndex);
     }
 
     public void ClearRegisters()
     {
         for (int i = 0; i < 5; i++)
         {
-            var registerCard = Registers[i];
+            var registerCard = _registers[i];
             if (registerCard != null)
             {
-                Hand[registerCard.HandIndex] = registerCard.Card;
+                _hand[registerCard.HandIndex] = registerCard.Card;
             }
-            Registers[i] = null;
+            _registers[i] = null;
         }
     }
 

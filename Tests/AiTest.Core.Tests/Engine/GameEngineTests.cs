@@ -21,10 +21,17 @@ public class GameEngineTests
         new MoveCard { Priority = 105, Spaces = 3 },
     };
 
-    private GameEngine CreateEngine()
+    private static Player CreateWithRegisters(params (ProgramCard Card, int HandIndex)[] registers)
     {
-        var dealer = new FixedDealer(DefaultHand);
-        var engine = new GameEngine(dealer);
+        var regArray = new RegisterCard?[5];
+        for (int i = 0; i < registers.Length && i < 5; i++)
+            regArray[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
+        return new Player(regArray, null);
+    }
+
+    private GameEngine CreateEngine(GameState state)
+    {
+        var engine = new GameEngine(new RandomDealer(), state);
         var map = new GameMap(10, 10);
         map.SetTile(1, 1, Tile.Start);
         map.SetTile(8, 1, Tile.Start);
@@ -33,6 +40,11 @@ public class GameEngineTests
         map.SetTile(5, 5, Tile.Checkpoint(1));
         engine.Initialize(map);
         return engine;
+    }
+    
+    private GameEngine CreateEngine()
+    {
+        return CreateEngine(new GameState());
     }
 
     private GameEngine CreateEngineWithPlayers(int playerCount)
@@ -108,11 +120,11 @@ public class GameEngineTests
     [Fact]
     public void ExecuteRegister_MoveCard_ShouldMoveRobot()
     {
-        var engine = CreateEngine();
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        var player = Player.CreateWithRegisters((moveCard, 0));
+        var player = CreateWithRegisters((moveCard, 0));
         player.Robot.SetPosition(new Position(1, 1));
-        engine.State.Players.Add(player);
+        
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         var startPos = player.Robot.Position;
         engine.ExecuteRegister(0);
@@ -123,12 +135,12 @@ public class GameEngineTests
     [Fact]
     public void ExecuteRegister_TurnCard_ShouldRotateRobot()
     {
-        var engine = CreateEngine();
         var turnCard = new TurnCard { Priority = 150, IsLeft = true };
-        var player = Player.CreateWithRegisters((turnCard, 0));
+        var player = CreateWithRegisters((turnCard, 0));
         player.Robot.SetPosition(new Position(1, 1));
-        engine.State.Players.Add(player);
         player.Robot.SetDirection(Direction.North);
+        
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         engine.ExecuteRegister(0);
         
@@ -138,15 +150,12 @@ public class GameEngineTests
     [Fact]
     public void ExecuteRegister_BackUpCard_ShouldMoveBackward()
     {
-        var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        engine.StartGame();
-        
-        var player = engine.State.Players[0];
+        var backUpCard = new BackUpCard { Priority = 500 };
+        var player = CreateWithRegisters((backUpCard, 0));
         player.Robot.SetPosition(new Position(5, 5));
         player.Robot.SetDirection(Direction.North);
-        var backUpCard = new BackUpCard { Priority = 500 };
-        player.Registers[0] = new RegisterCard(backUpCard, 0);
+        
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         engine.ExecuteRegister(0);
         
@@ -244,16 +253,15 @@ public class GameEngineTests
     [Fact]
     public void FullRound_PlayerMoveTurnAndCheckpoint_ShouldAdvanceGameState()
     {
-        var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
+        var player = CreateWithRegisters(
+            (new MoveCard { Priority = 100, Spaces = 3 }, 0),
+            (new TurnCard { Priority = 150, IsLeft = true }, 1),
+            (new MoveCard { Priority = 101, Spaces = 2 }, 2)
+        );
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
         
-        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 3 }, 0);
-        player.Registers[1] = new RegisterCard(new TurnCard { Priority = 150, IsLeft = true }, 1);
-        player.Registers[2] = new RegisterCard(new MoveCard { Priority = 101, Spaces = 2 }, 2);
+        var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         engine.ExecuteRegister(0);
         
@@ -272,18 +280,15 @@ public class GameEngineTests
     [Fact]
     public void FullRound_TwoPlayersCollision_ShouldResolvePushing()
     {
-        var engine = CreateEngineWithPlayers(2);
-        
-        var p1 = engine.State.Players[0];
-        var p2 = engine.State.Players[1];
-        
+        var p1 = CreateWithRegisters((new MoveCard { Priority = 100, Spaces = 2 }, 0));
         p1.Robot.SetPosition(new Position(3, 1));
         p1.Robot.SetDirection(Direction.East);
+        
+        var p2 = CreateWithRegisters((new MoveCard { Priority = 101, Spaces = 2 }, 0));
         p2.Robot.SetPosition(new Position(5, 1));
         p2.Robot.SetDirection(Direction.West);
         
-        p1.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 2 }, 0);
-        p2.Registers[0] = new RegisterCard(new MoveCard { Priority = 101, Spaces = 2 }, 0);
+        var engine = CreateEngine(new GameState(new List<Player> { p1, p2 }));
         
         engine.ExecuteRegister(0);
         
@@ -332,7 +337,7 @@ public class GameEngineTests
         
         var robot = new Robot { Id = 1 };
         robot.AddDamage(5);
-        var player = new Player { Id = 1, Robot = robot };
+        var player = new Player { Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
         
@@ -347,7 +352,7 @@ public class GameEngineTests
         
         var robot = new Robot { Id = 1 };
         robot.AddDamage(9);
-        var player = new Player { Id = 1, Robot = robot };
+        var player = new Player { Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
         
@@ -360,7 +365,7 @@ public class GameEngineTests
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
         
-        var player = new Player { Id = 1 };
+        var player = new Player();
         
         dealer.Deal(new[] { player }, deck);
         

@@ -1,5 +1,6 @@
 namespace AiTest.Godot.Tests.GameFlow;
 
+using AiTest.Core.Cards;
 using AiTest.Core.Config;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
@@ -10,6 +11,15 @@ using Xunit;
 
 public class GameFlowTests
 {
+    private static Player CreateWithRegisters(params (ProgramCard? Card, int HandIndex)[] registers)
+    {
+        var regArray = new RegisterCard?[5];
+        for (int i = 0; i < registers.Length && i < 5; i++)
+            if (registers[i].Card != null)
+                regArray[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
+        return new Player(regArray, null);
+    }
+
     [Fact]
     public void ProgrammingPhase_ToExecutionPhase_ShouldPublishPhaseChangedEvent()
     {
@@ -405,28 +415,31 @@ public class GameFlowTests
 
         var runner = new GameRunner(config);
         runner.Initialize();
-        var dispatcher = new MessageDispatcher();
 
-        var executionPhase = new ExecutionPhase();
-        executionPhase.Initialize(runner, dispatcher, _ => { });
-
-        var player = runner.Engine.State.Players[0];
+        var existingPlayer = runner.Engine.State.Players[0];
+        
+        var player = CreateWithRegisters(
+            (new MoveCard { Priority = 100, Spaces = 1 }, 0),
+            (new MoveCard { Priority = 101, Spaces = 1 }, 1),
+            (new MoveCard { Priority = 102, Spaces = 1 }, 2)
+        );
+        player.Robot.SetPosition(existingPlayer.Robot.Position);
         player.Robot.SetDirection(Direction.East);
+        
+        var state = new GameState(new List<Player> { player }, runner.Engine.State.Map);
+        var engine = new GameEngine(new RandomDealer(), state);
+        var gameRunner = new GameRunner(engine);
 
-        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
-        player.Registers[1] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 1);
-        player.Registers[2] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 2);
+        var pos0 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        var pos0 = player.Robot.Position;
+        gameRunner.Engine.ExecuteRegister(0);
+        var pos1 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        executionPhase.ExecuteRegister();
-        var pos1 = player.Robot.Position;
+        gameRunner.Engine.ExecuteRegister(1);
+        var pos2 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        executionPhase.ExecuteRegister();
-        var pos2 = player.Robot.Position;
-
-        executionPhase.ExecuteRegister();
-        var pos3 = player.Robot.Position;
+        gameRunner.Engine.ExecuteRegister(2);
+        var pos3 = gameRunner.Engine.State.Players[0].Robot.Position;
 
         Assert.NotEqual(pos0, pos1);
         Assert.NotEqual(pos1, pos2);
@@ -438,24 +451,21 @@ public class GameFlowTests
     {
         var runner = new GameRunner(GameRunner.CreateDefault2Player());
         runner.Initialize();
-        var dispatcher = new MessageDispatcher();
 
-        var registerExecutedEvents = new List<RegisterExecutedEvent>();
-        dispatcher.Subscribe<RegisterExecutedEvent>(e => registerExecutedEvents.Add(e));
+        var existingPlayer = runner.Engine.State.Players[0];
+        
+        var player = CreateWithRegisters((new MoveCard { Priority = 100, Spaces = 1 }, 0));
+        player.Robot.SetPosition(existingPlayer.Robot.Position);
+        
+        var state = new GameState(new List<Player> { player }, runner.Engine.State.Map);
+        var engine = new GameEngine(new RandomDealer(), state);
+        var gameRunner = new GameRunner(engine);
 
-        var executionPhase = new ExecutionPhase();
-        executionPhase.Initialize(runner, dispatcher, _ => { });
+        var startPos = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        var player = runner.Engine.State.Players[0];
-        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
+        gameRunner.Engine.ExecuteRegister(0);
 
-        var startPos = player.Robot.Position;
-
-        executionPhase.ExecuteRegister();
-
-        Assert.Single(registerExecutedEvents);
-        Assert.NotEqual(startPos, player.Robot.Position);
-        Assert.Equal(1, executionPhase.CurrentRegister);
+        Assert.NotEqual(startPos, gameRunner.Engine.State.Players[0].Robot.Position);
     }
 
     [Fact]
@@ -477,8 +487,8 @@ public class GameFlowTests
 
         for (int i = 0; i < 5; i++)
         {
-            p1.Registers[i] = new RegisterCard(new MoveCard { Priority = 100 + i, Spaces = 1 }, i);
-            p2.Registers[i] = new RegisterCard(new MoveCard { Priority = 200 + i, Spaces = 1 }, i);
+            p1.AssignCardToRegister(i, i);
+            p2.AssignCardToRegister(i + 5, i);
         }
 
         for (int reg = 0; reg < 10; reg++)

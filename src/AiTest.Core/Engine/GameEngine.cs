@@ -79,40 +79,57 @@ public enum GamePhase
 
 public sealed class GameState
 {
+    private readonly List<Player> _players;
+
     public GameMap Map { get; set; } = null!;
-    public List<Player> Players { get; } = new();
+    public IReadOnlyList<Player> Players => _players;
     public int CurrentPlayerIndex { get; set; }
     public int CurrentRegister { get; set; }
     public GamePhase Phase { get; set; } = GamePhase.Setup;
     public int Round { get; set; }
     public Player? Winner { get; set; }
 
+    public GameState() : this(new List<Player>()) { }
+
+    public GameState(List<Player> players)
+    {
+        _players = players;
+        Map = new GameMap(10, 10);
+    }
+
+    public GameState(List<Player> players, GameMap map)
+    {
+        _players = players;
+        Map = map;
+        Phase = GamePhase.Programming;
+    }
+
     public Player AddPlayer(string name)
     {
         var player = new Player
         {
-            Id = Players.Count + 1,
+            Id = _players.Count + 1,
             Name = name,
             Robot = new Robot
             {
-                Id = Players.Count + 1,
+                Id = _players.Count + 1,
                 Name = name
             }
         };
-        Players.Add(player);
+        _players.Add(player);
         return player;
     }
 
     public Player? GetCurrentPlayer()
     {
-        return CurrentPlayerIndex >= 0 && CurrentPlayerIndex < Players.Count
-            ? Players[CurrentPlayerIndex]
+        return CurrentPlayerIndex >= 0 && CurrentPlayerIndex < _players.Count
+            ? _players[CurrentPlayerIndex]
             : null;
     }
 
     public void Clear()
     {
-        Players.Clear();
+        _players.Clear();
         CurrentPlayerIndex = 0;
         CurrentRegister = 0;
         Round = 0;
@@ -143,11 +160,14 @@ public sealed class GameEngine : IGameEngine
     private readonly LaserResolver _laserResolver = new();
     private IDealer _dealer;
 
-    public GameEngine() : this(new RandomDealer()) { }
+    public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
-    public GameEngine(IDealer dealer)
+    public GameEngine(IDealer dealer) : this(dealer, new GameState()) { }
+
+    public GameEngine(IDealer dealer, GameState state)
     {
         _dealer = dealer;
+        State = state;
     }
 
     public IDealer Dealer
@@ -156,7 +176,7 @@ public sealed class GameEngine : IGameEngine
         set => _dealer = value ?? throw new ArgumentNullException(nameof(value));
     }
 
-    public GameState State { get; } = new();
+    public GameState State { get; }
 
     public void Initialize(GameMap map)
     {

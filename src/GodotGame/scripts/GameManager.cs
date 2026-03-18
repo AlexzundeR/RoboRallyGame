@@ -95,6 +95,7 @@ public partial class GameManager : Node2D
 		}
 		_dispatcher.Publish(new PhaseChangedEvent(newPhase, _roundNumber));
 		SetPhase(newPhase);
+		UpdateUI();
 	}
 
 	private void SetPhase(GamePhaseType phase)

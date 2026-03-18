@@ -16,6 +16,12 @@ public class GameRunner
         _engine = new GameEngine(dealer);
     }
 
+    public GameRunner(GameEngine engine)
+    {
+        _config = new GameConfiguration();
+        _engine = engine;
+    }
+
     public GameEngine Engine => _engine;
     public GameConfiguration Config => _config;
 

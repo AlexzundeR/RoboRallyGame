@@ -95,8 +95,8 @@ public class GameRunnerTests
 
         for (int i = 0; i < 5; i++)
         {
-            p1.Registers[i] = new RegisterCard(new MoveCard { Priority = 100 + i, Spaces = 1 }, i);
-            p2.Registers[i] = new RegisterCard(new MoveCard { Priority = 200 + i, Spaces = 1 }, i);
+            p1.AssignCardToRegister(i, i);
+            p2.AssignCardToRegister(i + 5, i);
         }
 
         for (int reg = 0; reg < 5; reg++)
@@ -105,59 +105,6 @@ public class GameRunnerTests
         }
 
         Assert.Equal(GamePhase.Programming, runner.Engine.State.Phase);
-    }
-
-    [Fact]
-    public void ExecuteRegister_MoveCard_ShouldMoveRobot()
-    {
-        var runner = new GameRunner(GameRunner.CreateMinimal());
-        runner.Initialize();
-
-        var player = runner.Engine.State.Players[0];
-        var startPos = player.Robot.Position;
-        
-        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
-
-        runner.Engine.ExecuteRegister(0);
-
-        Assert.NotEqual(startPos, player.Robot.Position);
-    }
-
-    [Fact]
-    public void ExecuteRegister_TurnCard_ShouldRotateRobot()
-    {
-        var runner = new GameRunner(GameRunner.CreateMinimal());
-        runner.Initialize();
-
-        var player = runner.Engine.State.Players[0];
-        player.Robot.SetDirection(Direction.North);
-        
-        player.Registers[0] = new RegisterCard(new TurnCard { Priority = 150, IsLeft = true }, 0);
-
-        runner.Engine.ExecuteRegister(0);
-
-        Assert.Equal(Direction.West, player.Robot.Direction);
-    }
-
-    [Fact]
-    public void TwoPlayers_OneMovesFirst_ShouldExecuteByPriority()
-    {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
-        runner.Initialize();
-
-        var p1 = runner.Engine.State.Players[0];
-        var p2 = runner.Engine.State.Players[1];
-        
-        p1.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
-        p2.Registers[0] = new RegisterCard(new MoveCard { Priority = 200, Spaces = 1 }, 0);
-
-        var p1Start = p1.Robot.Position;
-        var p2Start = p2.Robot.Position;
-
-        runner.Engine.ExecuteRegister(0);
-
-        Assert.NotEqual(p1Start, p1.Robot.Position);
-        Assert.NotEqual(p2Start, p2.Robot.Position);
     }
 
     [Fact]

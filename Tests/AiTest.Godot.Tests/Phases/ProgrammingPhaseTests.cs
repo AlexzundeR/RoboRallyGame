@@ -1,5 +1,6 @@
 namespace AiTest.Godot.Tests.Phases;
 
+using AiTest.Core.Cards;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Messages;
@@ -15,19 +16,20 @@ public class MockInputService : IInputService
         _actions[action] = pressed;
     }
 
-    public bool IsActionJustPressed(string action)
-    {
-        if (_actions.TryGetValue(action, out var pressed) && pressed)
-        {
-            _actions[action] = false;
-            return true;
-        }
-        return false;
-    }
+    public bool IsActionJustPressed(string action) => _actions.GetValueOrDefault(action, false);
+    public bool IsActionPressed(string action) => _actions.GetValueOrDefault(action, false);
 }
 
 public class ProgrammingPhaseTests
 {
+    private static Player CreateWithHand(params ProgramCard[] cards)
+    {
+        var hand = new ProgramCard?[9];
+        for (int i = 0; i < cards.Length && i < 9; i++)
+            hand[i] = cards[i];
+        return new Player(null, hand);
+    }
+
     private readonly GameRunner _runner;
     private readonly MessageDispatcher _dispatcher;
     private readonly ProgrammingPhase _phase;
@@ -96,16 +98,19 @@ public class ProgrammingPhaseTests
     [Fact]
     public void SelectCard_ShouldPlaceCardInSelectedRegister()
     {
-        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        var card = new MoveCard { Priority = 999, Spaces = 1 };
-        player.Hand[0] = card;
+        var player = CreateWithHand(new MoveCard { Priority = 999, Spaces = 1 });
+        var state = new GameState(new List<Player> { player });
+        var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
+        var phase = new ProgrammingPhase();
+        phase.Initialize(runner, _dispatcher, _ => { });
+        
         var initialCount = player.AvailableCardCount;
         
-        _phase.SelectCard(0, 2);
+        phase.SelectCard(0, 2);
         
         var registerCard = player.GetRegister(2);
         Assert.NotNull(registerCard);
-        Assert.Same(card, registerCard.Card);
+        Assert.Equal(999, registerCard.Card.Priority);
         Assert.Equal(0, registerCard.HandIndex);
         Assert.Equal(initialCount - 1, player.AvailableCardCount);
     }
@@ -113,26 +118,32 @@ public class ProgrammingPhaseTests
     [Fact]
     public void SelectCard_ShouldAdvanceSelectedRegister()
     {
-        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        player.Hand[0] = new MoveCard { Priority = 999, Spaces = 1 };
+        var player = CreateWithHand(new MoveCard { Priority = 999, Spaces = 1 });
+        var state = new GameState(new List<Player> { player });
+        var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
+        var phase = new ProgrammingPhase();
+        phase.Initialize(runner, _dispatcher, _ => { });
         
-        Assert.Equal(0, _phase.SelectedRegister);
-        _phase.SelectCard(0, 0);
+        Assert.Equal(0, phase.SelectedRegister);
+        phase.SelectCard(0, 0);
         
-        Assert.Equal(1, _phase.SelectedRegister);
+        Assert.Equal(1, phase.SelectedRegister);
     }
 
     [Fact]
     public void ConfirmPlayer_ShouldResetSelectedRegister()
     {
-        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        player.Hand[0] = new MoveCard { Priority = 999, Spaces = 1 };
+        var player = CreateWithHand(new MoveCard { Priority = 999, Spaces = 1 });
+        var state = new GameState(new List<Player> { player });
+        var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
+        var phase = new ProgrammingPhase();
+        phase.Initialize(runner, _dispatcher, _ => { });
         
-        _phase.SelectCard(0, 3);
-        Assert.Equal(1, _phase.SelectedRegister);
+        phase.SelectCard(0, 3);
+        Assert.Equal(1, phase.SelectedRegister);
         
-        _phase.ConfirmPlayer();
+        phase.ConfirmPlayer();
         
-        Assert.Equal(0, _phase.SelectedRegister);
+        Assert.Equal(0, phase.SelectedRegister);
     }
 }
