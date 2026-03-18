@@ -105,6 +105,21 @@ public class ProgrammingPhaseTests
         
         Assert.NotNull(player.GetRegister(2));
         Assert.Same(card, player.GetRegister(2));
+        Assert.Equal(initialHandCount, player.Hand.Count);
+    }
+
+    [Fact]
+    public void SelectCard_ShouldRemoveCardFromHand()
+    {
+        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
+        var initialHandCount = player.Hand.Count;
+        var card = new MoveCard { Priority = 999, Spaces = 1 };
+        player.Hand.Add(card);
+        
+        _phase.SelectCard(initialHandCount, 0);
+        
+        Assert.Equal(initialHandCount, player.Hand.Count);
+        Assert.Same(card, player.GetRegister(0));
     }
 
     [Fact]

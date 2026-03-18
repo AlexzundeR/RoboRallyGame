@@ -12,8 +12,12 @@ public sealed class Player
     public List<ProgramCard> Hand { get; } = new();
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
+    
+    private readonly HashSet<int> _usedHandSlots = new();
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
+
+    public IReadOnlyCollection<int> UsedHandSlots => _usedHandSlots;
 
     public void DealCards(IEnumerable<ProgramCard> cards)
     {
@@ -40,6 +44,7 @@ public sealed class Player
         var cardInReg = Registers[registerIndex];
         Hand.RemoveAt(handIndex);
         Registers[registerIndex] = card;
+        _usedHandSlots.Add(handIndex);
 
         if (cardInReg != null)
             Hand.Add(cardInReg);
@@ -49,6 +54,7 @@ public sealed class Player
     {
         for (int i = 0; i < 5; i++)
             Registers[i] = null;
+        _usedHandSlots.Clear();
     }
 
     public void AddEnergy(int amount) => Robot.AddEnergy(amount);

@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 
@@ -80,7 +81,11 @@ public partial class PlayerPanel : PanelContainer
 		{
 			var card = _handCards[i];
 
-			if (i < player.Hand.Count)
+			if (player.UsedHandSlots.Contains(i))
+			{
+				card.SetEmpty();
+			}
+			else if (i < player.Hand.Count)
 			{
 				var programCard = player.Hand[i];
 				var symbol = GetCardSymbol(programCard);
