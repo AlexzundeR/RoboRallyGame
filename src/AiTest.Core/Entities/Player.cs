@@ -35,12 +35,6 @@ public sealed class Player
         }
     }
 
-    public void SetRegister(int index, ProgramCard? card)
-    {
-        if (index >= 0 && index < 5 && card != null)
-            Registers[index] = new RegisterCard(card, -1);
-    }
-
     public RegisterCard? GetRegister(int index)
     {
         return index >= 0 && index < 5 ? Registers[index] : null;
@@ -49,6 +43,12 @@ public sealed class Player
     public ProgramCard? GetHandCard(int index)
     {
         return index >= 0 && index < 9 ? Hand[index] : null;
+    }
+
+    public void SetRegister(int index, ProgramCard card, int handIndex)
+    {
+        if (index >= 0 && index < 5 && card != null)
+            Registers[index] = new RegisterCard(card, handIndex);
     }
 
     public void AssignCardToRegister(int handIndex, int registerIndex)
@@ -60,14 +60,28 @@ public sealed class Player
         if (card == null) return;
 
         var registerCard = Registers[registerIndex];
-        Hand[handIndex] = registerCard?.Card;
+        
+        Hand[handIndex] = null;
+        
+        if (registerCard != null)
+        {
+            Hand[registerCard.HandIndex] = registerCard.Card;
+        }
+        
         Registers[registerIndex] = new RegisterCard(card, handIndex);
     }
 
     public void ClearRegisters()
     {
         for (int i = 0; i < 5; i++)
+        {
+            var registerCard = Registers[i];
+            if (registerCard != null)
+            {
+                Hand[registerCard.HandIndex] = registerCard.Card;
+            }
             Registers[i] = null;
+        }
     }
 
     public void AddEnergy(int amount) => Robot.AddEnergy(amount);

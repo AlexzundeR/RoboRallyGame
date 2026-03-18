@@ -95,8 +95,8 @@ public class GameRunnerTests
 
         for (int i = 0; i < 5; i++)
         {
-            p1.SetRegister(i, new MoveCard { Priority = 100 + i, Spaces = 1 });
-            p2.SetRegister(i, new MoveCard { Priority = 200 + i, Spaces = 1 });
+            p1.SetRegister(i, new MoveCard { Priority = 100 + i, Spaces = 1 }, i);
+            p2.SetRegister(i, new MoveCard { Priority = 200 + i, Spaces = 1 }, i);
         }
 
         for (int reg = 0; reg < 5; reg++)
@@ -116,7 +116,7 @@ public class GameRunnerTests
         var player = runner.Engine.State.Players[0];
         var startPos = player.Robot.Position;
         
-        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 });
+        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 }, 0);
 
         runner.Engine.ExecuteRegister(0);
 
@@ -132,7 +132,7 @@ public class GameRunnerTests
         var player = runner.Engine.State.Players[0];
         player.Robot.SetDirection(Direction.North);
         
-        player.SetRegister(0, new TurnCard { Priority = 150, IsLeft = true });
+        player.SetRegister(0, new TurnCard { Priority = 150, IsLeft = true }, 0);
 
         runner.Engine.ExecuteRegister(0);
 
@@ -148,8 +148,8 @@ public class GameRunnerTests
         var p1 = runner.Engine.State.Players[0];
         var p2 = runner.Engine.State.Players[1];
         
-        p1.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 });
-        p2.SetRegister(0, new MoveCard { Priority = 200, Spaces = 1 });
+        p1.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 }, 0);
+        p2.SetRegister(0, new MoveCard { Priority = 200, Spaces = 1 }, 0);
 
         var p1Start = p1.Robot.Position;
         var p2Start = p2.Robot.Position;

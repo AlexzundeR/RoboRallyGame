@@ -38,20 +38,6 @@ public class PlayerTests
     }
 
     [Fact]
-    public void SetRegister_ShouldStoreCard()
-    {
-        var player = new Player();
-        var card = new MoveCard { Spaces = 1, Priority = 100 };
-        
-        player.SetRegister(0, card);
-        
-        var registerCard = player.GetRegister(0);
-        Assert.NotNull(registerCard);
-        Assert.Equal(card, registerCard.Card);
-        Assert.Equal(-1, registerCard.HandIndex);
-    }
-
-    [Fact]
     public void GetRegister_InvalidIndex_ShouldReturnNull()
     {
         var player = new Player();
@@ -64,13 +50,17 @@ public class PlayerTests
     public void ClearRegisters_ShouldSetAllToNull()
     {
         var player = new Player();
-        player.SetRegister(0, new MoveCard { Spaces = 1 });
-        player.SetRegister(2, new TurnCard { IsLeft = true });
+        player.Hand[0] = new MoveCard { Spaces = 1 };
+        player.Hand[1] = new TurnCard { IsLeft = true };
+        
+        player.AssignCardToRegister(0, 0);
+        player.AssignCardToRegister(1, 2);
         
         player.ClearRegisters();
         
         Assert.Null(player.GetRegister(0));
         Assert.Null(player.GetRegister(2));
+        Assert.Equal(2, player.AvailableCardCount);
     }
 
     [Fact]
@@ -90,25 +80,6 @@ public class PlayerTests
     }
 
     [Fact]
-    public void AssignCardToRegister_WithExistingCard_ShouldSwap()
-    {
-        var player = new Player();
-        var card1 = new MoveCard { Spaces = 1, Priority = 100 };
-        var card2 = new MoveCard { Spaces = 2, Priority = 200 };
-        
-        player.Hand[0] = card1;
-        player.SetRegister(0, card2);
-        
-        player.AssignCardToRegister(0, 0);
-        
-        var registerCard = player.GetRegister(0);
-        Assert.NotNull(registerCard);
-        Assert.Equal(card1, registerCard.Card);
-        Assert.Equal(0, registerCard.HandIndex);
-        Assert.Equal(card2, player.Hand[0]);
-    }
-
-    [Fact]
     public void AssignCardToRegister_WithRegisterCard_ShouldSwap()
     {
         var player = new Player();
@@ -125,22 +96,36 @@ public class PlayerTests
         
         player.AssignCardToRegister(0, 1);
         
-        var register0 = player.GetRegister(0);
-        Assert.NotNull(register0);
-        Assert.Equal(card2, register0.Card);
-        Assert.Equal(1, register0.HandIndex);
-        
-        var register1 = player.GetRegister(1);
-        Assert.NotNull(register1);
-        Assert.Equal(card1, register1.Card);
-        Assert.Equal(0, register1.HandIndex);
-        
+        Assert.Equal(card2, player.GetRegister(0)!.Card);
+        Assert.Equal(card1, player.GetRegister(1)!.Card);
         Assert.Null(player.Hand[0]);
-        Assert.Null(player.Hand[1]);
     }
 
     [Fact]
-    public void AssignCardToRegister_MultipleCards_ShouldSwapCorrectly()
+    public void AssignCardToRegister_OverwriteRegister_ShouldReturnOldCard()
+    {
+        var player = new Player();
+        var card1 = new MoveCard { Spaces = 1, Priority = 100 };
+        var card2 = new MoveCard { Spaces = 2, Priority = 200 };
+        var card3 = new MoveCard { Spaces = 3, Priority = 300 };
+        
+        player.Hand[0] = card1;
+        player.Hand[1] = card2;
+        player.Hand[2] = card3;
+        
+        player.AssignCardToRegister(1, 0);
+        Assert.Null(player.Hand[1]);
+        Assert.Equal(card2, player.GetRegister(0)!.Card);
+        
+        player.AssignCardToRegister(0, 0);
+        
+        Assert.Equal(card1, player.GetRegister(0)!.Card);
+        Assert.Equal(0, player.GetRegister(0)!.HandIndex);
+        Assert.Equal(card2, player.Hand[1]);
+    }
+
+    [Fact]
+    public void AssignCardToRegister_MultipleCards_ShouldWorkCorrectly()
     {
         var player = new Player();
         var card1 = new MoveCard { Spaces = 1, Priority = 100 };
