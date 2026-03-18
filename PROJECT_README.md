@@ -97,14 +97,28 @@ AssignCardToRegister(handIndex, registerIndex):
     card = Hand[handIndex]
     registerCard = Registers[registerIndex]
     
-    Hand[handIndex] = registerCard?.Card  // старая карта регистра идёт в руку
+    Hand[handIndex] = null
+    Hand[registerCard.HandIndex] = registerCard.Card  // возврат на своё место
     Registers[registerIndex] = (card, handIndex)
 ```
 
 **Поведение:**
-- Если регистр пуст → карта уходит из руки, слот в руке становится null
-- Если регистр занят → карты меняются местами (swap)
-- RegisterCard сохраняет HandIndex для отображения номера карты в UI
+- Карта уходит из руки (handIndex → null)
+- Карта из регистра возвращается на свою старую позицию в руке
+- В регистр кладётся новая карта с запомненным HandIndex
+
+#### Конструктор Player для тестов
+
+```csharp
+// Пустой игрок
+var player = new Player();
+
+// Игрок с регистрами
+var player = Player.CreateWithRegisters(
+    (new MoveCard { Priority = 100 }, 0),
+    (new TurnCard { Priority = 150 }, 1)
+);
+```
 
 #### Отображение номеров
 
