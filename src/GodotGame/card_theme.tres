@@ -1,38 +1,40 @@
 [gd_resource type="Theme" format=3 uid="uid://b6r2nueb3lvf0"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v7a0a"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 draw_center = false
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.15674683, 0.15674683, 0.15674675, 1)
+border_color = Color(0.38265234, 0.38265237, 0.3826523, 1)
 border_blend = true
 corner_detail = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6nxvl"]
-draw_center = false
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_blend = true
-corner_detail = 1
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j4yx7"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
 draw_center = false
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.9921451, 0.9921451, 0.9921451, 1)
+border_color = Color(0.8303452, 0.8303452, 0.83034515, 1)
+border_blend = true
+corner_detail = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fixed"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
 border_blend = true
 corner_detail = 1
 
 [resource]
-Panel/colors/fixed_border_color = Color(0, 0, 0, 1)
-Panel/colors/normal_border_color = Color(0.38265234, 0.38265237, 0.3826523, 1)
-Panel/colors/selected_border_color = Color(0.8303452, 0.8303452, 0.83034515, 1)
-Panel/styles/fixed = SubResource("StyleBoxFlat_v7a0a")
-Panel/styles/panel = SubResource("StyleBoxFlat_6nxvl")
-Panel/styles/selected = SubResource("StyleBoxFlat_j4yx7")
+Card/colors/empty_bg = Color(0, 0, 0, 1)
+Card/colors/normal_bg = Color(0.15, 0.15, 0.15, 1)
+Card/colors/normal_text = Color(1, 1, 1, 1)
+Card/colors/selected_text = Color(0.9, 0.9, 0.9, 1)
+Card/styles/normal = SubResource("StyleBoxFlat_normal")
+Card/styles/selected = SubResource("StyleBoxFlat_selected")
+Card/styles/fixed = SubResource("StyleBoxFlat_fixed")

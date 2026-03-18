@@ -77,7 +77,7 @@ public sealed class BackUpCard : ProgramCard
         }
     }
 }
-//ToDo: закрыть все мутирующие дейтсвия с полями, переделать на методы, особенно работу с массивами
+//ToDo: закрыть все мутирующие дейтсвия с свойствами, переделать на методы, особенно работу с массивами
 public sealed class Player
 {
     public int Id { get; init; }

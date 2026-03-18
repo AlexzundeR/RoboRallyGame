@@ -24,6 +24,7 @@ public partial class GameUI : CanvasLayer
 
 	private BoxContainer? _p1HandCardholder;
 	private BoxContainer? _p1RegistersCardholder;
+	//Todo: плохо, что вся логика игроков продублирована, нужно вынести панель игрока в отдельный контрол и переиспользовать его для каждого игрока
 	private Label? _p2Header;
 	private Label? _p2Hand;
 	private Label? _p2Registers;

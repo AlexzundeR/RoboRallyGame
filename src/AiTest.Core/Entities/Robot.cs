@@ -2,6 +2,7 @@ namespace AiTest.Core.Entities;
 
 using AiTest.Core.Models;
 
+//Todo: по всему проекту отдельные классы вынеси в отдельные файлы и создай хорошую струкутуру папок
 public enum RobotStatus
 {
     Active,
@@ -10,6 +11,7 @@ public enum RobotStatus
     Destroyed
 }
 
+//ToDo: закрыть все мутирующие дейтсвия с свойствами, переделать на методы, особенно работу с массивами
 public sealed class Robot
 {
     public int Id { get; init; }

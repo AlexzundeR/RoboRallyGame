@@ -3,7 +3,42 @@ using System;
 
 public partial class RegisterActionCard : PanelContainer
 {
-	// Экспортируемые свойства для настройки в редакторе
+	public enum CardState { Normal, Selected, Fixed, Empty }
+
+	public CardState CurrentState => EvaluateState();
+
+	private CardState EvaluateState()
+	{
+		if (CardSymbol == null) return CardState.Empty;
+		if (IsFixed) return CardState.Fixed;
+		if (IsSelected) return CardState.Selected;
+		return CardState.Normal;
+	}
+
+	public record CardStyles(StyleBox BorderStyle, Color BackgroundColor);
+
+	public static class CardStyleFactory
+	{
+		private const string ThemeType = "Card";
+
+		public static CardStyles Evaluate(Theme theme, CardState state)
+		{
+			string styleName = state switch
+			{
+				CardState.Selected => "selected",
+				CardState.Fixed => "fixed",
+				_ => "normal"
+			};
+
+			return new CardStyles(
+				theme.GetStylebox(styleName, ThemeType),
+				state == CardState.Empty
+					? theme.GetColor("empty_bg", ThemeType)
+					: theme.GetColor("normal_bg", ThemeType)
+			);
+		}
+	}
+
 	[Export] public string CardSymbol { get; set; }
 	[Export] public int CardPriority { get; set; } = 100;
 	[Export] public int CardNumber { get; set; } = 1;
@@ -25,7 +60,7 @@ public partial class RegisterActionCard : PanelContainer
 		_symbolLabel = GetNode<Label>("GridContainer/Symbol");
 		_priorityLabel = GetNode<Label>("GridContainer/Priority");
 		_background = GetNode<ColorRect>("Background");
-		_animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer"); ;
+		_animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
 		_border = GetNode<Panel>("Border");
 		UpdateDisplay();
 	}
@@ -44,49 +79,19 @@ public partial class RegisterActionCard : PanelContainer
 
 	private void UpdateDisplay()
 	{
-		if (_numberLabel == null)
-		{
-			return;
-		}
+		if (_numberLabel == null) return;
 
-		if (CardSymbol == null)
-		{
-			_background.Color = Colors.Black;
-		}
+		var styles = CardStyleFactory.Evaluate(CardTheme, CurrentState);
 
-		if (IsSelected)
-		{
-			_border.Visible = true;
-		}
-		else
-		{
-			_border.Visible = true;
-		}
-		if (IsFixed && IsSelected)
-		{
-			GD.Print("OOOOPS");
-		}
+		_background.Color = styles.BackgroundColor;
+		_border.AddThemeStyleboxOverride("panel", styles.BorderStyle);
 
-		if (IsFixed)
+		if (CardSymbol != null)
 		{
-			_border.AddThemeStyleboxOverride("panel", CardTheme.GetStylebox("fixed", "Panel"));
+			_symbolLabel.Text = CardSymbol;
+			_numberLabel.Text = CardNumber.ToString();
+			_priorityLabel.Text = CardPriority.ToString();
 		}
-		else if (IsSelected)
-		{
-			var sb = CardTheme.GetStylebox("selected", "Panel");
-			_border.AddThemeStyleboxOverride("panel", sb);
-		}
-		else
-		{
-			_border.AddThemeStyleboxOverride("panel", CardTheme.GetStylebox("panel", "Panel"));
-		}
-		
-
-		if (CardSymbol == null) return;
-
-		_symbolLabel.Text = $"{CardSymbol}";
-		_numberLabel.Text = $"{CardNumber}";
-		_priorityLabel.Text = $"{CardPriority}";
 	}
 
 	// Метод для обновления данных карточки
