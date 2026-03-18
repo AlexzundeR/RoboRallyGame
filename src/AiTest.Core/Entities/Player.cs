@@ -9,20 +9,28 @@ public sealed class Player
     public string Name { get; init; } = "Player";
     public Robot Robot { get; init; } = new();
     public ProgramCard?[] Registers { get; } = new ProgramCard?[5];
-    public List<ProgramCard> Hand { get; } = new();
+    public ProgramCard?[] Hand { get; } = new ProgramCard?[9];
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
-    
-    private readonly HashSet<int> _usedHandSlots = new();
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
 
-    public IReadOnlyCollection<int> UsedHandSlots => _usedHandSlots;
+    public int AvailableCardCount => Hand.Count(c => c != null);
 
     public void DealCards(IEnumerable<ProgramCard> cards)
     {
-        Hand.Clear();
-        Hand.AddRange(cards);
+        for (int i = 0; i < 9; i++)
+            Hand[i] = null;
+        
+        int index = 0;
+        foreach (var card in cards)
+        {
+            if (index < 9)
+            {
+                Hand[index] = card;
+                index++;
+            }
+        }
     }
 
     public void SetRegister(int index, ProgramCard? card)
@@ -36,25 +44,28 @@ public sealed class Player
         return index >= 0 && index < 5 ? Registers[index] : null;
     }
 
-    public void AssignCardToRegister(ProgramCard card, int handIndex, int registerIndex)
+    public ProgramCard? GetHandCard(int index)
     {
-        if (handIndex < 0 || handIndex >= Hand.Count || registerIndex < 0 || registerIndex >= 5)
+        return index >= 0 && index < 9 ? Hand[index] : null;
+    }
+
+    public void AssignCardToRegister(int handIndex, int registerIndex)
+    {
+        if (handIndex < 0 || handIndex >= 9 || registerIndex < 0 || registerIndex >= 5)
             return;
 
-        var cardInReg = Registers[registerIndex];
-        Hand.RemoveAt(handIndex);
-        Registers[registerIndex] = card;
-        _usedHandSlots.Add(handIndex);
+        var card = Hand[handIndex];
+        if (card == null) return;
 
-        if (cardInReg != null)
-            Hand.Add(cardInReg);
+        var cardInReg = Registers[registerIndex];
+        Hand[handIndex] = cardInReg;
+        Registers[registerIndex] = card;
     }
 
     public void ClearRegisters()
     {
         for (int i = 0; i < 5; i++)
             Registers[i] = null;
-        _usedHandSlots.Clear();
     }
 
     public void AddEnergy(int amount) => Robot.AddEnergy(amount);

@@ -76,6 +76,9 @@ public partial class RegisterActionCard : PanelContainer
 
 	internal void SetEmpty()
 	{
+		CardSymbol = null;
+		CardPriority = 0;
+		CardNumber = 0;
 		UpdateDisplay();
 	}
 

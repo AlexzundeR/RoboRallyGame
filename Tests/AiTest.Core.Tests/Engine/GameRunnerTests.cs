@@ -172,7 +172,7 @@ public class GameRunnerTests
 
         runner.Engine.NextRound();
 
-        Assert.Equal(4, player.Hand.Count);
+        Assert.Equal(4, player.AvailableCardCount);
     }
 
     [Fact]
@@ -187,6 +187,6 @@ public class GameRunnerTests
 
         runner.Engine.NextRound();
 
-        Assert.Empty(player.Hand);
+        Assert.Equal(0, player.AvailableCardCount);
     }
 }

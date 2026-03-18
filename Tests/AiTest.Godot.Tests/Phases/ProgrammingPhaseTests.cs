@@ -97,40 +97,25 @@ public class ProgrammingPhaseTests
     public void SelectCard_ShouldPlaceCardInSelectedRegister()
     {
         var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        var initialHandCount = player.Hand.Count;
         var card = new MoveCard { Priority = 999, Spaces = 1 };
-        player.Hand.Add(card);
+        player.Hand[0] = card;
+        var initialCount = player.AvailableCardCount;
         
-        _phase.SelectCard(initialHandCount, 2);
+        _phase.SelectCard(0, 2);
         
         Assert.NotNull(player.GetRegister(2));
         Assert.Same(card, player.GetRegister(2));
-        Assert.Equal(initialHandCount, player.Hand.Count);
-    }
-
-    [Fact]
-    public void SelectCard_ShouldRemoveCardFromHand()
-    {
-        var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        var initialHandCount = player.Hand.Count;
-        var card = new MoveCard { Priority = 999, Spaces = 1 };
-        player.Hand.Add(card);
-        
-        _phase.SelectCard(initialHandCount, 0);
-        
-        Assert.Equal(initialHandCount, player.Hand.Count);
-        Assert.Same(card, player.GetRegister(0));
+        Assert.Equal(initialCount - 1, player.AvailableCardCount);
     }
 
     [Fact]
     public void SelectCard_ShouldAdvanceSelectedRegister()
     {
         var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        var initialHandCount = player.Hand.Count;
-        player.Hand.Add(new MoveCard { Priority = 999, Spaces = 1 });
+        player.Hand[0] = new MoveCard { Priority = 999, Spaces = 1 };
         
         Assert.Equal(0, _phase.SelectedRegister);
-        _phase.SelectCard(initialHandCount, 0);
+        _phase.SelectCard(0, 0);
         
         Assert.Equal(1, _phase.SelectedRegister);
     }
@@ -139,10 +124,9 @@ public class ProgrammingPhaseTests
     public void ConfirmPlayer_ShouldResetSelectedRegister()
     {
         var player = _runner.Engine.State.Players[_phase.CurrentPlayerIndex];
-        var initialHandCount = player.Hand.Count;
-        player.Hand.Add(new MoveCard { Priority = 999, Spaces = 1 });
+        player.Hand[0] = new MoveCard { Priority = 999, Spaces = 1 };
         
-        _phase.SelectCard(initialHandCount, 3);
+        _phase.SelectCard(0, 3);
         Assert.Equal(1, _phase.SelectedRegister);
         
         _phase.ConfirmPlayer();

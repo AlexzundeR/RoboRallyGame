@@ -14,7 +14,8 @@ public class PlayerTests
         Assert.Equal(1, player.Id);
         Assert.Equal("TestPlayer", player.Name);
         Assert.NotNull(player.Robot);
-        Assert.Empty(player.Hand);
+        for (int i = 0; i < 9; i++)
+            Assert.Null(player.Hand[i]);
         for (int i = 0; i < 5; i++)
             Assert.Null(player.GetRegister(i));
     }
@@ -31,7 +32,9 @@ public class PlayerTests
         
         player.DealCards(cards);
         
-        Assert.Equal(2, player.Hand.Count);
+        Assert.Equal(2, player.AvailableCardCount);
+        Assert.NotNull(player.Hand[0]);
+        Assert.NotNull(player.Hand[1]);
     }
 
     [Fact]
@@ -72,13 +75,12 @@ public class PlayerTests
     {
         var player = new Player();
         var card = new MoveCard { Spaces = 1, Priority = 100 };
-        player.Hand.Add(card);
+        player.Hand[0] = card;
         
-        player.AssignCardToRegister(card, 0, 0);
+        player.AssignCardToRegister(0, 0);
         
         Assert.Equal(card, player.GetRegister(0));
-        Assert.Empty(player.Hand);
-        Assert.Contains(0, player.UsedHandSlots);
+        Assert.Null(player.Hand[0]);
     }
 
     [Fact]
@@ -88,49 +90,35 @@ public class PlayerTests
         var card1 = new MoveCard { Spaces = 1, Priority = 100 };
         var card2 = new MoveCard { Spaces = 2, Priority = 200 };
         
-        player.Hand.Add(card1);
+        player.Hand[0] = card1;
         player.SetRegister(0, card2);
         
-        player.AssignCardToRegister(card1, 0, 0);
+        player.AssignCardToRegister(0, 0);
         
-        Assert.Single(player.Hand);
+        Assert.Equal(card1, player.GetRegister(0));
         Assert.Equal(card2, player.Hand[0]);
-        Assert.Contains(0, player.UsedHandSlots);
     }
 
     [Fact]
-    public void AssignCardToRegister_MultipleCards_ShouldTrackAllUsedSlots()
+    public void AssignCardToRegister_MultipleCards_ShouldSwapCorrectly()
     {
         var player = new Player();
         var card1 = new MoveCard { Spaces = 1, Priority = 100 };
         var card2 = new MoveCard { Spaces = 2, Priority = 200 };
         var card3 = new MoveCard { Spaces = 3, Priority = 300 };
         
-        player.Hand.Add(card1);
-        player.Hand.Add(card2);
-        player.Hand.Add(card3);
+        player.Hand[0] = card1;
+        player.Hand[1] = card2;
+        player.Hand[2] = card3;
         
-        player.AssignCardToRegister(card1, 0, 0);
-        player.AssignCardToRegister(card2, 1, 1);
+        player.AssignCardToRegister(0, 0);
+        player.AssignCardToRegister(1, 1);
         
-        Assert.Contains(0, player.UsedHandSlots);
-        Assert.Contains(1, player.UsedHandSlots);
-        Assert.Equal(2, player.UsedHandSlots.Count);
-    }
-
-    [Fact]
-    public void ClearRegisters_ShouldClearUsedHandSlots()
-    {
-        var player = new Player();
-        var card = new MoveCard { Spaces = 1, Priority = 100 };
-        player.Hand.Add(card);
-        
-        player.AssignCardToRegister(card, 0, 0);
-        Assert.Contains(0, player.UsedHandSlots);
-        
-        player.ClearRegisters();
-        
-        Assert.Empty(player.UsedHandSlots);
+        Assert.Equal(card1, player.GetRegister(0));
+        Assert.Equal(card2, player.GetRegister(1));
+        Assert.Null(player.Hand[0]);
+        Assert.Null(player.Hand[1]);
+        Assert.NotNull(player.Hand[2]);
     }
 
     [Fact]
@@ -138,12 +126,12 @@ public class PlayerTests
     {
         var player = new Player();
         var card = new MoveCard { Spaces = 1, Priority = 100 };
-        player.Hand.Add(card);
+        player.Hand[0] = card;
         
-        player.AssignCardToRegister(card, -1, 0);
-        player.AssignCardToRegister(card, 0, 5);
+        player.AssignCardToRegister(-1, 0);
+        player.AssignCardToRegister(0, 5);
         
-        Assert.Single(player.Hand);
+        Assert.NotNull(player.Hand[0]);
         Assert.Equal(card, player.Hand[0]);
     }
 

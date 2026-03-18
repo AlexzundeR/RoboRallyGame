@@ -102,7 +102,7 @@ public class GameEngineTests
         
         engine.StartGame();
         
-        Assert.Equal(9, engine.State.Players[0].Hand.Count);
+        Assert.Equal(9, engine.State.Players[0].AvailableCardCount);
     }
 
     [Fact]
@@ -339,7 +339,7 @@ public class GameEngineTests
         
         dealer.Deal(new[] { player }, deck);
         
-        Assert.Equal(4, player.Hand.Count);
+        Assert.Equal(4, player.AvailableCardCount);
     }
 
     [Fact]
@@ -354,7 +354,7 @@ public class GameEngineTests
         
         dealer.Deal(new[] { player }, deck);
         
-        Assert.Equal(0, player.Hand.Count);
+        Assert.Equal(0, player.AvailableCardCount);
     }
 
     [Fact]
@@ -367,7 +367,7 @@ public class GameEngineTests
         
         dealer.Deal(new[] { player }, deck);
         
-        Assert.Equal(9, player.Hand.Count);
+        Assert.Equal(9, player.AvailableCardCount);
     }
 
     private static List<ProgramCard> CreateDefaultDeck()

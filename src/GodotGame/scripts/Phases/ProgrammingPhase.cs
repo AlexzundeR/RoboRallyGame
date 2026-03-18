@@ -104,10 +104,12 @@ public class ProgrammingPhase : IGamePhase
 
 		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
 		
-		if (cardIndex < player.Hand.Count && registerIndex < 5)
+		if (cardIndex < 9 && registerIndex < 5)
 		{
-			var card = player.Hand[cardIndex];
-			player.AssignCardToRegister(card, cardIndex, registerIndex);
+			var card = player.GetHandCard(cardIndex);
+			if (card == null) return;
+			
+			player.AssignCardToRegister(cardIndex, registerIndex);
 			
 			_dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, registerIndex));
 			

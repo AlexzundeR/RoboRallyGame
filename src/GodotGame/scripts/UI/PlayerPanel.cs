@@ -1,6 +1,5 @@
 using Godot;
 using System.Collections.Generic;
-using System.Linq;
 using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 
@@ -80,20 +79,16 @@ public partial class PlayerPanel : PanelContainer
 		for (int i = 0; i < 9; i++)
 		{
 			var card = _handCards[i];
+			var programCard = player.Hand[i];
 
-			if (player.UsedHandSlots.Contains(i))
+			if (programCard == null)
 			{
 				card.SetEmpty();
-			}
-			else if (i < player.Hand.Count)
-			{
-				var programCard = player.Hand[i];
-				var symbol = GetCardSymbol(programCard);
-				card.SetCardData(symbol, programCard.Priority, i + 1);
 			}
 			else
 			{
-				card.SetEmpty();
+				var symbol = GetCardSymbol(programCard);
+				card.SetCardData(symbol, programCard.Priority, i + 1);
 			}
 		}
 	}
