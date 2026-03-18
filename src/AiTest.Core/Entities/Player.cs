@@ -10,10 +10,27 @@ public sealed class Player
     public int Id { get; init; }
     public string Name { get; init; } = "Player";
     public Robot Robot { get; init; } = new();
-    public RegisterCard?[] Registers { get; } = new RegisterCard?[5];
+    public RegisterCard?[] Registers { get; }
     public ProgramCard?[] Hand { get; } = new ProgramCard?[9];
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
+
+    public Player() : this(null) { }
+
+    public Player(RegisterCard?[]? registers)
+    {
+        Registers = registers ?? new RegisterCard?[5];
+    }
+
+    public static Player CreateWithRegisters(params (ProgramCard Card, int HandIndex)[] registers)
+    {
+        var player = new Player();
+        for (int i = 0; i < registers.Length && i < 5; i++)
+        {
+            player.Registers[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
+        }
+        return player;
+    }
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
 
@@ -43,12 +60,6 @@ public sealed class Player
     public ProgramCard? GetHandCard(int index)
     {
         return index >= 0 && index < 9 ? Hand[index] : null;
-    }
-
-    public void SetRegister(int index, ProgramCard card, int handIndex)
-    {
-        if (index >= 0 && index < 5 && card != null)
-            Registers[index] = new RegisterCard(card, handIndex);
     }
 
     public void AssignCardToRegister(int handIndex, int registerIndex)

@@ -413,9 +413,9 @@ public class GameFlowTests
         var player = runner.Engine.State.Players[0];
         player.Robot.SetDirection(Direction.East);
 
-        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 }, 0);
-        player.SetRegister(1, new MoveCard { Priority = 100, Spaces = 1 }, 1);
-        player.SetRegister(2, new MoveCard { Priority = 100, Spaces = 1 }, 2);
+        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
+        player.Registers[1] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 1);
+        player.Registers[2] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 2);
 
         var pos0 = player.Robot.Position;
 
@@ -447,7 +447,7 @@ public class GameFlowTests
         executionPhase.Initialize(runner, dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
-        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 1 }, 0);
+        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 1 }, 0);
 
         var startPos = player.Robot.Position;
 
@@ -477,8 +477,8 @@ public class GameFlowTests
 
         for (int i = 0; i < 5; i++)
         {
-            p1.SetRegister(i, new MoveCard { Priority = 100 + i, Spaces = 1 }, i);
-            p2.SetRegister(i, new MoveCard { Priority = 200 + i, Spaces = 1 }, i);
+            p1.Registers[i] = new RegisterCard(new MoveCard { Priority = 100 + i, Spaces = 1 }, i);
+            p2.Registers[i] = new RegisterCard(new MoveCard { Priority = 200 + i, Spaces = 1 }, i);
         }
 
         for (int reg = 0; reg < 10; reg++)

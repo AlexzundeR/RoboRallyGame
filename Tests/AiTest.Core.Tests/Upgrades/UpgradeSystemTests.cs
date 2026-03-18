@@ -262,7 +262,7 @@ public class UpgradeSystemTests
         player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        player.SetRegister(0, moveCard, 0);
+        player.Registers[0] = new RegisterCard(moveCard, 0);
         
         engine.ExecuteRegister(0);
         
@@ -284,7 +284,7 @@ public class UpgradeSystemTests
         player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 3 };
-        player.SetRegister(0, moveCard, 0);
+        player.Registers[0] = new RegisterCard(moveCard, 0);
         
         engine.ExecuteRegister(0);
         
@@ -306,7 +306,7 @@ public class UpgradeSystemTests
         player.Robot.SetDirection(Direction.East);
         
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        player.SetRegister(0, moveCard, 0);
+        player.Registers[0] = new RegisterCard(moveCard, 0);
         
         engine.ExecuteRegister(0);
         

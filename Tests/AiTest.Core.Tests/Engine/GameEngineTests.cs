@@ -109,12 +109,10 @@ public class GameEngineTests
     public void ExecuteRegister_MoveCard_ShouldMoveRobot()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        engine.StartGame();
-        
-        var player = engine.State.Players[0];
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        player.SetRegister(0, moveCard, 0);
+        var player = Player.CreateWithRegisters((moveCard, 0));
+        player.Robot.SetPosition(new Position(1, 1));
+        engine.State.Players.Add(player);
         
         var startPos = player.Robot.Position;
         engine.ExecuteRegister(0);
@@ -126,12 +124,11 @@ public class GameEngineTests
     public void ExecuteRegister_TurnCard_ShouldRotateRobot()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
-        var player = engine.State.Players[0];
-        player.Robot.SetDirection(Direction.North);
         var turnCard = new TurnCard { Priority = 150, IsLeft = true };
-        player.SetRegister(0, turnCard, 0);
+        var player = Player.CreateWithRegisters((turnCard, 0));
+        player.Robot.SetPosition(new Position(1, 1));
+        engine.State.Players.Add(player);
+        player.Robot.SetDirection(Direction.North);
         
         engine.ExecuteRegister(0);
         
@@ -149,7 +146,7 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(5, 5));
         player.Robot.SetDirection(Direction.North);
         var backUpCard = new BackUpCard { Priority = 500 };
-        player.SetRegister(0, backUpCard, 0);
+        player.Registers[0] = new RegisterCard(backUpCard, 0);
         
         engine.ExecuteRegister(0);
         
@@ -254,9 +251,9 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
         
-        player.SetRegister(0, new MoveCard { Priority = 100, Spaces = 3 }, 0);
-        player.SetRegister(1, new TurnCard { Priority = 150, IsLeft = true }, 1);
-        player.SetRegister(2, new MoveCard { Priority = 101, Spaces = 2 }, 2);
+        player.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 3 }, 0);
+        player.Registers[1] = new RegisterCard(new TurnCard { Priority = 150, IsLeft = true }, 1);
+        player.Registers[2] = new RegisterCard(new MoveCard { Priority = 101, Spaces = 2 }, 2);
         
         engine.ExecuteRegister(0);
         
@@ -285,8 +282,8 @@ public class GameEngineTests
         p2.Robot.SetPosition(new Position(5, 1));
         p2.Robot.SetDirection(Direction.West);
         
-        p1.SetRegister(0, new MoveCard { Priority = 100, Spaces = 2 }, 0);
-        p2.SetRegister(0, new MoveCard { Priority = 101, Spaces = 2 }, 0);
+        p1.Registers[0] = new RegisterCard(new MoveCard { Priority = 100, Spaces = 2 }, 0);
+        p2.Registers[0] = new RegisterCard(new MoveCard { Priority = 101, Spaces = 2 }, 0);
         
         engine.ExecuteRegister(0);
         
