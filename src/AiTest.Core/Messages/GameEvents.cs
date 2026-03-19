@@ -23,11 +23,13 @@ public sealed record ExecutionStartedEvent(int Round) : IEvent;
 
 public sealed record RegistersClearedEvent() : IEvent;
 
-public sealed record Phase1StartedEvent(int Register) : IEvent;
+public sealed record MovementPhaseStartedEvent(int Register) : IEvent;
 
-public sealed record Phase2StartedEvent(int Register) : IEvent;
+public sealed record ConveyorPhaseStartedEvent(int Register) : IEvent;
 
-public sealed record Phase3StartedEvent(int Register) : IEvent;
+public sealed record LaserPhaseStartedEvent(int Register) : IEvent;
+
+public sealed record PhaseExecutionCompleteEvent(int Register) : IEvent;
 
 public sealed record MoveEvent(int PlayerId, Position From, Position To) : IEvent;
 

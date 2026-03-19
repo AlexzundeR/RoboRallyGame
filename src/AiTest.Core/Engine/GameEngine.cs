@@ -145,10 +145,8 @@ public interface IGameEngine
     void Initialize(GameMap map);
     void AddPlayer(string name);
     void StartGame();
-    void ExecuteRegister(int registerIndex);
-    void ProcessBoardElements();
-    void FireLasers();
-    void NextRegister();
+    void BeginRegisterExecution(int registerIndex);
+    StepResult TryExecuteNextStep();
     void NextRound();
     bool IsGameOver();
     Player? GetWinner();
@@ -161,6 +159,13 @@ public sealed class GameEngine : IGameEngine
     private readonly LaserResolver _laserResolver = new();
     private IDealer _dealer;
 
+    private int _currentRegister = -1;
+    private int _currentStep = -1;
+    private List<Player> _alivePlayers = new();
+    private int _movementStepIndex = -1;
+    private bool _conveyorExecuted = false;
+    private bool _laserExecuted = false;
+
     public event Action<MoveEvent>? OnMove;
     public event Action<RotateEvent>? OnRotate;
     public event Action<LaserFireEvent>? OnLaserFire;
@@ -169,9 +174,10 @@ public sealed class GameEngine : IGameEngine
     public event Action<CheckpointEvent>? OnCheckpoint;
     public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
     public event Action<RobotRebootEvent>? OnRobotReboot;
-    public event Action<Phase1StartedEvent>? OnPhase1Started;
-    public event Action<Phase2StartedEvent>? OnPhase2Started;
-    public event Action<Phase3StartedEvent>? OnPhase3Started;
+    public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
+    public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
+    public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
+    public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
 
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
@@ -214,27 +220,218 @@ public sealed class GameEngine : IGameEngine
         DealCardsToAllPlayers();
     }
 
+    public void BeginRegisterExecution(int registerIndex)
+    {
+        _currentRegister = registerIndex;
+        _currentStep = 0;
+        _alivePlayers = State.Players.Where(p => p.Robot.IsAlive).ToList();
+        _movementStepIndex = 0;
+        _conveyorExecuted = false;
+        _laserExecuted = false;
+    }
+
+    public StepResult TryExecuteNextStep()
+    {
+        var totalSteps = GetTotalSteps();
+        if (_currentStep >= totalSteps)
+        {
+            OnPhaseExecutionComplete?.Invoke(new PhaseExecutionCompleteEvent(_currentRegister));
+            return StepResult.Completed;
+        }
+
+        var movementSteps = _alivePlayers.Count;
+
+        if (_currentStep < movementSteps)
+        {
+            ExecuteMovementStep(_alivePlayers[_currentStep]);
+        }
+        else if (_currentStep == movementSteps && !_conveyorExecuted)
+        {
+            ExecuteConveyorStep();
+        }
+        else if (_currentStep >= movementSteps && !_laserExecuted)
+        {
+            ExecuteLaserStep();
+        }
+
+        _currentStep++;
+        return StepResult.Executed;
+    }
+
+    private int GetTotalSteps()
+    {
+        return _alivePlayers.Count + 2;
+    }
+
+    private void ExecuteMovementStep(Player player)
+    {
+        if (player.Robot.NeedsReboot)
+            return;
+
+        if (_currentRegister < player.Robot.LockedRegisters)
+            return;
+
+        var card = player.GetRegister(_currentRegister);
+        if (card == null)
+            return;
+
+        var beforePos = player.Robot.Position;
+        var beforeDir = player.Robot.Direction;
+
+        if (card.Card is TurnCard turnCard)
+        {
+            if (turnCard.IsLeft)
+                player.Robot.RotateLeft();
+            else
+                player.Robot.RotateRight();
+        }
+        else if (card.Card is UTurnCard)
+        {
+            player.Robot.Rotate180();
+        }
+        else if (card.Card is BackUpCard)
+        {
+            var targetPos = player.Robot.Position.Move(player.Robot.Direction.TurnAround());
+            if (State.Map.IsInBounds(targetPos) && State.Map.GetTile(targetPos).Type != TileType.Wall)
+            {
+                player.Robot.SetPosition(targetPos);
+            }
+        }
+        else if (card.Card is MoveCard moveCard)
+        {
+            var movementStrategy = GetMovementStrategy(player);
+            var cardStrategy = GetCardExecutionStrategy(player);
+            var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) + cardStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
+            var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
+            player.Robot.SetPosition(targetPos);
+        }
+
+        if (player.Robot.Position != beforePos)
+        {
+            OnMove?.Invoke(new MoveEvent(player.Robot.Id, beforePos, player.Robot.Position));
+        }
+        if (player.Robot.Direction != beforeDir)
+        {
+            OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
+        }
+    }
+
+    private void ExecuteConveyorStep()
+    {
+        var beforeStates = CaptureRobotStates();
+
+        foreach (var player in State.Players)
+        {
+            if (!player.Robot.IsAlive)
+                continue;
+
+            var conveyorStrategy = GetConveyorStrategy(player);
+            var ignoreConveyors = conveyorStrategy.ShouldIgnoreConveyors(player.Robot);
+            var ignorePits = conveyorStrategy.ShouldIgnorePits(player.Robot);
+
+            var tile = State.Map.GetTile(player.Robot.Position);
+
+            switch (tile.Type)
+            {
+                case TileType.Pit when !ignorePits:
+                    player.Robot.LoseLifeToken();
+                    break;
+                case TileType.GearCW:
+                    player.Robot.RotateRight();
+                    break;
+                case TileType.GearCCW:
+                    player.Robot.RotateLeft();
+                    break;
+                case TileType.ConveyorCW when !ignoreConveyors:
+                case TileType.ExpressConveyorCW when !ignoreConveyors:
+                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCW ? 2 : 1);
+                    break;
+                case TileType.ConveyorCCW when !ignoreConveyors:
+                case TileType.ExpressConveyorCCW when !ignoreConveyors:
+                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCCW ? 2 : 1);
+                    break;
+                case TileType.Checkpoint:
+                    HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
+                    break;
+            }
+        }
+
+        var afterStates = CaptureRobotStates();
+        foreach (var (playerId, (beforePos, beforeDir, _)) in beforeStates)
+        {
+            if (afterStates.TryGetValue(playerId, out var after))
+            {
+                if (after.Pos != beforePos)
+                {
+                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(playerId, beforePos, after.Pos));
+                }
+                if (after.Dir != beforeDir)
+                {
+                    OnRotate?.Invoke(new RotateEvent(playerId, beforeDir, after.Dir));
+                }
+            }
+        }
+
+        _conveyorExecuted = true;
+    }
+
+    private void ExecuteLaserStep()
+    {
+        var shots = _laserResolver.PrepareShots(State.Map, State.Players);
+
+        foreach (var shot in shots)
+        {
+            var hitPlayerId = State.Players
+                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id &&
+                    p.Robot.IsAlive &&
+                    shot.Path.Contains(p.Robot.Position))
+                ?.Robot.Id;
+
+            _laserResolver.Fire(new List<LaserShot> { shot }, State.Players);
+
+            var damage = hitPlayerId.HasValue ? 1 : 0;
+            OnLaserFire?.Invoke(new LaserFireEvent(shot.Source.Id, shot.Source.Position, shot.Direction, shot.Path, hitPlayerId, damage));
+        }
+
+        _laserExecuted = true;
+    }
+
     public void ExecuteRegister(int registerIndex)
+    {
+        BeginRegisterExecution(registerIndex);
+        while (TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
+    public void ExecuteMovementPhase(int registerIndex)
     {
         var beforeState = CaptureRobotStates();
         
-        OnPhase1Started?.Invoke(new Phase1StartedEvent(registerIndex));
+        OnMovementPhaseStarted?.Invoke(new MovementPhaseStartedEvent(registerIndex));
         Phase1_CardExecution(registerIndex);
         
-        var afterMoveState = CaptureRobotStates();
-        FireMoveAndRotateEvents(beforeState, afterMoveState);
+        FireMoveAndRotateEvents(beforeState, CaptureRobotStates());
+    }
+
+    public void ExecuteConveyorPhase(int registerIndex)
+    {
+        var beforeState = CaptureRobotStates();
         
-        OnPhase2Started?.Invoke(new Phase2StartedEvent(registerIndex));
+        OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(registerIndex));
         Phase2_BoardElements();
         
-        var afterBoardState = CaptureRobotStates();
-        FireMoveEvents(beforeState, afterBoardState);
+        FireMoveEvents(beforeState, CaptureRobotStates());
+    }
+
+    public void ExecuteLaserPhase(int registerIndex)
+    {
+        var beforeState = CaptureRobotStates();
         
-        OnPhase3Started?.Invoke(new Phase3StartedEvent(registerIndex));
+        OnLaserPhaseStarted?.Invoke(new LaserPhaseStartedEvent(registerIndex));
         Phase3_Lasers();
         
-        var afterLaserState = CaptureRobotStates();
-        FireDamageEvents(beforeState, afterLaserState);
+        FireDamageEvents(beforeState, CaptureRobotStates());
+        
+        OnPhaseExecutionComplete?.Invoke(new PhaseExecutionCompleteEvent(registerIndex));
     }
     
     private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureRobotStates()

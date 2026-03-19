@@ -219,7 +219,37 @@ Godot can use Tween or AnimationPlayer for this.
 - Registers now properly clear visually after execution phase
 
 ### Next Steps
-1. Test in Godot - verify laser beams appear
+1. Test in Godot - verify laser beams appear after movement
 2. Verify register cards clear after execution
 3. Test simultaneous robot movement animation
 4. Consider adding delays between execution phases
+
+### Phase Separation (Implemented)
+- Added `TryExecuteNextStep()` to IGameEngine interface
+- GameEngine now has internal state machine for step-by-step execution
+- New approach: `BeginRegisterExecution(registerIndex)` + `TryExecuteNextStep()` loop
+- Each call to `TryExecuteNextStep()` executes one step (player movement, conveyor, or laser)
+- AnimationController no longer needs to track phases - just reacts to events
+- Animation queue still used for sequential animations, but phase tracking removed
+
+### Simple State Machine Pattern (New)
+```
+Client:
+  engine.BeginRegisterExecution(registerIndex);
+  _animationController.WaitForAnimations(OnAnimationsComplete);
+  // call TryExecuteNextStep in OnAnimationsComplete callback
+
+void OnAnimationsComplete() {
+  if (engine.TryExecuteNextStep() == StepResult.Executed) {
+    _animationController.WaitForAnimations(OnAnimationsComplete);
+  } else {
+    // register complete
+  }
+}
+```
+
+Each step fires appropriate events (MoveEvent, RotateEvent, ConveyorMoveEvent, LaserFireEvent)
+AnimationController:
+- Subscribes to engine events
+- Tracks active animations count
+- Calls callback when all animations for step complete

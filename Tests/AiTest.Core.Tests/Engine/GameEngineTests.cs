@@ -311,7 +311,8 @@ public class GameEngineTests
         p2.Robot.SetPosition(new Position(4, 2));
         p2.Robot.SetDirection(Direction.North);
         
-        engine.ExecuteRegister(0);
+        engine.ExecuteMovementPhase(0);
+        engine.ExecuteLaserPhase(0);
         
         Assert.Equal(1, p2.Robot.Damage);
     }
