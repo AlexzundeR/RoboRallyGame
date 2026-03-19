@@ -4,6 +4,7 @@ using System.Linq;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Godot;
+using AiTest.Godot.Animations;
 using AiTest.Godot.Phases;
 using AiTest.Core.Messages;
 
@@ -13,7 +14,7 @@ public partial class GameManager : Node2D
 	private GameUI? _gameUI;
 	private MapRenderer? _mapRenderer;
 	private RobotRenderer? _robotRenderer;
-	private AnimationController? _animationController;
+	private AnimationService? _animationService;
 	private MessageDispatcher _dispatcher = new();
 
 	private IGamePhase? _currentPhase;
@@ -29,8 +30,8 @@ public partial class GameManager : Node2D
 		InitializeGame();
 		SetupLayers();
 		CreateTestLevel();
-		InitializeAnimationController();
 		InitializePhases();
+		InitializeAnimationController();
 		SubscribeToEvents();
 
 		GD.Print("=== Game Ready! ===");
@@ -48,6 +49,8 @@ public partial class GameManager : Node2D
 		_executionPhase = new ExecutionPhase();
 
 		_programmingPhase.Initialize(_runner!, _dispatcher, OnPhaseComplete);
+		_executionPhase.SetAnimationService(_animationService!);
+		_executionPhase.SetRobotLayer(_robotRenderer!);
 		_executionPhase.Initialize(_runner!, _dispatcher, OnPhaseComplete);
 
 		SetPhase(GamePhaseType.Programming);
@@ -66,8 +69,6 @@ public partial class GameManager : Node2D
 
 	private void OnExecutionStarted(ExecutionStartedEvent e)
 	{
-		_animationController?.ClearLog();
-		_animationController?.AddLogMessage($"[b]=== Round {e.Round} Execution ===[/b]");
 	}
 
 	private void OnRegistersCleared(RegistersClearedEvent e)
@@ -145,10 +146,8 @@ public partial class GameManager : Node2D
 		var effectsLayer = new Node2D { Name = "EffectsLayer" };
 		AddChild(effectsLayer);
 
-		_animationController = new AnimationController { Name = "AnimationController" };
-		AddChild(_animationController);
-		
-		_animationController.SetEffectsLayer(effectsLayer);
+		_animationService = new AnimationService { Name = "AnimationService" };
+		AddChild(_animationService);
 
 		_gameUI = GetNodeOrNull<GameUI>("UILayer/GameUI");
 		GD.Print("[GameManager] GameUI loaded from scene: " + (_gameUI != null));
@@ -156,17 +155,26 @@ public partial class GameManager : Node2D
 
 	private void InitializeAnimationController()
 	{
-		if (_runner == null || _robotRenderer == null || _animationController == null) return;
+		if (_animationService == null || _robotRenderer == null || _executionPhase == null)
+		{
+			GD.PrintErr("[GameManager] InitializeAnimationController: missing dependencies");
+			return;
+		}
 		
-		_animationController.Initialize(_runner, _robotRenderer);
+		GD.Print("[GameManager] AnimationService initialized");
 		
 		var logLabel = GetNodeOrNull<RichTextLabel>("UILayer/GameUI/ActionLogPanel/VBox/ScrollContainer/LogLabel");
 		if (logLabel != null)
 		{
-			_animationController.SetActionLog(logLabel);
+			_executionPhase.SetActionLog(logLabel);
+			GD.Print("[GameManager] ActionLog connected to ExecutionPhase");
+		}
+		else
+		{
+			GD.PrintErr("[GameManager] ActionLog not found in scene!");
 		}
 		
-		GD.Print("[GameManager] AnimationController initialized");
+		GD.Print("[GameManager] Animation setup complete");
 	}
 
 	private void CreateTestLevel()
