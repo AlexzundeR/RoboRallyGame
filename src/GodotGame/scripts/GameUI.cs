@@ -41,7 +41,7 @@ public partial class GameUI : CanvasLayer
 		_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
 		_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
 		_statusModal = GetNode<PanelContainer>("StatusModal");
-		_playerPanelsContainer = GetNode<HBoxContainer>("BottomPanel/HBox");
+		_playerPanelsContainer = GetNode<HBoxContainer>("BottomHBox/BottomPanel/HBox");
 
 		InitializePlayerPanels();
 

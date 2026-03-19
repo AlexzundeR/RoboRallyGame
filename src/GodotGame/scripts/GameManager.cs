@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Linq;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
@@ -12,6 +13,7 @@ public partial class GameManager : Node2D
 	private GameUI? _gameUI;
 	private MapRenderer? _mapRenderer;
 	private RobotRenderer? _robotRenderer;
+	private AnimationController? _animationController;
 	private MessageDispatcher _dispatcher = new();
 
 	private IGamePhase? _currentPhase;
@@ -27,6 +29,7 @@ public partial class GameManager : Node2D
 		InitializeGame();
 		SetupLayers();
 		CreateTestLevel();
+		InitializeAnimationController();
 		InitializePhases();
 		SubscribeToEvents();
 
@@ -57,6 +60,19 @@ public partial class GameManager : Node2D
 		_dispatcher.Subscribe<RegisterExecutedEvent>(OnRegisterExecuted);
 		_dispatcher.Subscribe<PhaseChangedEvent>(OnPhaseChanged);
 		_dispatcher.Subscribe<RegisterSelectionChangedEvent>(OnRegisterSelectionChanged);
+		_dispatcher.Subscribe<ExecutionStartedEvent>(OnExecutionStarted);
+		_dispatcher.Subscribe<RegistersClearedEvent>(OnRegistersCleared);
+	}
+
+	private void OnExecutionStarted(ExecutionStartedEvent e)
+	{
+		_animationController?.ClearLog();
+		_animationController?.AddLogMessage($"[b]=== Round {e.Round} Execution ===[/b]");
+	}
+
+	private void OnRegistersCleared(RegistersClearedEvent e)
+	{
+		UpdateUI();
 	}
 
 	private void OnRegisterSelectionChanged(RegisterSelectionChangedEvent e)
@@ -110,6 +126,11 @@ public partial class GameManager : Node2D
 			_ => null
 		};
 
+		if (phase == GamePhaseType.Execution)
+		{
+			_dispatcher.Publish(new ExecutionStartedEvent(_roundNumber));
+		}
+
 		_currentPhase?.OnEnter();
 	}
 
@@ -121,8 +142,31 @@ public partial class GameManager : Node2D
 		_robotRenderer = new RobotRenderer { Name = "RobotLayer" };
 		AddChild(_robotRenderer);
 
+		var effectsLayer = new Node2D { Name = "EffectsLayer" };
+		AddChild(effectsLayer);
+
+		_animationController = new AnimationController { Name = "AnimationController" };
+		AddChild(_animationController);
+		
+		_animationController.SetEffectsLayer(effectsLayer);
+
 		_gameUI = GetNodeOrNull<GameUI>("UILayer/GameUI");
 		GD.Print("[GameManager] GameUI loaded from scene: " + (_gameUI != null));
+	}
+
+	private void InitializeAnimationController()
+	{
+		if (_runner == null || _robotRenderer == null || _animationController == null) return;
+		
+		_animationController.Initialize(_runner, _robotRenderer);
+		
+		var logLabel = GetNodeOrNull<RichTextLabel>("UILayer/GameUI/ActionLogPanel/VBox/ScrollContainer/LogLabel");
+		if (logLabel != null)
+		{
+			_animationController.SetActionLog(logLabel);
+		}
+		
+		GD.Print("[GameManager] AnimationController initialized");
 	}
 
 	private void CreateTestLevel()

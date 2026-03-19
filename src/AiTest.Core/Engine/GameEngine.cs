@@ -2,6 +2,7 @@ namespace AiTest.Core.Engine;
 
 using AiTest.Core.Cards;
 using AiTest.Core.Entities;
+using AiTest.Core.Messages;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
 
@@ -160,6 +161,18 @@ public sealed class GameEngine : IGameEngine
     private readonly LaserResolver _laserResolver = new();
     private IDealer _dealer;
 
+    public event Action<MoveEvent>? OnMove;
+    public event Action<RotateEvent>? OnRotate;
+    public event Action<LaserFireEvent>? OnLaserFire;
+    public event Action<DamageEvent>? OnDamage;
+    public event Action<ConveyorMoveEvent>? OnConveyorMove;
+    public event Action<CheckpointEvent>? OnCheckpoint;
+    public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
+    public event Action<RobotRebootEvent>? OnRobotReboot;
+    public event Action<Phase1StartedEvent>? OnPhase1Started;
+    public event Action<Phase2StartedEvent>? OnPhase2Started;
+    public event Action<Phase3StartedEvent>? OnPhase3Started;
+
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
     public GameEngine(IDealer dealer) : this(dealer, new GameState()) { }
@@ -203,9 +216,95 @@ public sealed class GameEngine : IGameEngine
 
     public void ExecuteRegister(int registerIndex)
     {
+        var beforeState = CaptureRobotStates();
+        
+        OnPhase1Started?.Invoke(new Phase1StartedEvent(registerIndex));
         Phase1_CardExecution(registerIndex);
+        
+        var afterMoveState = CaptureRobotStates();
+        FireMoveAndRotateEvents(beforeState, afterMoveState);
+        
+        OnPhase2Started?.Invoke(new Phase2StartedEvent(registerIndex));
         Phase2_BoardElements();
+        
+        var afterBoardState = CaptureRobotStates();
+        FireMoveEvents(beforeState, afterBoardState);
+        
+        OnPhase3Started?.Invoke(new Phase3StartedEvent(registerIndex));
         Phase3_Lasers();
+        
+        var afterLaserState = CaptureRobotStates();
+        FireDamageEvents(beforeState, afterLaserState);
+    }
+    
+    private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureRobotStates()
+    {
+        var states = new Dictionary<int, (Position, Direction, int)>();
+        foreach (var player in State.Players)
+        {
+            states[player.Robot.Id] = (player.Robot.Position, player.Robot.Direction, player.Robot.Damage);
+        }
+        return states;
+    }
+    
+    private void FireMoveAndRotateEvents(
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
+    {
+        foreach (var player in State.Players)
+        {
+            var id = player.Robot.Id;
+            if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
+            {
+                if (b.Pos != a.Pos)
+                {
+                    OnMove?.Invoke(new MoveEvent(id, b.Pos, a.Pos));
+                }
+                if (b.Dir != a.Dir)
+                {
+                    OnRotate?.Invoke(new RotateEvent(id, b.Dir, a.Dir));
+                }
+            }
+        }
+    }
+    
+    private void FireMoveEvents(
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
+    {
+        foreach (var player in State.Players)
+        {
+            var id = player.Robot.Id;
+            if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
+            {
+                if (b.Pos != a.Pos)
+                {
+                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(id, b.Pos, a.Pos));
+                }
+            }
+        }
+    }
+    
+    private void FireDamageEvents(
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
+    {
+        foreach (var player in State.Players)
+        {
+            var id = player.Robot.Id;
+            if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
+            {
+                if (b.Damage != a.Damage)
+                {
+                    OnDamage?.Invoke(new DamageEvent(id, a.Damage - b.Damage, a.Damage));
+                    
+                    if (a.Damage >= 10)
+                    {
+                        OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
+                    }
+                }
+            }
+        }
     }
 
     private void Phase1_CardExecution(int registerIndex)
@@ -422,6 +521,19 @@ public sealed class GameEngine : IGameEngine
     private void Phase3_Lasers()
     {
         var shots = _laserResolver.PrepareShots(State.Map, State.Players);
+        
+        foreach (var shot in shots)
+        {
+            var hitPlayerId = State.Players
+                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id && 
+                    p.Robot.IsAlive && 
+                    shot.Path.Contains(p.Robot.Position))
+                ?.Robot.Id;
+            
+            var damage = hitPlayerId.HasValue ? 1 : 0;
+            OnLaserFire?.Invoke(new LaserFireEvent(shot.Source.Id, shot.Source.Position, shot.Direction, shot.Path, hitPlayerId, damage));
+        }
+        
         _laserResolver.Fire(shots, State.Players);
     }
 
@@ -436,6 +548,7 @@ public sealed class GameEngine : IGameEngine
         {
             for (int i = 0; i < checkpointNum; i++)
                 player.Robot.AddCheckpoint();
+            OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, checkpointNum));
         }
     }
 

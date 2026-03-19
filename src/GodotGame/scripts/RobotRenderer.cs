@@ -22,6 +22,7 @@ public partial class RobotRenderer : Node2D
 
 	private void CreateRobotSprite(Player player)
 	{
+		var robotSize = TileSize - 20;
 		var robot = new ColorRect
 		{
 			Name = $"Robot_{player.Id}",
@@ -29,8 +30,9 @@ public partial class RobotRenderer : Node2D
 				player.Robot.Position.X * TileSize + 10,
 				player.Robot.Position.Y * TileSize + MapOffsetY + 10
 			),
-			Size = new Vector2(TileSize - 20, TileSize - 20),
-			Color = player.Id == 1 ? Colors.DodgerBlue : Colors.Red
+			Size = new Vector2(robotSize, robotSize),
+			Color = player.Id == 1 ? Colors.DodgerBlue : Colors.Red,
+			PivotOffset = new Vector2(robotSize / 2, robotSize / 2)
 		};
 
 		var directionIndicator = new ColorRect

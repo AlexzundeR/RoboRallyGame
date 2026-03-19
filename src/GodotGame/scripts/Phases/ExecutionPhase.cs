@@ -110,26 +110,18 @@ public class ExecutionPhase : IGamePhase
 
 		var state = _runner.Engine.State;
 
-		if (state.CurrentPlayerIndex < state.Players.Count - 1)
+		foreach (var player in state.Players)
 		{
-			state.CurrentPlayerIndex++;
-			state.CurrentRegister = 0;
-			_dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Execution, state.Round));
+			player.ClearRegisters();
 		}
-		else
-		{
-			foreach (var player in state.Players)
-			{
-				player.ClearRegisters();
-			}
-			
-			state.CurrentPlayerIndex = 0;
-			state.CurrentRegister = 0;
-			state.Round++;
-			_runner.Engine.NextRound();
-			_dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Programming, state.Round));
-			_onPhaseComplete?.Invoke(GamePhaseType.Programming);
-		}
+		
+		state.CurrentPlayerIndex = 0;
+		state.CurrentRegister = 0;
+		state.Round++;
+		_runner.Engine.NextRound();
+		_dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Programming, state.Round));
+		_dispatcher.Publish(new RegistersClearedEvent());
+		_onPhaseComplete?.Invoke(GamePhaseType.Programming);
 	}
 
 	public void OnExit()
