@@ -1,0 +1,129 @@
+namespace AiTest.Godot;
+
+using Godot;
+using AiTest.Core.Entities;
+using AiTest.Core.Models;
+
+public partial class Robot : Node2D
+{
+    private const int TileSize = 48;
+    private const int MapOffsetY = 120;
+
+    private ColorRect _body = null!;
+    private Polygon2D _directionIndicator = null!;
+    private ColorRect _healthBar = null!;
+    
+    private int _playerId;
+    private Color _playerColor;
+    private Core.Models.Position _gridPosition;
+    private Direction _direction;
+    private int _damage;
+    private bool _isAlive = true;
+
+    public int PlayerId => _playerId;
+
+    public override void _Ready()
+    {
+        _body = GetNode<ColorRect>("Body");
+        _directionIndicator = GetNode<Polygon2D>("DirectionIndicator");
+        _healthBar = GetNode<ColorRect>("HealthBar");
+        
+        _directionIndicator.Color = Colors.Yellow;
+    }
+
+    public void Initialize(Player player)
+    {
+        _playerId = player.Id;
+        _playerColor = player.Id == 1 ? Colors.DodgerBlue : Colors.Red;
+        _gridPosition = player.Robot.Position;
+        _direction = player.Robot.Direction;
+        _damage = player.Robot.Damage;
+        _isAlive = player.Robot.IsAlive;
+
+        UpdateVisuals();
+    }
+
+    public void UpdateFromPlayer(Player player)
+    {
+        _gridPosition = player.Robot.Position;
+        _direction = player.Robot.Direction;
+        _damage = player.Robot.Damage;
+        _isAlive = player.Robot.IsAlive;
+
+        UpdateVisuals();
+    }
+
+    private void UpdateVisuals()
+    {
+        var targetPos = new Vector2(
+            _gridPosition.X * TileSize + 24,
+            _gridPosition.Y * TileSize + MapOffsetY + 24
+        );
+        Position = Position.Lerp(targetPos, 0.15f);
+
+        RotationDegrees = DirectionToAngle(_direction);
+
+        _body.Color = _playerColor;
+        
+        if (!_isAlive)
+        {
+            _body.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            _directionIndicator.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+        }
+        else
+        {
+            _body.Modulate = Colors.White;
+            _directionIndicator.Modulate = Colors.White;
+        }
+
+        UpdateHealthBar();
+    }
+
+    private void UpdateHealthBar()
+    {
+        float healthPercent = System.Math.Max(0, 1f - _damage / 10f);
+        _healthBar.Size = new Vector2(22 * healthPercent, 2);
+        
+        if (healthPercent > 0.6f)
+            _healthBar.Color = Colors.Green;
+        else if (healthPercent > 0.3f)
+            _healthBar.Color = Colors.Yellow;
+        else
+            _healthBar.Color = Colors.Red;
+    }
+
+    public void SetDirection(Direction direction)
+    {
+        _direction = direction;
+    }
+
+    public Core.Models.Position GetGridPosition() => _gridPosition;
+    public Direction GetDirection() => _direction;
+    public bool IsAlive() => _isAlive;
+
+    public Vector2 GetWorldPosition()
+    {
+        return new Vector2(
+            _gridPosition.X * TileSize + 24,
+            _gridPosition.Y * TileSize + MapOffsetY + 24
+        );
+    }
+
+    private float DirectionToAngle(Direction dir) => dir switch
+    {
+        Direction.North => 0f,
+        Direction.East => 90f,
+        Direction.South => 180f,
+        Direction.West => 270f,
+        _ => 0f
+    };
+
+    public override void _Process(double delta)
+    {
+        var targetPos = new Vector2(
+            _gridPosition.X * TileSize + 24,
+            _gridPosition.Y * TileSize + MapOffsetY + 24
+        );
+        Position = Position.Lerp(targetPos, 0.15f);
+    }
+}

@@ -16,7 +16,7 @@ public class ExecutionPhase : IGamePhase
 	private IMessageDispatcher? _dispatcher;
 	private Action<GamePhaseType>? _onPhaseComplete;
 	private IAnimationService? _animationService;
-	private Node2D? _robotLayer;
+	private RobotRenderer? _robotLayer;
 	private RichTextLabel? _actionLog;
 	private IInputService _inputService;
 	private bool _inputHandled;
@@ -41,7 +41,7 @@ public class ExecutionPhase : IGamePhase
 		_animationService = service;
 	}
 
-	public void SetRobotLayer(Node2D robotLayer)
+	public void SetRobotLayer(RobotRenderer robotLayer)
 	{
 		_robotLayer = robotLayer;
 	}
@@ -299,9 +299,9 @@ public class ExecutionPhase : IGamePhase
 
 	public void OnExit() { }
 
-	private ColorRect? GetRobot(int playerId)
+	private Robot? GetRobot(int playerId)
 	{
 		if (_robotLayer == null) return null;
-		return _robotLayer.GetNodeOrNull<ColorRect>($"Robot_{playerId}");
+		return _robotLayer.GetRobot(playerId);
 	}
 }

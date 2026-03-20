@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://tile_base"]
+
+[node name="Tile" type="Node2D"]
+
+[node name="BaseTile" type="ColorRect" parent="."]
+offset_right = 48.0
+offset_bottom = 48.0
+
+[node name="BorderTile" type="ColorRect" parent="."]
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 47.0

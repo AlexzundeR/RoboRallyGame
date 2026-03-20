@@ -23,7 +23,7 @@ public partial class AnimationService : Node, IAnimationService
 
     public static Vector2 PositionToVector(Position pos)
     {
-        return new Vector2(pos.X * TileSize + 10, pos.Y * TileSize + MapOffsetY + 10);
+        return new Vector2(pos.X * TileSize + 24, pos.Y * TileSize + MapOffsetY + 24);
     }
 
     public static Vector2 PositionToVectorCentered(Position pos)

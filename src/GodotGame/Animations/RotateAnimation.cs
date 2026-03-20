@@ -6,7 +6,7 @@ using AiTest.Core.Models;
 
 public class RotateAnimation : Animation
 {
-    public ColorRect Robot { get; init; } = null!;
+    public Robot Robot { get; init; } = null!;
     public Direction To { get; init; }
     public float Duration { get; init; } = 0.4f;
 
@@ -23,10 +23,19 @@ public class RotateAnimation : Animation
         
         tween.SetTrans(Tween.TransitionType.Cubic);
         tween.SetEase(Tween.EaseType.InOut);
-        tween.TweenProperty(Robot, "rotation_degrees", AnimationService.DirectionToAngle(To), Duration);
+        tween.TweenProperty(Robot, "rotation_degrees", DirectionToAngle(To), Duration);
         tween.Finished += () => tcs.SetResult(true);
         tween.Play();
         
         return tcs.Task;
     }
+
+    private float DirectionToAngle(Direction dir) => dir switch
+    {
+        Direction.North => 0f,
+        Direction.East => 90f,
+        Direction.South => 180f,
+        Direction.West => 270f,
+        _ => 0f
+    };
 }
