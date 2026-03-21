@@ -32,6 +32,9 @@ Code analysis is configured via:
 - `.editorconfig` - code style and formatting rules
 - `Directory.Build.props` - analyzer configuration
 
+### Primary Analysis: dotnet build
+**Always run `dotnet build` first** - it shows all errors, warnings, and analyzer diagnostics.
+
 ### Enabled Analyzers
 - **Microsoft.CodeAnalysis.NetAnalyzers** - built into .NET SDK
 - **Roslynator.Analyzers** - code style and best practices
@@ -46,6 +49,12 @@ Code analysis is configured via:
 # Check code formatting (requires dotnet format)
 dotnet format --verify-no-changes src/GodotGame/AiTest.Godot.csproj
 ```
+
+### LSP Configuration
+- **csharp-ls** installed via `dotnet tool install --global csharp-ls`
+- Configuration in `opencode.json` uses `dotnet tool run csharp-ls`
+- LSP may have slow initialization (3-4 seconds) on C# projects
+- For real-time diagnostics, use VS Code with C# extension
 
 ## Test Commands
 
