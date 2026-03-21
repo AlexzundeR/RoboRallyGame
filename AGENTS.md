@@ -2,15 +2,19 @@
 
 ## Project Overview
 
-- **Project Type**: .NET 10 Class Library (Game Logic Core)
+- **Project Type**: Godot Game (C#) + Core Library
 - **Language**: C# 12
-- **Target Framework**: net10.0
+- **Target Framework**: net8.0
+- **Projects**: AiTest.Core (logic), AiTest.Godot (game UI)
 
 ## Build Commands
 
 ```bash
-# Build the project
+# Build all projects
 dotnet build
+
+# Build Godot project specifically
+dotnet build src/GodotGame/AiTest.Godot.csproj
 
 # Build in Release mode
 dotnet build -c Release
@@ -20,6 +24,27 @@ dotnet clean && dotnet build
 
 # Restore dependencies
 dotnet restore
+```
+
+## Code Analysis
+
+Code analysis is configured via:
+- `.editorconfig` - code style and formatting rules
+- `Directory.Build.props` - analyzer configuration
+
+### Enabled Analyzers
+- **Microsoft.CodeAnalysis.NetAnalyzers** - built into .NET SDK
+- **Roslynator.Analyzers** - code style and best practices
+
+### Key Rules
+- Code style warnings are **NOT** treated as errors (`EnforceCodeStyleInBuild=false`)
+- Nullable reference annotations (`CS8632`) are suppressed
+- Warnings don't block builds
+
+### Format Checking
+```bash
+# Check code formatting (requires dotnet format)
+dotnet format --verify-no-changes src/GodotGame/AiTest.Godot.csproj
 ```
 
 ## Test Commands
@@ -92,9 +117,15 @@ dotnet test --logger "console;verbosity=detailed"
 ```
 AiTest.Core/
 ├── AiTest.Core.csproj
-├── Class1.cs          # Remove after adding real classes
 ├── Game/              # Game logic components
 └── Models/            # Data models and DTOs
+
+src/GodotGame/
+├── scripts/           # Game scripts (Robot, Tile, MapRenderer, etc.)
+├── Tiles/             # Tile scenes and scripts
+├── Animations/        # Animation classes
+├── Services/          # Game services
+└── project.godot      # Godot project config
 ```
 
 ## Testing
