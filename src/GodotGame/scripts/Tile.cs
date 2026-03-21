@@ -6,23 +6,11 @@ public abstract partial class Tile : Node2D
 {
 	private const int TileSize = 48;
 	private const int MapOffsetY = 120;
-
-	private ColorRect? _baseTile;
-	private ColorRect? _borderTile;
-	private bool _initialized;
 	
 	protected Core.Models.Position GridPosition { get; private set; }
 	protected Core.Models.TileType TileType { get; private set; }
 	protected abstract Color BaseColor { get; }
 	protected abstract Color BorderColor { get; }
-
-	public override void _Ready()
-	{
-		_baseTile = GetNodeOrNull<ColorRect>("BaseTile");
-		_borderTile = GetNodeOrNull<ColorRect>("BorderTile");
-		
-		OnReady();
-	}
 
 	protected virtual void OnReady()
 	{
@@ -38,15 +26,13 @@ public abstract partial class Tile : Node2D
 			position.Y * TileSize + MapOffsetY
 		);
 		
-		_baseTile ??= GetNodeOrNull<ColorRect>("BaseTile");
-		_borderTile ??= GetNodeOrNull<ColorRect>("BorderTile");
+		if (!IsInsideTree()) return;
 		
-		if (_baseTile != null)
-			_baseTile.Color = BaseColor;
-		if (_borderTile != null)
-			_borderTile.Color = BorderColor;
+		var baseTile = GetNode<ColorRect>("BaseTile");
+		var borderTile = GetNode<ColorRect>("BorderTile");
 		
-		_initialized = true;
+		baseTile.Color = BaseColor;
+		borderTile.Color = BorderColor;
 	}
 
 	public virtual void StartAnimations()
@@ -55,17 +41,5 @@ public abstract partial class Tile : Node2D
 
 	public virtual void StopAnimations()
 	{
-	}
-
-	protected void SetBaseColor(Color color)
-	{
-		if (_baseTile != null)
-			_baseTile.Color = color;
-	}
-
-	protected void SetBorderColor(Color color)
-	{
-		if (_borderTile != null)
-			_borderTile.Color = color;
 	}
 }

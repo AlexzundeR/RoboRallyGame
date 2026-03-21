@@ -17,7 +17,17 @@ offset_right = 47.0
 offset_bottom = 47.0
 color = Color(0.35, 0.5, 0.6, 1)
 
+[node name="ConveyorLines" type="Polygon2D" parent="."]
+position = Vector2(0, 0)
+polygon = PackedVector2Array(4, 8, 44, 8, 44, 10, 4, 10, 4, 20, 44, 20, 44, 22, 4, 22, 4, 32, 44, 32, 44, 34, 4, 34, 4, 38, 44, 38, 44, 40, 4, 40)
+color = Color(0.3, 0.5, 0.6, 0.4)
+
 [node name="Arrow" type="Polygon2D" parent="."]
 position = Vector2(24, 24)
 polygon = PackedVector2Array(0, -10, 8, 6, 0, 2, -8, 6)
-color = Color(0.6, 0.8, 0.9, 1)
+color = Color(0.7, 0.9, 1, 1)
+
+[node name="ArrowHighlight" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(0, -8, 4, 2, 0, 0)
+color = Color(1, 1, 1, 0.3)

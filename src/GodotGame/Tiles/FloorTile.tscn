@@ -16,3 +16,28 @@ offset_top = 1.0
 offset_right = 47.0
 offset_bottom = 47.0
 color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="CornerTL" type="Polygon2D" parent="."]
+position = Vector2(6, 6)
+polygon = PackedVector2Array(0, 0, 4, 0, 0, 4)
+color = Color(0.35, 0.35, 0.4, 0.4)
+
+[node name="CornerTR" type="Polygon2D" parent="."]
+position = Vector2(42, 6)
+polygon = PackedVector2Array(0, 0, -4, 0, 0, 4)
+color = Color(0.35, 0.35, 0.4, 0.4)
+
+[node name="CornerBL" type="Polygon2D" parent="."]
+position = Vector2(6, 42)
+polygon = PackedVector2Array(0, 0, 4, 0, 0, -4)
+color = Color(0.35, 0.35, 0.4, 0.4)
+
+[node name="CornerBR" type="Polygon2D" parent="."]
+position = Vector2(42, 42)
+polygon = PackedVector2Array(0, 0, -4, 0, 0, -4)
+color = Color(0.35, 0.35, 0.4, 0.4)
+
+[node name="CenterDot" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(-2, -2, 2, -2, 2, 2, -2, 2)
+color = Color(0.4, 0.4, 0.45, 0.3)

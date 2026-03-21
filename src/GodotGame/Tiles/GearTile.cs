@@ -25,6 +25,7 @@ public partial class GearTile : Tile
 
     public override void StartAnimations()
     {
+        if (!IsInsideTree() || _gear == null) return;
         if (_isRotating) return;
         _isRotating = true;
         

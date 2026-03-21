@@ -16,3 +16,20 @@ offset_top = 1.0
 offset_right = 47.0
 offset_bottom = 47.0
 color = Color(0.25, 0.45, 0.25, 1)
+
+[node name="FlagPole" type="ColorRect" parent="."]
+offset_left = 22.0
+offset_top = 8.0
+offset_right = 24.0
+offset_bottom = 40.0
+color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="FlagTriangle" type="Polygon2D" parent="."]
+position = Vector2(24, 12)
+polygon = PackedVector2Array(0, 0, 16, 6, 0, 12)
+color = Color(0.2, 0.8, 0.2, 1)
+
+[node name="FlagHighlight" type="Polygon2D" parent="."]
+position = Vector2(24, 12)
+polygon = PackedVector2Array(0, 1, 8, 6, 0, 5)
+color = Color(0.4, 0.9, 0.4, 0.5)

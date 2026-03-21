@@ -62,6 +62,7 @@ public partial class PlayerPanel : PanelContainer
 	public void Update(Player player, bool isCurrentPlayer, bool isProgramming,
 					   int currentRegister, int selectedRegister)
 	{
+		if (!IsInsideTree()) return;
 		UpdateHeader(player);
 		UpdateHand(player, isCurrentPlayer && isProgramming);
 		UpdateRegisters(player, currentRegister, isProgramming, isCurrentPlayer, selectedRegister);

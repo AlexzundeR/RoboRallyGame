@@ -45,7 +45,7 @@ public partial class RegisterActionCard : PanelContainer
 
 	private void UpdateDisplay()
 	{
-		if (_numberLabel == null) return;
+		if (!IsInsideTree()) return;
 
 		var styles = CardStyleFactory.Evaluate(CardTheme, IsEmpty, IsFixed, IsSelected);
 

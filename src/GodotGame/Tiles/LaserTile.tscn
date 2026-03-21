@@ -16,3 +16,23 @@ offset_top = 1.0
 offset_right = 47.0
 offset_bottom = 47.0
 color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="LaserEmitter" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(-5, -5, 5, -5, 5, 5, -5, 5)
+color = Color(1, 0.2, 0.2, 0.9)
+
+[node name="LaserCore" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(-2, -2, 2, -2, 2, 2, -2, 2)
+color = Color(1, 0.8, 0.8, 1)
+
+[node name="LaserBeamH" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(-20, -1, 20, -1, 20, 1, -20, 1)
+color = Color(1, 0.3, 0.3, 0.3)
+
+[node name="LaserGlowH" type="Polygon2D" parent="."]
+position = Vector2(24, 24)
+polygon = PackedVector2Array(-18, -3, 18, -3, 18, 3, -18, 3)
+color = Color(1, 0.2, 0.2, 0.1)

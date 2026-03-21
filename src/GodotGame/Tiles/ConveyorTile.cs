@@ -28,11 +28,14 @@ public partial class ConveyorTile : Tile
             Core.Models.TileType.ConveyorCCW or Core.Models.TileType.ExpressConveyorCCW => -90f,
             _ => 0f
         };
-        _arrow.RotationDegrees = dir;
+        
+        if (_arrow != null)
+            _arrow.RotationDegrees = dir;
     }
 
     public override void StartAnimations()
     {
+        if (!IsInsideTree() || _arrow == null) return;
         if (_isRotating) return;
         _isRotating = true;
         

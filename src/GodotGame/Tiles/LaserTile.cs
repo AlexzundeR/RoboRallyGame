@@ -1,5 +1,7 @@
 namespace AiTest.Godot.Tiles;
 
+using Godot;
+
 public partial class LaserTile : Tile
 {
     private Polygon2D _emitter = null!;
@@ -11,19 +13,12 @@ public partial class LaserTile : Tile
     protected override void OnReady()
     {
         base.OnReady();
-        
-        _emitter = new Polygon2D
-        {
-            Name = "Emitter",
-            Position = new Vector2(24, 24),
-            Polygon = new[] { new Vector2(-6, -6), new Vector2(6, -6), new Vector2(6, 6), new Vector2(-6, 6) },
-            Color = new Color(1.0f, 0.2f, 0.2f, 0.8f)
-        };
-        AddChild(_emitter);
+        _emitter = GetNode<Polygon2D>("LaserEmitter");
     }
 
     public override void StartAnimations()
     {
+        if (!IsInsideTree() || _emitter == null) return;
         if (_isPulsing) return;
         _isPulsing = true;
         

@@ -26,8 +26,8 @@ public partial class GameUI : CanvasLayer
 	{
 		set
 		{
-			if (_priorityLabel != null)
-				_priorityLabel.Text = value;
+			if (!IsInsideTree()) return;
+			_priorityLabel.Text = value;
 		}
 	}
 
@@ -44,13 +44,12 @@ public partial class GameUI : CanvasLayer
 		_playerPanelsContainer = GetNode<HBoxContainer>("BottomHBox/BottomPanel/HBox");
 
 		InitializePlayerPanels();
-
-		if (_infoButton != null)
-			_infoButton.Pressed += OnInfoPressed;
+		_infoButton.Pressed += OnInfoPressed;
 	}
 
 	private void InitializePlayerPanels()
 	{
+		if (!IsInsideTree()) return;
 		if (PlayerPanelScene == null) return;
 
 		for (int i = 0; i < 2; i++)
@@ -69,51 +68,41 @@ public partial class GameUI : CanvasLayer
 
 	private void OnInfoPressed()
 	{
+		if (!IsInsideTree()) return;
 		_modalVisible = !_modalVisible;
-		if (_statusModal != null)
-			_statusModal.Visible = _modalVisible;
+		_statusModal.Visible = _modalVisible;
 	}
 
 	public void UpdateRound(int round)
 	{
-		if (_roundLabel != null)
-			_roundLabel.Text = $"Round: {round}";
+		if (!IsInsideTree()) return;
+		_roundLabel.Text = $"Round: {round}";
 	}
 
 	public void UpdatePhase(bool programming)
 	{
-		if (_phaseLabel == null) return;
-
+		if (!IsInsideTree()) return;
 		_phaseLabel.Text = programming ? "PROGRAMMING" : "EXECUTION";
 		_phaseLabel.AddThemeColorOverride("font_color", programming ? Colors.Yellow : Colors.Green);
 	}
 
 	public void UpdateRegisterPrompt(int currentRegister, int selectedRegister, string playerName)
 	{
-		if (_registerLabel == null) return;
-
+		if (!IsInsideTree()) return;
 		_registerLabel.Text = $"{playerName}: Register [{selectedRegister + 1}]/5";
-
-		if (_actionPrompt != null)
-		{
-			_actionPrompt.Text = $"SELECT {playerName.ToUpper()}: <- -> SELECT REGISTER | 1-9 SELECT CARD";
-		}
+		_actionPrompt.Text = $"SELECT {playerName.ToUpper()}: <- -> SELECT REGISTER | 1-9 SELECT CARD";
 	}
 
 	public void UpdateExecutionPrompt(int currentRegister, string playerName)
 	{
-		if (_registerLabel == null) return;
-
+		if (!IsInsideTree()) return;
 		_registerLabel.Text = $"{playerName}: Executing register {currentRegister + 1}/5";
-
-		if (_actionPrompt != null)
-		{
-			_actionPrompt.Text = $"EXECUTING {playerName.ToUpper()}: REGISTER {currentRegister + 1} (PRESS SPACE)";
-		}
+		_actionPrompt.Text = $"EXECUTING {playerName.ToUpper()}: REGISTER {currentRegister + 1} (PRESS SPACE)";
 	}
 
 	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
 	{
+		if (!IsInsideTree()) return;
 		if (_playerPanels.Count >= 2)
 		{
 			_playerPanels[0].Update(p1, currentPlayerIndex == 0, programming, currentRegister, selectedRegister);
