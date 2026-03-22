@@ -70,6 +70,15 @@ dotnet test -v n
 
 # Run tests and show output immediately
 dotnet test --logger "console;verbosity=detailed"
+
+# Run tests with Godot runtime support (for GdUnit4Net tests)
+# Windows:
+set GODOT_BIN=C:\Program Files (x86)\godot\Godot_v4.6.1-stable_mono_win64.exe
+dotnet test
+
+# Linux/macOS:
+export GODOT_BIN=/path/to/Godot_v4.x-stable_mono_linux.x86_64
+dotnet test
 ```
 
 ## Code Style Guidelines
@@ -139,10 +148,73 @@ src/GodotGame/
 
 ## Testing
 
-- Use xUnit for unit tests (recommended for .NET)
+### Test Projects Structure
+```
+Tests/
+├── AiTest.Core.Tests/        # Pure logic tests (xUnit)
+└── AiTest.Godot.Tests/       # Godot-specific tests
+    ├── ExecutionPhase/       # Execution phase tests
+    ├── GameFlow/             # Game flow integration tests
+    ├── Messages/             # Message dispatcher tests
+    ├── Phases/               # Phase tests
+    ├── GdUnit/               # GdUnit4Net tests (RequireGodotRuntime)
+    └── GlobalUsings.cs       # Common usings (FluentAssertions, Godot, etc.)
+```
+
+### Testing Frameworks
+- **xUnit** - for unit tests
+- **FluentAssertions** - for readable assertions (`.Should().Be()`)
+- **GdUnit4Net** - for Godot runtime integration tests
+
+### Running Tests
+```bash
+# Run all tests
+dotnet test
+
+# Run Godot tests only
+dotnet test Tests/AiTest.Godot.Tests/
+
+# Run tests with GODOT_BIN (for GdUnit4Net runtime tests)
+export GODOT_BIN="/path/to/Godot_v4.x-stable_mono_win64.exe"  # Linux/macOS
+set GODOT_BIN=C:\path\to\Godot_v4.x-stable_mono_win64.exe    # Windows
+dotnet test
+```
+
+### Writing Tests
+```csharp
+// xUnit + FluentAssertions
+[Fact]
+public void ExecutionPhase_ExecuteRegister_PublishesEvent()
+{
+    var phase = new ExecutionPhase();
+    phase.Initialize(runner, dispatcher, _ => {});
+    
+    phase.ExecuteRegister();
+    
+    events.Should().HaveCount(1);
+}
+
+// GdUnit4Net with Godot runtime
+[TestSuite]
+public class RobotNodeTests
+{
+    [TestCase]
+    [RequireGodotRuntime]
+    public void Robot_Move_UpdatesPosition()
+    {
+        var robot = new Robot();
+        robot.Move(new Position(1, 0));
+        AssertThat(robot.Position.X).IsEqual(1);
+    }
+}
+```
+
+### Test Guidelines
+- **Unit tests** (`AiTest.Core.Tests`): Test pure game logic without Godot dependencies
+- **Integration tests** (`AiTest.Godot.Tests`): Test classes that use Godot APIs
+- **Godot Runtime tests** (`GdUnit/`): Use `[RequireGodotRuntime]` attribute, requires `GODOT_BIN` environment variable
 - Test file naming: `{ClassName}Tests.cs`
 - Test method naming: `{MethodName}_{Scenario}_{ExpectedResult}`
-- Place tests in separate test project: `AiTest.Core.Tests`
 
 ## Common Tasks
 
