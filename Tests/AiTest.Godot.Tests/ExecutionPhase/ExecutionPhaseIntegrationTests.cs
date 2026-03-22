@@ -190,7 +190,41 @@ public class ExecutionPhaseIntegrationTests
         {
             phase.ExecuteRegister();
         }
+        
+        phase.ExecuteRegister();
 
         player.Registers.Should().AllSatisfy(r => r.Should().BeNull());
+    }
+
+    [Fact]
+    public void ExecutionPhase_CompleteAllRegisters_PublishesRegistersClearedEvent()
+    {
+        var runner = CreateRunnerWithCards(
+            new MoveCard { Priority = 100, Spaces = 1 },
+            new MoveCard { Priority = 101, Spaces = 1 },
+            new MoveCard { Priority = 102, Spaces = 1 },
+            new MoveCard { Priority = 103, Spaces = 1 },
+            new MoveCard { Priority = 104, Spaces = 1 }
+        );
+        var dispatcher = new MessageDispatcher();
+        var phase = new ExecutionPhase();
+        phase.SetAnimationService(new MockAnimationService());
+        phase.Initialize(runner, dispatcher, _ => { });
+
+        var events = new List<RegistersClearedEvent>();
+        dispatcher.Subscribe<RegistersClearedEvent>(e => events.Add(e));
+
+        var player = runner.Engine.State.Players[0];
+        for (int i = 0; i < 5; i++)
+        {
+            player.AssignCardToRegister(i, i);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            phase.ExecuteRegister();
+        }
+
+        events.Should().HaveCount(1);
     }
 }

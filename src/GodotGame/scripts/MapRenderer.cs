@@ -1,7 +1,9 @@
 using Godot;
 using System.Collections.Generic;
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 using AiTest.Godot.Tiles;
+using AiTest.Godot.Components;
 
 namespace AiTest.Godot;
 
@@ -17,6 +19,7 @@ public partial class MapRenderer : Node2D
     private PackedScene _laserTileScene = null!;
     private PackedScene _startTileScene = null!;
     private PackedScene _checkpointTileScene = null!;
+    private PackedScene _barricadeRendererScene = null!;
     
     private const int TileSize = 48;
     private const int MapOffsetY = 120;
@@ -31,6 +34,7 @@ public partial class MapRenderer : Node2D
         _laserTileScene = GD.Load<PackedScene>("res://Tiles/LaserTile.tscn");
         _startTileScene = GD.Load<PackedScene>("res://Tiles/StartTile.tscn");
         _checkpointTileScene = GD.Load<PackedScene>("res://Tiles/CheckpointTile.tscn");
+        _barricadeRendererScene = GD.Load<PackedScene>("res://Components/BarricadeRenderer.tscn");
     }
 
     public void RenderMap(GameMap map)
@@ -78,6 +82,14 @@ public partial class MapRenderer : Node2D
             {
                 gearTile.Initialize(pos, tileData.Type);
             }
+        }
+        
+        var blockedComponent = tileData.GetComponent<BlockedMovementComponent>();
+        if (blockedComponent != null && blockedComponent.BlockedDirections.Count > 0 && blockedComponent.BlockedDirections.Count < 4)
+        {
+            var barricadeRenderer = _barricadeRendererScene.Instantiate<BarricadeRenderer>();
+            tileNode.AddChild(barricadeRenderer);
+            barricadeRenderer.RenderBlockages(blockedComponent.BlockedDirections);
         }
         
         tileNode.StartAnimations();

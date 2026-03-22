@@ -7,8 +7,14 @@ public sealed class BackUpCard : ProgramCard
 {
     public override void Execute(Robot robot, GameMap map)
     {
-        var newPos = robot.Position.Move(robot.Direction.TurnAround());
-        if (map.IsInBounds(newPos) && map.GetTile(newPos).Type != TileType.Wall)
+        var oppositeDir = robot.Direction.TurnAround();
+        var currentTile = map.GetTile(robot.Position);
+        var newPos = robot.Position.Move(oppositeDir);
+        var targetTile = map.GetTile(newPos);
+        
+        if (map.IsInBounds(newPos) && 
+            targetTile.CanEnterFrom(oppositeDir) && 
+            currentTile.CanExitTo(oppositeDir))
         {
             robot.Move(newPos);
         }

@@ -13,6 +13,7 @@ public partial class GameUI : CanvasLayer
 	private Label _actionPrompt;
 	private Label _helpLabel;
 	private Button _infoButton;
+	private Button _closeButton;
 	private PanelContainer _statusModal;
 
 	private HBoxContainer _playerPanelsContainer;
@@ -40,11 +41,13 @@ public partial class GameUI : CanvasLayer
 		_actionPrompt = GetNode<Label>("TopPanel/HBox/MiddlePanel/ActionPrompt");
 		_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
 		_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
+		_closeButton = GetNode<Button>("StatusModal/VBox/CloseButton");
 		_statusModal = GetNode<PanelContainer>("StatusModal");
 		_playerPanelsContainer = GetNode<HBoxContainer>("BottomHBox/BottomPanel/HBox");
 
 		InitializePlayerPanels();
 		_infoButton.Pressed += OnInfoPressed;
+		_closeButton.Pressed += OnClosePressed;
 	}
 
 	private void InitializePlayerPanels()
@@ -71,6 +74,13 @@ public partial class GameUI : CanvasLayer
 		if (!IsInsideTree()) return;
 		_modalVisible = !_modalVisible;
 		_statusModal.Visible = _modalVisible;
+	}
+
+	private void OnClosePressed()
+	{
+		if (!IsInsideTree()) return;
+		_modalVisible = false;
+		_statusModal.Visible = false;
 	}
 
 	public void UpdateRound(int round)

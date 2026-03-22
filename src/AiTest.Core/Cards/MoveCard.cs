@@ -11,10 +11,15 @@ public sealed class MoveCard : ProgramCard
     {
         for (int i = 0; i < Spaces; i++)
         {
-            var newPos = robot.Position.Move(robot.Direction);
-            if (map.IsInBounds(newPos) && map.GetTile(newPos).Type != TileType.Wall)
+            var currentTile = map.GetTile(robot.Position);
+            var targetPos = robot.Position.Move(robot.Direction);
+            var targetTile = map.GetTile(targetPos);
+            
+            if (map.IsInBounds(targetPos) && 
+                targetTile.CanEnterFrom(robot.Direction) && 
+                currentTile.CanExitTo(robot.Direction))
             {
-                robot.Move(newPos);
+                robot.Move(targetPos);
             }
             else
             {

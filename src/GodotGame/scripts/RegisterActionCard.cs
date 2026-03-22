@@ -58,6 +58,12 @@ public partial class RegisterActionCard : PanelContainer
 			_numberLabel.Text = CardNumber.ToString();
 			_priorityLabel.Text = CardPriority.ToString();
 		}
+		else
+		{
+			_symbolLabel.Text = "";
+			_numberLabel.Text = "";
+			_priorityLabel.Text = "";
+		}
 	}
 
 	// Метод для обновления данных карточки

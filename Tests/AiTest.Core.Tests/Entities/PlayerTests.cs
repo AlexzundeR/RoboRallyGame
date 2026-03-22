@@ -162,6 +162,27 @@ public class PlayerTests
     }
 
     [Fact]
+    public void AssignCardToRegister_LockedRegister_ShouldNotAllowAssignment()
+    {
+        var robot = new Robot();
+        robot.AddDamage(6);
+        
+        var hand = new ProgramCard?[9];
+        hand[0] = new MoveCard { Priority = 100, Spaces = 1 };
+        hand[1] = new MoveCard { Priority = 101, Spaces = 2 };
+        
+        var player = new Player(null, hand) { Robot = robot };
+        
+        player.AssignCardToRegister(0, 0);
+        player.AssignCardToRegister(1, 1);
+        
+        Assert.NotNull(player.Hand[0]);
+        Assert.NotNull(player.Hand[1]);
+        Assert.Null(player.GetRegister(0));
+        Assert.Null(player.GetRegister(1));
+    }
+
+    [Fact]
     public void AddEnergy_ShouldNotExceedMax()
     {
         var robot = new Robot();

@@ -131,23 +131,23 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -150.0
-offset_right = 200.0
-offset_bottom = 150.0
+offset_left = -250.0
+offset_top = -220.0
+offset_right = 250.0
+offset_bottom = 220.0
+
+[node name="ColorRect" type="ColorRect" parent="StatusModal" unique_id=38284602]
+layout_mode = 2
+color = Color(0.15, 0.15, 0.2, 0.98)
 
 [node name="VBox" type="VBoxContainer" parent="StatusModal" unique_id=1170889836]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="StatusModal/VBox" unique_id=1206824381]
 layout_mode = 2
 text = "GAME INFO"
 horizontal_alignment = 1
-
-[node name="CloseButton" type="Button" parent="StatusModal/VBox" unique_id=1700129405]
-layout_mode = 2
-text = "Close"
 
 [node name="ControlsLabel" type="Label" parent="StatusModal/VBox" unique_id=1171831665]
 layout_mode = 2
@@ -155,5 +155,129 @@ text = "CONTROLS
 
 1-9: Select card for register
 SPACE: Confirm / Execute
-ESC: Restart game"
+ESC: Restart game
+I: Open this info panel"
 horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="StatusModal/VBox" unique_id=38284900]
+layout_mode = 2
+
+[node name="LegendTitle" type="Label" parent="StatusModal/VBox" unique_id=38284901]
+layout_mode = 2
+text = "MAP LEGEND"
+horizontal_alignment = 1
+
+[node name="LegendGrid" type="GridContainer" parent="StatusModal/VBox" unique_id=38284902]
+layout_mode = 2
+columns = 3
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 8
+
+[node name="WallIcon" type="ColorRect" parent="StatusModal/VBox/LegendGrid" unique_id=38285001]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="WallLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284903]
+layout_mode = 2
+text = "Wall"
+
+[node name="WallDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284904]
+layout_mode = 2
+text = "Blocked"
+
+[node name="TunnelIcon" type="HBoxContainer" parent="StatusModal/VBox/LegendGrid" unique_id=38285002]
+layout_mode = 2
+
+[node name="WallHalf" type="ColorRect" parent="StatusModal/VBox/LegendGrid/TunnelIcon" unique_id=38285003]
+custom_minimum_size = Vector2(12, 20)
+layout_mode = 2
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="StripeHalf" type="ColorRect" parent="StatusModal/VBox/LegendGrid/TunnelIcon" unique_id=38285004]
+custom_minimum_size = Vector2(12, 20)
+layout_mode = 2
+color = Color(0.9, 0.7, 0, 1)
+
+[node name="TunnelLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284905]
+layout_mode = 2
+text = "Tunnel"
+
+[node name="TunnelDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284906]
+layout_mode = 2
+text = "Limited entry"
+
+[node name="PitIcon" type="ColorRect" parent="StatusModal/VBox/LegendGrid" unique_id=38285007]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+color = Color(0.05, 0.05, 0.08, 1)
+
+[node name="PitLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284907]
+layout_mode = 2
+text = "Pit"
+
+[node name="PitDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284908]
+layout_mode = 2
+text = "Damage"
+
+[node name="ConveyorIcon" type="HBoxContainer" parent="StatusModal/VBox/LegendGrid" unique_id=38285009]
+layout_mode = 2
+
+[node name="BG" type="ColorRect" parent="StatusModal/VBox/LegendGrid/ConveyorIcon" unique_id=38285010]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+color = Color(0.25, 0.4, 0.5, 1)
+
+[node name="Arrow" type="Polygon2D" parent="StatusModal/VBox/LegendGrid/ConveyorIcon" unique_id=38285011]
+position = Vector2(16, 12)
+polygon = PackedVector2Array(-4, -6, 4, 0, -4, 6)
+color = Color(1, 1, 1, 0.9)
+
+[node name="ConveyorLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284909]
+layout_mode = 2
+text = "Conveyor"
+
+[node name="ConveyorDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284910]
+layout_mode = 2
+text = "Pushes robot"
+
+[node name="GearIcon" type="HBoxContainer" parent="StatusModal/VBox/LegendGrid" unique_id=38285015]
+layout_mode = 2
+
+[node name="BG" type="ColorRect" parent="StatusModal/VBox/LegendGrid/GearIcon" unique_id=38285016]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+color = Color(0.5, 0.35, 0.3, 1)
+
+[node name="ArrowCW" type="Polygon2D" parent="StatusModal/VBox/LegendGrid/GearIcon" unique_id=38285017]
+position = Vector2(12, 12)
+polygon = PackedVector2Array(4, -6, 8, -2, 4, 2, 6, 0, 6, -6, 4, -6, 0, 0)
+color = Color(1, 1, 1, 0.9)
+
+[node name="GearLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284913]
+layout_mode = 2
+text = "Gear"
+
+[node name="GearDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284914]
+layout_mode = 2
+text = "Rotates robot"
+
+[node name="CheckpointIcon" type="ColorRect" parent="StatusModal/VBox/LegendGrid" unique_id=38285021]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+color = Color(0.3, 0.5, 0.3, 1)
+
+[node name="CheckpointLabel" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284917]
+layout_mode = 2
+text = "Checkpoint"
+
+[node name="CheckpointDesc" type="Label" parent="StatusModal/VBox/LegendGrid" unique_id=38284918]
+layout_mode = 2
+text = "Save point"
+
+[node name="HSeparator2" type="HSeparator" parent="StatusModal/VBox" unique_id=38284919]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="StatusModal/VBox" unique_id=1700129405]
+layout_mode = 2
+text = "Close"

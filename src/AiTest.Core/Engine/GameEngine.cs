@@ -291,8 +291,14 @@ public sealed class GameEngine : IGameEngine
         }
         else if (card.Card is BackUpCard)
         {
-            var targetPos = player.Robot.Position.Move(player.Robot.Direction.TurnAround());
-            if (State.Map.IsInBounds(targetPos) && State.Map.GetTile(targetPos).Type != TileType.Wall)
+            var oppositeDir = player.Robot.Direction.TurnAround();
+            var currentTile = State.Map.GetTile(player.Robot.Position);
+            var targetPos = player.Robot.Position.Move(oppositeDir);
+            var targetTile = State.Map.GetTile(targetPos);
+            
+            if (State.Map.IsInBounds(targetPos) && 
+                targetTile.CanEnterFrom(oppositeDir) && 
+                currentTile.CanExitTo(oppositeDir))
             {
                 player.Robot.SetPosition(targetPos);
             }
@@ -543,8 +549,14 @@ public sealed class GameEngine : IGameEngine
 
             if (card.Card is BackUpCard)
             {
-                var targetPos = player.Robot.Position.Move(player.Robot.Direction.TurnAround());
-                if (State.Map.IsInBounds(targetPos) && State.Map.GetTile(targetPos).Type != TileType.Wall)
+                var oppositeDir = player.Robot.Direction.TurnAround();
+                var currentTile = State.Map.GetTile(player.Robot.Position);
+                var targetPos = player.Robot.Position.Move(oppositeDir);
+                var targetTile = State.Map.GetTile(targetPos);
+                
+                if (State.Map.IsInBounds(targetPos) && 
+                    targetTile.CanEnterFrom(oppositeDir) && 
+                    currentTile.CanExitTo(oppositeDir))
                 {
                     moveIntents.Add(new MoveIntent
                     {
@@ -638,11 +650,14 @@ public sealed class GameEngine : IGameEngine
         var pos = robot.Position;
         for (int i = 0; i < spaces; i++)
         {
+            var currentTile = State.Map.GetTile(pos);
             var next = pos.Move(robot.Direction);
             if (State.Map.IsInBounds(next))
             {
-                var tile = State.Map.GetTile(next);
-                if (tile.Type == TileType.Wall || tile.Type == TileType.Pit)
+                var nextTile = State.Map.GetTile(next);
+                if (!nextTile.CanEnterFrom(robot.Direction))
+                    break;
+                if (!currentTile.CanExitTo(robot.Direction))
                     break;
                 if (!movementStrategy.CanEnterTile(robot, State.Map, next))
                     break;
@@ -762,11 +777,12 @@ public sealed class GameEngine : IGameEngine
 
         for (int i = 0; i < spaces; i++)
         {
+            var currentTile = State.Map.GetTile(player.Robot.Position);
             var newPos = player.Robot.Position.Move(direction);
             if (State.Map.IsInBounds(newPos))
             {
                 var targetTile = State.Map.GetTile(newPos);
-                if (targetTile.Type != TileType.Wall && targetTile.Type != TileType.Pit)
+                if (targetTile.CanEnterFrom(direction) && currentTile.CanExitTo(direction))
                 {
                     player.Robot.Move(newPos);
                 }

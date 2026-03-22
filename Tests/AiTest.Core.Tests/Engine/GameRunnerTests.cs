@@ -136,4 +136,133 @@ public class GameRunnerTests
 
         Assert.Equal(0, player.AvailableCardCount);
     }
+
+    [Fact]
+    public void Initialize_WithBlockedDirections_ShouldCreateWallWithBlockage()
+    {
+        var config = new GameConfiguration
+        {
+            MapWidth = 8,
+            MapHeight = 8,
+            Players = new List<PlayerConfig> { new() { Name = "Player1" } },
+            Map = new MapConfig
+            {
+                Tiles = new List<TilePlacement>
+                {
+                    new() { X = 3, Y = 3, Type = TileType.Wall, BlockedDirections = new List<Direction> { Direction.North, Direction.South } }
+                }
+            }
+        };
+        var runner = new GameRunner(config);
+        
+        runner.Initialize();
+
+        var tile = runner.Engine.State.Map.GetTile(3, 3);
+        Assert.Equal(TileType.Wall, tile.Type);
+        Assert.False(tile.CanEnterFrom(Direction.North));
+        Assert.False(tile.CanEnterFrom(Direction.South));
+        Assert.True(tile.CanEnterFrom(Direction.East));
+        Assert.True(tile.CanEnterFrom(Direction.West));
+    }
+
+    [Fact]
+    public void Initialize_WithTunnel_ShouldBlockPerpendicularDirections()
+    {
+        var config = new GameConfiguration
+        {
+            MapWidth = 8,
+            MapHeight = 8,
+            Players = new List<PlayerConfig> { new() { Name = "Player1" } },
+            Map = new MapConfig
+            {
+                Tiles = new List<TilePlacement>
+                {
+                    // Тоннель Север-Юг (проход только сверху и снизу)
+                    new() { X = 4, Y = 4, Type = TileType.Wall, BlockedDirections = new List<Direction> { Direction.East, Direction.West } }
+                }
+            }
+        };
+        var runner = new GameRunner(config);
+        
+        runner.Initialize();
+
+        var tile = runner.Engine.State.Map.GetTile(4, 4);
+        Assert.Equal(TileType.Wall, tile.Type);
+        Assert.True(tile.CanEnterFrom(Direction.North));
+        Assert.True(tile.CanEnterFrom(Direction.South));
+        Assert.False(tile.CanEnterFrom(Direction.East));
+        Assert.False(tile.CanEnterFrom(Direction.West));
+    }
+
+    [Fact]
+    public void Initialize_WithConveyor_ShouldCreateConveyorTile()
+    {
+        var config = new GameConfiguration
+        {
+            MapWidth = 8,
+            MapHeight = 8,
+            Players = new List<PlayerConfig> { new() { Name = "Player1" } },
+            Map = new MapConfig
+            {
+                Tiles = new List<TilePlacement>
+                {
+                    new() { X = 3, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.East }
+                }
+            }
+        };
+        var runner = new GameRunner(config);
+        
+        runner.Initialize();
+
+        var tile = runner.Engine.State.Map.GetTile(3, 3);
+        Assert.Equal(TileType.ConveyorCW, tile.Type);
+        Assert.NotNull(tile.ConveyorDir);
+    }
+
+    [Fact]
+    public void Initialize_WithGears_ShouldCreateGearTiles()
+    {
+        var config = new GameConfiguration
+        {
+            MapWidth = 8,
+            MapHeight = 8,
+            Players = new List<PlayerConfig> { new() { Name = "Player1" } },
+            Map = new MapConfig
+            {
+                Tiles = new List<TilePlacement>
+                {
+                    new() { X = 3, Y = 3, Type = TileType.GearCW },
+                    new() { X = 4, Y = 3, Type = TileType.GearCCW }
+                }
+            }
+        };
+        var runner = new GameRunner(config);
+        
+        runner.Initialize();
+
+        Assert.Equal(TileType.GearCW, runner.Engine.State.Map.GetTile(3, 3).Type);
+        Assert.Equal(TileType.GearCCW, runner.Engine.State.Map.GetTile(4, 3).Type);
+    }
+
+    [Fact]
+    public void CreateDefault2Player_Map_ShouldHaveDiverseElements()
+    {
+        var config = GameRunner.CreateDefault2Player();
+        
+        var walls = config.Map.Tiles.Count(t => t.Type == TileType.Wall);
+        var pits = config.Map.Tiles.Count(t => t.Type == TileType.Pit);
+        var conveyorTiles = config.Map.Tiles.Count(t => t.Type == TileType.ConveyorCW || t.Type == TileType.ExpressConveyorCW);
+        var gearTiles = config.Map.Tiles.Count(t => t.Type == TileType.GearCW || t.Type == TileType.GearCCW);
+        
+        Assert.True(walls >= 4, "Should have at least 4 wall tiles");
+        Assert.True(pits >= 3, "Should have at least 3 pits");
+        Assert.True(conveyorTiles >= 4, "Should have at least 4 conveyor tiles");
+        Assert.True(gearTiles >= 4, "Should have at least 4 gear tiles");
+        
+        var blockedWalls = config.Map.Tiles.Count(t => 
+            t.Type == TileType.Wall && 
+            t.BlockedDirections != null && 
+            t.BlockedDirections.Count > 0);
+        Assert.True(blockedWalls >= 4, "Should have at least 4 walls with blockages (tunnels/barricades)");
+    }
 }

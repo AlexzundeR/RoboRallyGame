@@ -96,7 +96,6 @@ public class ExecutionPhase : IGamePhase
 			_animations.Add(new MoveAnimation
 			{
 				Robot = robot,
-				From = e.From,
 				To = e.To
 			});
 		}
@@ -292,8 +291,9 @@ public class ExecutionPhase : IGamePhase
 		_runner.Engine.NextRound();
 		Log("");
 		Log("[color=green][b]=== Round Complete ===[/b][/color]");
-		_dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Programming, state.Round));
+		
 		_dispatcher.Publish(new RegistersClearedEvent());
+		_dispatcher.Publish(new PhaseChangedEvent(GamePhaseType.Programming, state.Round));
 		_onPhaseComplete?.Invoke(GamePhaseType.Programming);
 	}
 

@@ -1,3 +1,5 @@
+using AiTest.Core.Models.Components;
+
 namespace AiTest.Core.Models;
 
 public enum TileType
@@ -31,30 +33,46 @@ public sealed class Tile
     public ConveyorDirection? ConveyorDir { get; init; }
     public bool HasBoardLaser { get; init; }
     public int? CheckpointNumber { get; set; }
+    
+    private readonly IReadOnlyList<ITileComponent> _components;
+    public IReadOnlyList<ITileComponent> Components => _components;
 
-    public static Tile Floor => new() { Type = TileType.Floor };
-    public static Tile Wall => new() { Type = TileType.Wall };
-    public static Tile Pit => new() { Type = TileType.Pit };
-    public static Tile Start => new() { Type = TileType.Start };
-    public static Tile LaserH => new() { Type = TileType.LaserH, HasBoardLaser = true };
-    public static Tile LaserV => new() { Type = TileType.LaserV, HasBoardLaser = true };
-
-    public static Tile Conveyor(ConveyorDirection dir, bool express = false) => new()
+    public Tile() : this(TileType.Floor, [])
     {
-        Type = express
-            ? (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ExpressConveyorCW : TileType.ExpressConveyorCCW)
-            : (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ConveyorCW : TileType.ConveyorCCW),
+    }
+
+    public Tile(TileType type, IEnumerable<ITileComponent>? components = null)
+    {
+        Type = type;
+        _components = components?.ToList() ?? [];
+    }
+
+    public T? GetComponent<T>() where T : class, ITileComponent
+    {
+        foreach (var component in _components)
+            if (component is T typed)
+                return typed;
+        return null;
+    }
+
+    public static Tile Floor => new(TileType.Floor);
+    public static Tile Wall => new(TileType.Wall);
+    public static Tile Pit => new(TileType.Pit);
+    public static Tile Start => new(TileType.Start);
+    public static Tile LaserH => new(TileType.LaserH) { HasBoardLaser = true };
+    public static Tile LaserV => new(TileType.LaserV) { HasBoardLaser = true };
+
+    public static Tile Conveyor(ConveyorDirection dir, bool express = false) => new(express
+        ? (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ExpressConveyorCW : TileType.ExpressConveyorCCW)
+        : (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ConveyorCW : TileType.ConveyorCCW))
+    {
         ConveyorDir = dir
     };
 
-    public static Tile Gear(bool clockwise = true) => new()
-    {
-        Type = clockwise ? TileType.GearCW : TileType.GearCCW
-    };
+    public static Tile Gear(bool clockwise = true) => new(clockwise ? TileType.GearCW : TileType.GearCCW);
 
-    public static Tile Checkpoint(int number) => new()
+    public static Tile Checkpoint(int number) => new(TileType.Checkpoint)
     {
-        Type = TileType.Checkpoint,
         CheckpointNumber = number
     };
 

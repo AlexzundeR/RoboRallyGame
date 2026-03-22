@@ -14,6 +14,7 @@ public partial class Robot : Node2D
 	private Polygon2D _directionIndicator = null!;
 	private ColorRect _healthBar = null!;
 	private Tween? _rotationTween;
+	private bool _isAnimating;
 	
 	private int _playerId;
 	private Color _playerColor;
@@ -159,8 +160,14 @@ public partial class Robot : Node2D
 	public override void _Process(double delta)
 	{
 		if (!IsInsideTree()) return;
+		if (_isAnimating) return;
 		
 		var targetPos = GetWorldPosition();
 		Position = Position.Lerp(targetPos, 0.15f);
+	}
+
+	public void SetAnimating(bool animating)
+	{
+		_isAnimating = animating;
 	}
 }

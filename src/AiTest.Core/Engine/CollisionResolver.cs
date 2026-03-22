@@ -68,8 +68,9 @@ public sealed class CollisionResolver
         {
             if (map.IsInBounds(intent.To))
             {
-                var tile = map.GetTile(intent.To);
-                if (tile.Type != TileType.Wall)
+                var currentTile = map.GetTile(intent.Robot.Position);
+                var targetTile = map.GetTile(intent.To);
+                if (targetTile.CanEnterFrom(intent.Direction) && currentTile.CanExitTo(intent.Direction))
                 {
                     intent.Robot.Move(intent.To);
                     return CollisionResult.Success;
@@ -91,6 +92,13 @@ public sealed class CollisionResolver
             RegisterIndex = intent.RegisterIndex,
             Type = MoveType.Push
         };
+        
+        var targetTileForPush = map.GetTile(intent.To);
+        var pushTargetTile = map.GetTile(pushIntent.To);
+        if (!pushTargetTile.CanEnterFrom(intent.Direction) || !targetTileForPush.CanExitTo(intent.Direction))
+        {
+            return CollisionResult.Blocked;
+        }
         
         var pushResult = TryMove(pushIntent, map, robots, resolved);
         

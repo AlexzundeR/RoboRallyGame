@@ -61,6 +61,9 @@ public sealed class Player
         if (handIndex < 0 || handIndex >= 9 || registerIndex < 0 || registerIndex >= 5)
             return;
 
+        if (registerIndex < Robot.LockedRegisters)
+            return;
+
         var card = _hand[handIndex];
         if (card == null) return;
 

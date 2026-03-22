@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://barricade_renderer"]
+
+[ext_resource type="Script" path="res://Components/BarricadeRenderer.cs" id="1"]
+
+[node name="BarricadeRenderer" type="Node2D"]
+script = ExtResource("1")

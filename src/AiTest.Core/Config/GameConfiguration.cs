@@ -32,6 +32,9 @@ public class TilePlacement
     public int X { get; init; }
     public int Y { get; init; }
     public TileType Type { get; init; }
+    public List<Direction>? BlockedDirections { get; init; }
+    public Direction? ConveyorDir { get; init; }
+    public bool? IsExpress { get; init; }
 }
 
 public class CheckpointPlacement
