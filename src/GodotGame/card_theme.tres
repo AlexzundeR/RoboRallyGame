@@ -40,6 +40,16 @@ border_color = Color(0.7, 0.7, 0.7, 1)
 border_blend = true
 corner_detail = 1
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_locked"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.3, 1)
+border_blend = true
+corner_detail = 1
+
 [resource]
 Card/colors/empty_bg = Color(0, 0, 0, 1)
 Card/colors/normal_bg = Color(0.15, 0.15, 0.15, 1)
@@ -49,3 +59,4 @@ Card/styles/fixed = SubResource("StyleBoxFlat_fixed")
 Card/styles/normal = SubResource("StyleBoxFlat_normal")
 Card/styles/selected = SubResource("StyleBoxFlat_selected")
 Card/styles/selected_fixed = SubResource("StyleBoxFlat_selected_fixed")
+Card/styles/locked = SubResource("StyleBoxFlat_locked")

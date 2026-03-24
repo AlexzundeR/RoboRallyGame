@@ -219,6 +219,22 @@ public class ExecutionPhase : IGamePhase
 			return;
 		}
 
+		var player = state.Players[state.CurrentPlayerIndex];
+		if (player.Robot.IsPowerDown)
+		{
+			Log($"[color=gray]{player.Name} is powered down, skipping all registers[/color]");
+			CompleteCurrentRegister();
+			return;
+		}
+
+		var register = player.GetRegister(state.CurrentRegister);
+		if (register == null)
+		{
+			Log($"[color=gray]{player.Name}: Register {state.CurrentRegister + 1} empty, skipping[/color]");
+			CompleteCurrentRegister();
+			return;
+		}
+
 		if (_currentRegisterLog != state.CurrentRegister)
 		{
 			_currentRegisterLog = state.CurrentRegister;
@@ -283,6 +299,25 @@ public class ExecutionPhase : IGamePhase
 		foreach (var player in state.Players)
 		{
 			player.ClearRegisters();
+
+			if (player.Robot.IsPowerDown)
+			{
+				Log($"[color=green]{player.Name} is powered down, removing all damage[/color]");
+				player.Robot.Repair(player.Robot.Damage);
+				continue;
+			}
+
+			var tile = state.Map.GetTile(player.Robot.Position);
+			if (tile.Type == TileType.RepairSite && player.Robot.Damage > 0)
+			{
+				Log($"[color=green]{player.Name} is on repair site, repairing 1 damage[/color]");
+				player.Robot.Repair(1);
+			}
+			else if (tile.Type == TileType.RepairSitePlus && player.Robot.Damage > 0)
+			{
+				Log($"[color=green]{player.Name} is on repair site+, repairing 1 damage[/color]");
+				player.Robot.Repair(1);
+			}
 		}
 		
 		state.CurrentPlayerIndex = 0;

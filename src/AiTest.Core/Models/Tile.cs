@@ -16,7 +16,9 @@ public enum TileType
     ExpressConveyorCW,
     ExpressConveyorCCW,
     Start,
-    Checkpoint
+    Checkpoint,
+    RepairSite,
+    RepairSitePlus
 }
 
 public enum ConveyorDirection
@@ -76,6 +78,9 @@ public sealed class Tile
         CheckpointNumber = number
     };
 
+    public static Tile RepairSite => new(TileType.RepairSite);
+    public static Tile RepairSitePlus => new(TileType.RepairSitePlus);
+
     public char ToChar()
     {
         if (HasBoardLaser)
@@ -94,6 +99,8 @@ public sealed class Tile
             TileType.GearCCW => '↻',
             TileType.Start => 'S',
             TileType.Checkpoint => CheckpointNumber.HasValue ? CheckpointNumber.Value.ToString()[0] : 'C',
+            TileType.RepairSite => '⚙',
+            TileType.RepairSitePlus => '⚒',
             _ => '?'
         };
     }

@@ -47,12 +47,18 @@ public partial class RegisterActionCard : PanelContainer
 	{
 		if (!IsInsideTree()) return;
 
-		var styles = CardStyleFactory.Evaluate(CardTheme, IsEmpty, IsFixed, IsSelected);
+		var styles = CardStyleFactory.Evaluate(CardTheme, IsEmpty, IsFixed, IsSelected, _isLocked);
 
 		_background.Color = styles.BackgroundColor;
 		_border.AddThemeStyleboxOverride("panel", styles.BorderStyle);
 
-		if (CardSymbol != null)
+		if (_isLocked)
+		{
+			_symbolLabel.Text = "🔒";
+			_numberLabel.Text = "";
+			_priorityLabel.Text = "";
+		}
+		else if (CardSymbol != null)
 		{
 			_symbolLabel.Text = CardSymbol;
 			_numberLabel.Text = CardNumber.ToString();
@@ -100,16 +106,26 @@ public partial class RegisterActionCard : PanelContainer
 		UpdateDisplay();
 	}
 
+	private bool _isLocked;
+
+	internal void SetLocked(bool isLocked)
+	{
+		_isLocked = isLocked;
+		UpdateDisplay();
+	}
+
 	public record CardStyles(StyleBox BorderStyle, Color BackgroundColor);
 
 	public static class CardStyleFactory
 	{
 		private const string ThemeType = "Card";
 
-		public static CardStyles Evaluate(Theme theme, bool isEmpty, bool isFixed, bool isSelected)
+		public static CardStyles Evaluate(Theme theme, bool isEmpty, bool isFixed, bool isSelected, bool isLocked = false)
 		{
 			string styleName = "normal";
-			if (isFixed && isSelected)
+			if (isLocked)
+				styleName = "locked";
+			else if (isFixed && isSelected)
 				styleName = "selected_fixed";
 			else if (isFixed)
 				styleName = "fixed";
@@ -118,7 +134,7 @@ public partial class RegisterActionCard : PanelContainer
 
 			return new CardStyles(
 				theme.GetStylebox(styleName, ThemeType),
-				isEmpty
+				isEmpty || isLocked
 					? theme.GetColor("empty_bg", ThemeType)
 					: theme.GetColor("normal_bg", ThemeType)
 			);

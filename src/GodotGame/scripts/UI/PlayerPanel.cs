@@ -97,6 +97,8 @@ public partial class PlayerPanel : PanelContainer
 	private void UpdateRegisters(Player player, int currentRegister, bool isProgramming,
 							   bool isCurrentPlayer, int selectedRegister)
 	{
+		bool isPowerDown = player.Robot.IsPowerDown;
+
 		for (int i = 0; i < 5; i++)
 		{
 			var card = _registerCards[i];
@@ -114,7 +116,11 @@ public partial class PlayerPanel : PanelContainer
 				card.SetSelected(false);
 			}
 
-			if (!isProgramming || !isCurrentPlayer)
+			if (isPowerDown)
+			{
+				card.SetLocked(true);
+			}
+			else if (!isProgramming || !isCurrentPlayer)
 			{
 				card.SetFixed(true);
 			}
@@ -124,7 +130,7 @@ public partial class PlayerPanel : PanelContainer
 			}
 
 			var registerCard = player.GetRegister(i);
-			if (registerCard == null)
+			if (registerCard == null || isPowerDown)
 			{
 				card.SetEmpty();
 			}
@@ -141,7 +147,8 @@ public partial class PlayerPanel : PanelContainer
 	{
 		var hp = player.Robot.LifeTokens;
 		var damage = player.Robot.Damage;
-		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage}";
+		var powerDown = player.Robot.IsPowerDown ? " | ⚡ OFF" : "";
+		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage}{powerDown}";
 	}
 
 	private string GetCardSymbol(ProgramCard card)

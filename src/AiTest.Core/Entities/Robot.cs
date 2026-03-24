@@ -51,6 +51,12 @@ public sealed class Robot
 
     public void TakeDamage(int amount)
     {
+        if (amount < 0)
+        {
+            Damage = Math.Max(0, Damage + amount);
+            return;
+        }
+
         Damage += amount;
         if (Damage >= 10)
         {
@@ -59,6 +65,11 @@ public sealed class Robot
             else
                 Status = RobotStatus.Destroyed;
         }
+    }
+
+    public void Repair(int amount)
+    {
+        Damage = Math.Max(0, Damage - amount);
     }
 
     public void AddEnergy(int amount) => Energy = Math.Min(Energy + amount, 10);

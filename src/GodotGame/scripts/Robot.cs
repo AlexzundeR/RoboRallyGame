@@ -22,6 +22,7 @@ public partial class Robot : Node2D
 	private Direction _direction;
 	private int _damage;
 	private bool _isAlive = true;
+	private bool _isPowerDown = false;
 
 	public int PlayerId => _playerId;
 
@@ -42,6 +43,7 @@ public partial class Robot : Node2D
 		_direction = player.Robot.Direction;
 		_damage = player.Robot.Damage;
 		_isAlive = player.Robot.IsAlive;
+		_isPowerDown = player.Robot.IsPowerDown;
 
 		if (IsInsideTree())
 		{
@@ -57,6 +59,7 @@ public partial class Robot : Node2D
 		_direction = player.Robot.Direction;
 		_damage = player.Robot.Damage;
 		_isAlive = player.Robot.IsAlive;
+		_isPowerDown = player.Robot.IsPowerDown;
 
 		if (IsInsideTree())
 			UpdateVisuals();
@@ -77,6 +80,11 @@ public partial class Robot : Node2D
 		{
 			_body.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 			_directionIndicator.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+		}
+		else if (_isPowerDown)
+		{
+			_body.Modulate = new Color(0.5f, 0.5f, 0.6f, 0.8f);
+			_directionIndicator.Modulate = new Color(0.5f, 0.5f, 0.6f, 0.8f);
 		}
 		else
 		{

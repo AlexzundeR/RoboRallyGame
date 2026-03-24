@@ -110,4 +110,31 @@ public sealed class Player
     }
 
     public void ClearTemporaryUpgrades() => TemporaryUpgrades.Clear();
+
+    public int FilledRegisterCount => _registers.Count(r => r != null);
+
+    public bool CanConfirmRegistration()
+    {
+        if (Robot.IsPowerDown)
+            return FilledRegisterCount == 0;
+
+        int availableRegisters = 5 - Robot.LockedRegisters;
+        int availableCards = AvailableCardCount;
+        int maxFillable = Math.Min(availableRegisters, availableCards);
+
+        return FilledRegisterCount >= maxFillable;
+    }
+
+    public void TogglePowerDown()
+    {
+        if (Robot.IsPowerDown)
+        {
+            Robot.WakeUp();
+        }
+        else
+        {
+            ClearRegisters();
+            Robot.PowerDown();
+        }
+    }
 }

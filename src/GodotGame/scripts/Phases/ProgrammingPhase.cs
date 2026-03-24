@@ -62,6 +62,19 @@ public class ProgrammingPhase : IGamePhase
 			return;
 		}
 
+		if (_inputService.IsActionJustPressed("ui_power_down"))
+		{
+			TogglePowerDown();
+			return;
+		}
+
+		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		if (player.Robot.IsPowerDown)
+		{
+			ConfirmPlayer();
+			return;
+		}
+
 		if (CurrentRegister >= 5) 
 		{
 			GD.Print("[ProgrammingPhase] HandleInput: all 5 registers filled, ignoring key inputs");
@@ -121,6 +134,13 @@ public class ProgrammingPhase : IGamePhase
 	{
 		if (_runner == null || _dispatcher == null) return;
 
+		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		if (!player.CanConfirmRegistration())
+		{
+			GD.Print("[ProgrammingPhase] ConfirmPlayer: cannot confirm - not all possible registers filled");
+			return;
+		}
+
 		_dispatcher.Publish(new PlayerConfirmedEvent(CurrentPlayerIndex));
 		
 		if (_runner.Engine.State.CurrentPlayerIndex < _runner.Engine.State.Players.Count - 1)
@@ -140,5 +160,14 @@ public class ProgrammingPhase : IGamePhase
 
 	public void OnExit()
 	{
+	}
+
+	public void TogglePowerDown()
+	{
+		if (_runner == null || _dispatcher == null) return;
+
+		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		player.TogglePowerDown();
+		_dispatcher.Publish(new PowerDownToggledEvent(CurrentPlayerIndex, player.Robot.IsPowerDown));
 	}
 }
