@@ -45,8 +45,8 @@
 
 - **Баг 1**: При блокировке регистра на руке в нем остается какая-то карта
   - Тест: `PlayerTests.AssignCardToRegister_LockedRegister_ShouldNotAllowAssignment` ✅
-  - Статус: **ИСПРАВЛЕН** ✅
-  - Исправление: Добавлена проверка `registerIndex < Robot.LockedRegisters` в `Player.AssignCardToRegister()`
+  - Статус: ~~ИСПРАВЛЕН~~ (требования изменились)
+  - История: изначально была проверка `registerIndex < Robot.LockedRegisters`, затем убрана для гибкости выбора регистров
 
 - **Баг 2**: После окончания фазы Execution визуально в регистрах остаются старые карточки
   - Тест: `ExecutionPhaseIntegrationTests.ExecutionPhase_ClearRegisters_AfterCompletion` ✅
@@ -60,10 +60,39 @@
 - **Баг 4**: При анимации вращения квадратов я вижу иногда как ровная грань квадрата  становится ступенчатой (aliasing)
   - Тест: Не требуется (визуальный баг)
 
-- Новый Баг
-  - Не отрабатывает столкновение роботов, роботы попадают на одну клетку, хотя должны, толкать друг друга
-  - Если робот стоит вплотную к стене, то простреливает ее, хотя выстрел не должен происходить
-  - ПРи падении в яму робот должен где-то появляться, например на последнем чекпоинте
+- Новый Баг (исправлено 24.03.2026)
+  - Не отрабатывает столкновение роботов, роботы попадают на одну клетку, хотя должны толкать друг друга
+    - Тесты: `CollisionResolverTests.Resolve_TwoRobotsMovingToSamePosition_HigherPriorityWinsAndPushes`, `Resolve_HigherPriorityPushesLowerPriority_IntoFreeSpace`, `Resolve_LowerPriorityTriesToMoveIntoHigherPriority_Blocked`, `GameEngineTests.ExecuteMovementStep_PushRobot_ShouldPushRobot` ✅
+    - Статус: **ИСПРАВЛЕН** ✅
+    - Исправления: 
+      - `CollisionResolver.cs` - исправлена логика приоритетов для толкания
+      - `GameEngine.cs` - ExecuteAllMovementSteps использует CollisionResolver
+  - Если робот стоит вплотную к стене, то простреливает её, хотя выстрел не должен происходить
+    - Тесты: `LaserResolverTests.PrepareShots_RobotNextToWall_ShouldNotShootThroughWall` ✅
+    - Статус: **ИСПРАВЛЕН** ✅
+    - Исправление: `LaserResolver.CalculatePath` - добавлена проверка `!tile.CanEnterFrom(dir)`
+  - При падении в яму робот должен где-то появляться, например на последнем чекпоинте
+    - Тест: `GameEngineTests.ProcessBoardElements_Pit_ShouldRespawnAtLastCheckpoint` ✅
+    - Статус: **ИСПРАВЛЕН** ✅
+    - Исправления:
+      - `Robot.cs` - добавлено свойство `LastCheckpointPosition`
+      - `Robot.AddCheckpoint(Position)` - сохраняет позицию чекпоинта
+      - `GameEngine.HandlePit` - вызывает Reboot() на последнем чекпоинте
+
+- Баг с бесконечным циклом (исправлено 24.03.2026)
+  - Игра зависала после первого раунда фазы исполнения
+    - Тесты: существующие тесты проходят ✅
+    - Статус: **ИСПРАВЛЕН** ✅
+    - Исправление: `GameEngine.TryExecuteNextStep` - добавлен `else { _currentStep++; }` для случая когда _laserExecuted уже true
+
+- Исправление UX: выбор регистров при нехватке карт (24.03.2026)
+  - При повреждении робота и нехватке карт можно заполнять любые регистры, а не только первые
+    - Тест: `PlayerTests.AssignCardToRegister_AnyRegister_CanAssign` ✅
+    - Статус: **ИСПРАВЛЕН** ✅
+    - Исправление: убрано ограничение `registerIndex < Robot.LockedRegisters` в `Player.AssignCardToRegister()`
+
+- Улучшения
+  - Тайлы с преградами сейчас рисуются как стены, но лучше рисовать их как обычные тайлы, может быть нужно использовать другой класс для тайлов с преградами (обычный тайл)
 
 #### Недостающие тесты для бага 2 (визуальная очистка регистров):
 

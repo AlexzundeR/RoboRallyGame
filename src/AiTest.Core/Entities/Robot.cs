@@ -13,6 +13,7 @@ public sealed class Robot
     public int LifeTokens { get; private set; } = 3;
     public RobotStatus Status { get; private set; } = RobotStatus.Active;
     public int CheckpointsReached { get; private set; }
+    public Position? LastCheckpointPosition { get; private set; }
 
     public bool IsAlive => Status != RobotStatus.Destroyed;
     public int LockedRegisters => Damage >= 5 ? Math.Min(Damage - 4, 5) : 0;
@@ -95,6 +96,11 @@ public sealed class Robot
     public void PowerDown() => Status = RobotStatus.PowerDown;
     public void WakeUp() => Status = RobotStatus.Active;
 
-    public void AddCheckpoint() => CheckpointsReached++;
+    public void AddCheckpoint(Position pos)
+    {
+        CheckpointsReached++;
+        LastCheckpointPosition = pos;
+    }
+    
     public void SetCheckpointsReached(int count) => CheckpointsReached = count;
 }

@@ -3,6 +3,7 @@ namespace AiTest.Core.Tests.Engine;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 
 public class CollisionResolverTests
 {
@@ -170,6 +171,92 @@ public class CollisionResolverTests
         
         Assert.Equal(new Position(6, 5), robot1.Position);
         Assert.Equal(new Position(7, 5), robot2.Position);
+    }
+
+    [Fact]
+    public void Resolve_TwoRobotsMovingToSamePosition_HigherPriorityWinsAndPushes()
+    {
+        var map = new GameMap(10, 10);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(7, 5), Direction.West);
+        
+        var resolver = new CollisionResolver();
+        resolver.AddIntent(new MoveIntent
+        {
+            Robot = robot1,
+            From = new Position(5, 5),
+            To = new Position(6, 5),
+            Direction = Direction.East,
+            Priority = 100,
+            RegisterIndex = 0,
+            Type = MoveType.Normal
+        });
+        resolver.AddIntent(new MoveIntent
+        {
+            Robot = robot2,
+            From = new Position(7, 5),
+            To = new Position(6, 5),
+            Direction = Direction.West,
+            Priority = 200,
+            RegisterIndex = 0,
+            Type = MoveType.Normal
+        });
+        
+        resolver.Resolve(map, new List<Robot> { robot1, robot2 });
+        
+        Assert.Equal(new Position(5, 5), robot1.Position);
+        Assert.Equal(new Position(6, 5), robot2.Position);
+    }
+
+    [Fact]
+    public void Resolve_HigherPriorityPushesLowerPriority_IntoFreeSpace()
+    {
+        var map = new GameMap(10, 10);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
+        
+        var resolver = new CollisionResolver();
+        resolver.AddIntent(new MoveIntent
+        {
+            Robot = robot1,
+            From = new Position(5, 5),
+            To = new Position(6, 5),
+            Direction = Direction.East,
+            Priority = 200,
+            RegisterIndex = 0,
+            Type = MoveType.Normal
+        });
+        
+        resolver.Resolve(map, new List<Robot> { robot1, robot2 });
+        
+        Assert.Equal(new Position(6, 5), robot1.Position);
+        Assert.Equal(new Position(7, 5), robot2.Position);
+    }
+
+    [Fact]
+    public void Resolve_LowerPriorityTriesToMoveIntoHigherPriority_Blocked()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(7, 5, Tile.Wall);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
+        
+        var resolver = new CollisionResolver();
+        resolver.AddIntent(new MoveIntent
+        {
+            Robot = robot1,
+            From = new Position(5, 5),
+            To = new Position(6, 5),
+            Direction = Direction.East,
+            Priority = 100,
+            RegisterIndex = 0,
+            Type = MoveType.Normal
+        });
+        
+        resolver.Resolve(map, new List<Robot> { robot1, robot2 });
+        
+        Assert.Equal(new Position(5, 5), robot1.Position);
+        Assert.Equal(new Position(6, 5), robot2.Position);
     }
 }
 
@@ -359,5 +446,48 @@ public class LaserResolverTests
         var robot2Shot = shots.First(s => s.Source.Id == 2);
         
         Assert.True(robot1Shot.Priority < robot2Shot.Priority);
+    }
+
+    [Fact]
+    public void CalculatePath_PartialWall_ShouldAllowFromOpenSide()
+    {
+        var map = new GameMap(10, 10);
+        var blockedComponent = new BlockedMovementComponent(DirectionSet.FromDirections(Direction.West));
+        map.SetTile(7, 5, new Tile(TileType.Floor, new[] { blockedComponent }));
+        
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> { new Player { Id = 1, Robot = robot1 } });
+        
+        var shot = shots.First(s => s.IsRobotLaser);
+        
+        Assert.Contains(new Position(7, 5), shot.Path);
+    }
+
+    [Fact]
+    public void PrepareShots_RobotNextToWall_ShouldNotShootThroughWall()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(7, 5, Tile.Wall);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(8, 5), Direction.North);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 }
+        });
+        
+        var shot = shots.First(s => s.Source.Id == 1);
+        
+        Assert.Contains(new Position(6, 5), shot.Path);
+        Assert.DoesNotContain(new Position(7, 5), shot.Path);
+        Assert.DoesNotContain(new Position(8, 5), shot.Path);
+        
+        resolver.Fire(shots, new List<Player> { new Player { Id = 1, Robot = robot1 }, new Player { Id = 2, Robot = robot2 } });
+        
+        Assert.Equal(0, robot2.Damage);
     }
 }

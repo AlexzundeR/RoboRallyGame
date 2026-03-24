@@ -243,82 +243,139 @@ public sealed class GameEngine : IGameEngine
 
         if (_currentStep < movementSteps)
         {
-            ExecuteMovementStep(_alivePlayers[_currentStep]);
+            ExecuteAllMovementSteps();
+            _currentStep = movementSteps;
         }
         else if (_currentStep == movementSteps && !_conveyorExecuted)
         {
             ExecuteConveyorStep();
+            _currentStep++;
         }
-        else if (_currentStep >= movementSteps && !_laserExecuted)
+        else if (_currentStep > movementSteps && !_laserExecuted)
         {
             ExecuteLaserStep();
+            _laserExecuted = true;
+            _currentStep++;
+        }
+        else
+        {
+            _currentStep++;
         }
 
-        _currentStep++;
         return StepResult.Executed;
     }
 
     private int GetTotalSteps()
     {
-        return _alivePlayers.Count + 2;
+        return _alivePlayers.Count + 3;
     }
 
-    private void ExecuteMovementStep(Player player)
+    private void ExecuteAllMovementSteps()
     {
-        if (player.Robot.NeedsReboot)
-            return;
-
-        if (_currentRegister < player.Robot.LockedRegisters)
-            return;
-
-        var card = player.GetRegister(_currentRegister);
-        if (card == null)
-            return;
-
-        var beforePos = player.Robot.Position;
-        var beforeDir = player.Robot.Direction;
-
-        if (card.Card is TurnCard turnCard)
+        var moveIntents = new List<MoveIntent>();
+        var rotateIntents = new List<(Player Player, Direction From, Direction To)>();
+        
+        foreach (var player in _alivePlayers)
         {
-            if (turnCard.IsLeft)
-                player.Robot.RotateLeft();
-            else
-                player.Robot.RotateRight();
-        }
-        else if (card.Card is UTurnCard)
-        {
-            player.Robot.Rotate180();
-        }
-        else if (card.Card is BackUpCard)
-        {
-            var oppositeDir = player.Robot.Direction.TurnAround();
-            var currentTile = State.Map.GetTile(player.Robot.Position);
-            var targetPos = player.Robot.Position.Move(oppositeDir);
-            var targetTile = State.Map.GetTile(targetPos);
-            
-            if (State.Map.IsInBounds(targetPos) && 
-                targetTile.CanEnterFrom(oppositeDir) && 
-                currentTile.CanExitTo(oppositeDir))
+            if (player.Robot.NeedsReboot)
+                continue;
+
+            if (_currentRegister < player.Robot.LockedRegisters)
+                continue;
+
+            var card = player.GetRegister(_currentRegister);
+            if (card == null)
+                continue;
+
+            var beforeDir = player.Robot.Direction;
+
+            if (card.Card is TurnCard turnCard)
             {
-                player.Robot.SetPosition(targetPos);
+                if (turnCard.IsLeft)
+                    player.Robot.RotateLeft();
+                else
+                    player.Robot.RotateRight();
+                
+                if (player.Robot.Direction != beforeDir)
+                {
+                    rotateIntents.Add((player, beforeDir, player.Robot.Direction));
+                }
+            }
+            else if (card.Card is UTurnCard)
+            {
+                player.Robot.Rotate180();
+                
+                if (player.Robot.Direction != beforeDir)
+                {
+                    rotateIntents.Add((player, beforeDir, player.Robot.Direction));
+                }
+            }
+            else if (card.Card is BackUpCard)
+            {
+                var oppositeDir = player.Robot.Direction.TurnAround();
+                var currentTile = State.Map.GetTile(player.Robot.Position);
+                var targetPos = player.Robot.Position.Move(oppositeDir);
+                var targetTile = State.Map.GetTile(targetPos);
+                
+                if (State.Map.IsInBounds(targetPos) && 
+                    targetTile.CanEnterFrom(oppositeDir) && 
+                    currentTile.CanExitTo(oppositeDir))
+                {
+                    moveIntents.Add(new MoveIntent
+                    {
+                        Robot = player.Robot,
+                        From = player.Robot.Position,
+                        To = targetPos,
+                        Direction = player.Robot.Direction,
+                        Priority = card.Card.Priority,
+                        RegisterIndex = _currentRegister,
+                        Type = MoveType.Normal
+                    });
+                }
+            }
+            else if (card.Card is MoveCard moveCard)
+            {
+                var movementStrategy = GetMovementStrategy(player);
+                var cardStrategy = GetCardExecutionStrategy(player);
+                var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) + cardStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
+                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
+                
+                if (targetPos != player.Robot.Position)
+                {
+                    moveIntents.Add(new MoveIntent
+                    {
+                        Robot = player.Robot,
+                        From = player.Robot.Position,
+                        To = targetPos,
+                        Direction = player.Robot.Direction,
+                        Priority = moveCard.Priority,
+                        RegisterIndex = _currentRegister,
+                        Type = MoveType.Normal
+                    });
+                }
             }
         }
-        else if (card.Card is MoveCard moveCard)
+        
+        if (moveIntents.Count > 0)
         {
-            var movementStrategy = GetMovementStrategy(player);
-            var cardStrategy = GetCardExecutionStrategy(player);
-            var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) + cardStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
-            var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
-            player.Robot.SetPosition(targetPos);
+            var resolver = new CollisionResolver();
+            foreach (var intent in moveIntents)
+                resolver.AddIntent(intent);
+            
+            resolver.Resolve(State.Map, _alivePlayers.Select(p => p.Robot).ToList());
         }
-
-        if (player.Robot.Position != beforePos)
+        
+        foreach (var (player, fromDir, toDir) in rotateIntents)
         {
-            OnMove?.Invoke(new MoveEvent(player.Robot.Id, beforePos, player.Robot.Position));
+            OnRotate?.Invoke(new RotateEvent(player.Robot.Id, fromDir, toDir));
         }
-        if (player.Robot.Direction != beforeDir)
+        
+        foreach (var intent in moveIntents)
         {
-            OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
+            if (intent.Robot.Position != intent.From)
+            {
+                OnMove?.Invoke(new MoveEvent(intent.Robot.Id, intent.From, intent.Robot.Position));
+            }
         }
     }
 
@@ -752,6 +809,11 @@ public sealed class GameEngine : IGameEngine
     private void HandlePit(Player player)
     {
         player.Robot.LoseLifeToken();
+        
+        if (player.Robot.LastCheckpointPosition.HasValue)
+        {
+            player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
+        }
     }
 
     private void HandleCheckpoint(Player player, int checkpointNum)
@@ -759,7 +821,7 @@ public sealed class GameEngine : IGameEngine
         if (checkpointNum == player.Robot.CheckpointsReached + 1)
         {
             for (int i = 0; i < checkpointNum; i++)
-                player.Robot.AddCheckpoint();
+                player.Robot.AddCheckpoint(player.Robot.Position);
             OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, checkpointNum));
         }
     }
@@ -816,6 +878,14 @@ public sealed class GameEngine : IGameEngine
             {
                 player.Robot.WakeUp();
             }
+            
+            if (player.Robot.Status == RobotStatus.Rebooting)
+            {
+                var spawnPos = player.Robot.LastCheckpointPosition ?? new Position(0, 0);
+                player.Robot.Reboot(spawnPos);
+                OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
+            }
+            
             player.ClearRegisters();
         }
 

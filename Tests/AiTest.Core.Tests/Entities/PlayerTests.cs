@@ -162,7 +162,7 @@ public class PlayerTests
     }
 
     [Fact]
-    public void AssignCardToRegister_LockedRegister_ShouldNotAllowAssignment()
+    public void AssignCardToRegister_AnyRegister_CanAssign()
     {
         var robot = new Robot();
         robot.AddDamage(6);
@@ -176,10 +176,10 @@ public class PlayerTests
         player.AssignCardToRegister(0, 0);
         player.AssignCardToRegister(1, 1);
         
-        Assert.NotNull(player.Hand[0]);
-        Assert.NotNull(player.Hand[1]);
-        Assert.Null(player.GetRegister(0));
-        Assert.Null(player.GetRegister(1));
+        Assert.Null(player.Hand[0]);
+        Assert.Null(player.Hand[1]);
+        Assert.NotNull(player.GetRegister(0));
+        Assert.NotNull(player.GetRegister(1));
     }
 
     [Fact]

@@ -171,6 +171,9 @@ public sealed class LaserResolver
             var tile = map.GetTile(pos);
             if (tile.Type == TileType.Wall)
                 break;
+            
+            if (!tile.CanEnterFrom(dir))
+                break;
                 
             path.Add(pos);
             pos = pos.Move(dir);

@@ -29,6 +29,16 @@ public class GameEngineTests
         return new Player(regArray, null);
     }
 
+    private static Player CreatePlayerWithRobot(int robotId, Position pos, Direction dir, params (ProgramCard Card, int HandIndex)[] registers)
+    {
+        var regArray = new RegisterCard?[5];
+        for (int i = 0; i < registers.Length && i < 5; i++)
+            regArray[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
+        var robot = new Robot(robotId, pos, dir);
+        var player = new Player(regArray, null) { Robot = robot };
+        return player;
+    }
+
     private GameEngine CreateEngine(GameState state)
     {
         var engine = new GameEngine(new RandomDealer(), state);
@@ -205,6 +215,50 @@ public class GameEngineTests
     }
 
     [Fact]
+    public void ProcessBoardElements_Pit_ShouldRespawnAtLastCheckpoint()
+    {
+        var engine = CreateEngine();
+        engine.State.Map.SetTile(5, 5, Tile.Checkpoint(1));
+        engine.State.Map.SetTile(7, 7, Tile.Checkpoint(2));
+        engine.State.Map.SetTile(3, 3, Tile.Pit);
+        
+        engine.AddPlayer("Player1");
+        var player = engine.State.Players[0];
+        
+        player.Robot.SetPosition(new Position(5, 5));
+        engine.ProcessBoardElements();
+        
+        player.Robot.SetPosition(new Position(3, 3));
+        engine.ProcessBoardElements();
+        
+        Assert.Equal(RobotStatus.Active, player.Robot.Status);
+        Assert.Equal(new Position(5, 5), player.Robot.Position);
+    }
+
+    [Fact]
+    public void ExecuteMovementStep_PushRobot_ShouldPushRobot()
+    {
+        var p1 = CreatePlayerWithRobot(1, new Position(3, 3), Direction.East, (new MoveCard { Priority = 100, Spaces = 1 }, 0));
+        var p2 = CreatePlayerWithRobot(2, new Position(4, 3), Direction.North, (new MoveCard { Priority = 101, Spaces = 1 }, 0));
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(1, 1, Tile.Start);
+        map.SetTile(3, 3, Tile.Floor);
+        map.SetTile(4, 3, Tile.Floor);
+        map.SetTile(5, 3, Tile.Floor);
+        
+        var engine = new GameEngine(new RandomDealer(), new GameState(new List<Player> { p1, p2 }));
+        engine.Initialize(map);
+        
+        engine.BeginRegisterExecution(0);
+        
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(new Position(4, 3), p1.Robot.Position);
+        Assert.Equal(new Position(4, 2), p2.Robot.Position);
+    }
+
+    [Fact]
     public void IsGameOver_WhenNoCheckpoints_ShouldReturnFalse()
     {
         var engine = CreateEngine();
@@ -280,13 +334,8 @@ public class GameEngineTests
     [Fact]
     public void FullRound_TwoPlayersCollision_ShouldResolvePushing()
     {
-        var p1 = CreateWithRegisters((new MoveCard { Priority = 100, Spaces = 2 }, 0));
-        p1.Robot.SetPosition(new Position(3, 1));
-        p1.Robot.SetDirection(Direction.East);
-        
-        var p2 = CreateWithRegisters((new MoveCard { Priority = 101, Spaces = 2 }, 0));
-        p2.Robot.SetPosition(new Position(5, 1));
-        p2.Robot.SetDirection(Direction.West);
+        var p1 = CreatePlayerWithRobot(1, new Position(3, 1), Direction.East, (new MoveCard { Priority = 100, Spaces = 2 }, 0));
+        var p2 = CreatePlayerWithRobot(2, new Position(5, 1), Direction.West, (new MoveCard { Priority = 101, Spaces = 2 }, 0));
         
         var engine = CreateEngine(new GameState(new List<Player> { p1, p2 }));
         

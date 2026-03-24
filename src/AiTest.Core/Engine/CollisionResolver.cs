@@ -40,29 +40,32 @@ public sealed class CollisionResolver
     
     public void Resolve(GameMap map, IReadOnlyList<Robot> robots)
     {
-        var resolved = new HashSet<int>();
+        var resolvedRobots = new Dictionary<int, Position>();
+        var robotsById = robots.ToDictionary(r => r.Id);
+        var intentsByRobotId = Intents.ToDictionary(i => i.Robot.Id, i => i);
         
         foreach (var intent in Intents.OrderByDescending(i => i.Priority))
         {
-            if (resolved.Contains(intent.Robot.Id))
+            if (resolvedRobots.ContainsKey(intent.Robot.Id))
                 continue;
             
-            if (resolved.Contains(intent.Robot.Id))
-                continue;
-                
-            var result = TryMove(intent, map, robots, resolved);
+            var result = TryMove(intent, map, robotsById, resolvedRobots, intentsByRobotId);
             
             if (result != CollisionResult.Blocked)
-                resolved.Add(intent.Robot.Id);
+                resolvedRobots[intent.Robot.Id] = intent.Robot.Position;
         }
     }
     
-    private CollisionResult TryMove(MoveIntent intent, GameMap map, IReadOnlyList<Robot> robots, HashSet<int> resolved)
+    private CollisionResult TryMove(MoveIntent intent, GameMap map, Dictionary<int, Robot> robotsById, Dictionary<int, Position> resolvedRobots, Dictionary<int, MoveIntent> intentsByRobotId)
     {
-        var targetRobot = robots.FirstOrDefault(r => 
+        if (resolvedRobots.Values.Contains(intent.To))
+            return CollisionResult.Blocked;
+        
+        var targetRobot = robotsById.Values.FirstOrDefault(r => 
             r.Id != intent.Robot.Id && 
             r.Position == intent.To &&
-            r.IsAlive);
+            r.IsAlive &&
+            !resolvedRobots.ContainsKey(r.Id));
         
         if (targetRobot == null)
         {
@@ -79,10 +82,45 @@ public sealed class CollisionResolver
             return CollisionResult.Blocked;
         }
         
-        if (resolved.Contains(targetRobot.Id))
-            return CollisionResult.Blocked;
+        var targetHasIntent = intentsByRobotId.TryGetValue(targetRobot.Id, out var targetIntent);
         
-        var pushIntent = new MoveIntent
+        if (targetHasIntent)
+        {
+            if (intent.Priority > targetIntent.Priority)
+            {
+                var pushIntent = new MoveIntent
+                {
+                    Robot = targetRobot,
+                    From = targetRobot.Position,
+                    To = intent.To.Move(intent.Direction),
+                    Direction = intent.Direction,
+                    Priority = int.MinValue,
+                    RegisterIndex = intent.RegisterIndex,
+                    Type = MoveType.Push
+                };
+                
+                var targetTileForPush = map.GetTile(intent.To);
+                var pushTargetTile = map.GetTile(pushIntent.To);
+                if (!pushTargetTile.CanEnterFrom(intent.Direction) || !targetTileForPush.CanExitTo(intent.Direction))
+                {
+                    return CollisionResult.Blocked;
+                }
+                
+                var pushResult = TryMove(pushIntent, map, robotsById, resolvedRobots, intentsByRobotId);
+                
+                if (pushResult == CollisionResult.Success)
+                {
+                    intent.Robot.Move(intent.To);
+                    return CollisionResult.Pushed;
+                }
+                
+                return CollisionResult.Blocked;
+            }
+            
+            return CollisionResult.Blocked;
+        }
+        
+        var pushOnlyIntent = new MoveIntent
         {
             Robot = targetRobot,
             From = targetRobot.Position,
@@ -93,17 +131,16 @@ public sealed class CollisionResolver
             Type = MoveType.Push
         };
         
-        var targetTileForPush = map.GetTile(intent.To);
-        var pushTargetTile = map.GetTile(pushIntent.To);
-        if (!pushTargetTile.CanEnterFrom(intent.Direction) || !targetTileForPush.CanExitTo(intent.Direction))
+        var tileAtTarget = map.GetTile(intent.To);
+        var tileAtPushDest = map.GetTile(pushOnlyIntent.To);
+        if (!tileAtPushDest.CanEnterFrom(intent.Direction) || !tileAtTarget.CanExitTo(intent.Direction))
         {
             return CollisionResult.Blocked;
         }
         
-        var pushResult = TryMove(pushIntent, map, robots, resolved);
-        
-        if (pushResult == CollisionResult.Success)
+        if (map.IsInBounds(pushOnlyIntent.To))
         {
+            targetRobot.Move(pushOnlyIntent.To);
             intent.Robot.Move(intent.To);
             return CollisionResult.Pushed;
         }
