@@ -68,6 +68,9 @@ public class GameMapTests
         var map = GameMap.CreateStandardMap();
         
         Assert.Equal(TileType.Start, map.GetTile(2, 2).Type);
+        Assert.Equal(TileType.Start, map.GetTile(12, 2).Type);
+        Assert.Equal(TileType.Start, map.GetTile(2, 12).Type);
+        Assert.Equal(TileType.Start, map.GetTile(12, 12).Type);
     }
 
     [Fact]
@@ -75,8 +78,11 @@ public class GameMapTests
     {
         var map = GameMap.CreateStandardMap();
         
-        Assert.Equal(TileType.Checkpoint, map.GetTile(5, 5).Type);
-        Assert.Equal(1, map.GetTile(5, 5).CheckpointNumber);
+        Assert.Equal(TileType.Checkpoint, map.GetTile(6, 6).Type);
+        Assert.Equal(1, map.GetTile(6, 6).CheckpointNumber);
+        Assert.Equal(2, map.GetTile(7, 6).CheckpointNumber);
+        Assert.Equal(3, map.GetTile(6, 7).CheckpointNumber);
+        Assert.Equal(4, map.GetTile(7, 7).CheckpointNumber);
     }
 
     [Fact]
@@ -84,7 +90,9 @@ public class GameMapTests
     {
         var map = GameMap.CreateStandardMap();
         
-        Assert.Equal(TileType.ConveyorCCW, map.GetTile(3, 3).Type);
+        Assert.Equal(TileType.ConveyorCCW, map.GetTile(4, 3).Type);
+        Assert.Equal(TileType.ConveyorCCW, map.GetTile(9, 3).Type);
+        Assert.Equal(TileType.ExpressConveyorCW, map.GetTile(3, 5).Type);
     }
 
     [Fact]
@@ -92,7 +100,8 @@ public class GameMapTests
     {
         var map = GameMap.CreateStandardMap();
         
-        Assert.Equal(TileType.Pit, map.GetTile(5, 2).Type);
+        Assert.Equal(TileType.Pit, map.GetTile(5, 12).Type);
+        Assert.Equal(TileType.Pit, map.GetTile(9, 12).Type);
     }
 
     [Fact]

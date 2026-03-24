@@ -10,10 +10,6 @@ public static class TileFactory
 
     public static Tile Wall() => new(TileType.Wall);
 
-    public static Tile Wall(params Direction[] blockedDirections) => new(TileType.Wall, [Blocked(blockedDirections)]);
-
-    public static Tile Wall(DirectionSet blockedDirections) => new(TileType.Wall, [new BlockedMovementComponent(blockedDirections)]);
-
     public static Tile Pit() => new(TileType.Pit);
 
     public static Tile Pit(params Direction[] blockedDirections) => new(TileType.Pit, [Blocked(blockedDirections)]);
@@ -40,15 +36,19 @@ public static class TileFactory
 
     public static Tile Checkpoint(int number) => new(TileType.Checkpoint) { CheckpointNumber = number };
 
-    public static Tile TunnelNS() => new(TileType.Wall, [new BlockedMovementComponent(DirectionSet.FromDirections(Direction.East, Direction.West))]);
+    public static Tile TunnelNS() => new(TileType.Floor, [new BlockedMovementComponent(DirectionSet.FromDirections(Direction.East, Direction.West))]);
 
-    public static Tile TunnelEW() => new(TileType.Wall, [new BlockedMovementComponent(DirectionSet.FromDirections(Direction.North, Direction.South))]);
+    public static Tile TunnelEW() => new(TileType.Floor, [new BlockedMovementComponent(DirectionSet.FromDirections(Direction.North, Direction.South))]);
 
-    public static Tile Barricade(Direction openDirection) => new(TileType.Wall, [Blocked(AllExcept(openDirection))]);
+    public static Tile Barricade(Direction openDirection) => new(TileType.Floor, [Blocked(AllExcept(openDirection))]);
 
-    public static Tile Barricade(params Direction[] openDirections) => new(TileType.Wall, [Blocked(AllExcept(openDirections))]);
+    public static Tile Barricade(params Direction[] openDirections) => new(TileType.Floor, [Blocked(AllExcept(openDirections))]);
 
-    public static Tile Barricade(DirectionSet openDirections) => new(TileType.Wall, [new BlockedMovementComponent(DirectionSet.All.Except(openDirections))]);
+    public static Tile Barricade(DirectionSet openDirections) => new(TileType.Floor, [new BlockedMovementComponent(DirectionSet.All.Except(openDirections))]);
+
+    public static Tile RepairSite() => new(TileType.RepairSite);
+
+    public static Tile RepairSitePlus() => new(TileType.RepairSitePlus);
 
     private static TileType typeFromConveyor(ConveyorDirection dir, bool express) => express
         ? (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ExpressConveyorCW : TileType.ExpressConveyorCCW)

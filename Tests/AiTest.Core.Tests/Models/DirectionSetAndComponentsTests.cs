@@ -197,22 +197,24 @@ public class TileWithComponentsTests
     [Fact]
     public void Tile_WithBlockedMovementComponent_ShouldAllowOnlyUnblockedDirections()
     {
-        var tile = TileFactory.Wall(Direction.East, Direction.West);
+        var tile = TileFactory.Barricade(Direction.East, Direction.West);
         
-        Assert.True(tile.CanEnterFrom(Direction.North));
-        Assert.True(tile.CanEnterFrom(Direction.South));
-        Assert.False(tile.CanEnterFrom(Direction.East));
-        Assert.False(tile.CanEnterFrom(Direction.West));
+        Assert.True(tile.CanEnterFrom(Direction.East));
+        Assert.True(tile.CanEnterFrom(Direction.West));
+        Assert.False(tile.CanEnterFrom(Direction.North));
+        Assert.False(tile.CanEnterFrom(Direction.South));
     }
     
     [Fact]
     public void Tile_WithComponent_ShouldGetComponent()
     {
-        var tile = TileFactory.Wall(Direction.North);
+        var tile = TileFactory.Barricade(Direction.East);
         var blocked = tile.GetComponent<BlockedMovementComponent>();
         
         Assert.NotNull(blocked);
         Assert.True(blocked!.BlockedDirections.Contains(Direction.North));
+        Assert.True(blocked.BlockedDirections.Contains(Direction.South));
+        Assert.True(blocked.BlockedDirections.Contains(Direction.West));
     }
     
     [Fact]
@@ -229,6 +231,7 @@ public class TileWithComponentsTests
     {
         var tile = TileFactory.TunnelNS();
         
+        Assert.Equal(TileType.Floor, tile.Type);
         Assert.True(tile.CanEnterFrom(Direction.North));
         Assert.True(tile.CanEnterFrom(Direction.South));
         Assert.False(tile.CanEnterFrom(Direction.East));
@@ -240,6 +243,7 @@ public class TileWithComponentsTests
     {
         var tile = TileFactory.TunnelEW();
         
+        Assert.Equal(TileType.Floor, tile.Type);
         Assert.True(tile.CanEnterFrom(Direction.East));
         Assert.True(tile.CanEnterFrom(Direction.West));
         Assert.False(tile.CanEnterFrom(Direction.North));
@@ -251,6 +255,7 @@ public class TileWithComponentsTests
     {
         var tile = TileFactory.Barricade(Direction.South);
         
+        Assert.Equal(TileType.Floor, tile.Type);
         Assert.True(tile.CanEnterFrom(Direction.South));
         Assert.False(tile.CanEnterFrom(Direction.North));
         Assert.False(tile.CanEnterFrom(Direction.East));
@@ -271,10 +276,10 @@ public class TileWithComponentsTests
     [Fact]
     public void WallWithBlocked_ShouldRespectExitBlockage()
     {
-        var tile = TileFactory.Wall(Direction.East);
+        var tile = TileFactory.Barricade(Direction.East);
         
-        Assert.False(tile.CanExitTo(Direction.East));
-        Assert.True(tile.CanExitTo(Direction.West));
+        Assert.True(tile.CanExitTo(Direction.East));
+        Assert.False(tile.CanExitTo(Direction.West));
     }
     
     [Fact]
