@@ -15,6 +15,7 @@ public partial class GameManager : Node2D
 	private MapRenderer? _mapRenderer;
 	private RobotRenderer? _robotRenderer;
 	private AnimationService? _animationService;
+	private CameraController? _camera;
 	private MessageDispatcher _dispatcher = new();
 
 	private IGamePhase? _currentPhase;
@@ -22,6 +23,10 @@ public partial class GameManager : Node2D
 	private ExecutionPhase? _executionPhase;
 	private GamePhaseType _phaseType = GamePhaseType.Programming;
 	private int _roundNumber = 1;
+
+	private bool _isDragging;
+	private Vector2 _dragStartMousePos;
+	private Vector2 _dragStartCameraPos;
 
 	public override void _Ready()
 	{
@@ -35,6 +40,41 @@ public partial class GameManager : Node2D
 		SubscribeToEvents();
 
 		GD.Print("=== Game Ready! ===");
+	}
+
+	public override void _Input(InputEvent @event)
+	{
+		HandleCameraInput(@event);
+	}
+
+	private void HandleCameraInput(InputEvent @event)
+	{
+		if (_camera == null)
+			return;
+
+		if (@event is InputEventMouseButton mouseButton)
+		{
+			if (mouseButton.ButtonIndex == MouseButton.Left || mouseButton.ButtonIndex == MouseButton.Middle)
+			{
+				if (mouseButton.Pressed)
+				{
+					_isDragging = true;
+					_dragStartMousePos = GetViewport().GetMousePosition();
+					_dragStartCameraPos = _camera.Position;
+				}
+				else
+				{
+					_isDragging = false;
+				}
+			}
+		}
+
+		if (@event is InputEventMouseMotion motion && _isDragging)
+		{
+			var currentMousePos = GetViewport().GetMousePosition();
+			var delta = currentMousePos - _dragStartMousePos;
+			_camera.Position = _dragStartCameraPos - delta / _camera.Zoom;
+		}
 	}
 
 	private void InitializeGame()
@@ -140,6 +180,9 @@ public partial class GameManager : Node2D
 		_mapRenderer = new MapRenderer { Name = "MapLayer" };
 		AddChild(_mapRenderer);
 
+		_camera = new CameraController { Name = "Camera" };
+		_mapRenderer.AddChild(_camera);
+
 		_robotRenderer = new RobotRenderer { Name = "RobotLayer" };
 		AddChild(_robotRenderer);
 
@@ -183,14 +226,54 @@ public partial class GameManager : Node2D
 		_mapRenderer!.RenderMap(map);
 		_robotRenderer!.CreateRobots(_runner.Engine.State.Players);
 		UpdateUI();
+		CenterCamera(map.Width, map.Height);
+	}
+
+	private void CenterCamera(int mapWidth, int mapHeight)
+	{
+		if (_camera == null)
+			return;
+
+		const int tileSize = 48;
+		const int mapOffsetY = 120;
+		const int actionLogWidth = 280;
+		var screenWidth = GetViewport().GetVisibleRect().Size.X;
+		var availableWidth = screenWidth - actionLogWidth;
+		var centerX = availableWidth / 2f;
+		var centerY = mapHeight * tileSize / 2f + mapOffsetY;
+		_camera.Position = new Vector2(centerX, centerY);
 	}
 
 	public override void _Process(double delta)
 	{
+		HandleCameraKeyboardPan(delta);
 		HandleInput();
 		_currentPhase?.Update(delta);
 		_robotRenderer!.UpdatePositions(_runner!.Engine.State.Players);
 		UpdateUI();
+	}
+
+	private void HandleCameraKeyboardPan(double delta)
+	{
+		if (_camera == null)
+			return;
+
+		const float panSpeed = 400f;
+		Vector2 moveDir = Vector2.Zero;
+
+		if (Input.IsKeyPressed(Key.W))
+			moveDir.Y -= 1;
+		if (Input.IsKeyPressed(Key.S))
+			moveDir.Y += 1;
+		if (Input.IsKeyPressed(Key.A))
+			moveDir.X -= 1;
+		if (Input.IsKeyPressed(Key.D))
+			moveDir.X += 1;
+
+		if (moveDir != Vector2.Zero)
+		{
+			_camera.Position -= moveDir.Normalized() * panSpeed * (float)delta;
+		}
 	}
 
 	private void HandleInput()
