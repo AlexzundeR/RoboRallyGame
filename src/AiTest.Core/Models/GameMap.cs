@@ -96,12 +96,12 @@ public sealed class GameMap
         map.SetTile(4, 10, Tile.Gear(false));
 
         // Board Lasers
-        map.SetTile(2, 5, Tile.LaserH);
-        map.SetTile(5, 2, Tile.LaserV);
-        map.SetTile(9, 2, Tile.LaserV);
-        map.SetTile(12, 5, Tile.LaserH);
-        map.SetTile(2, 9, Tile.LaserH);
-        map.SetTile(12, 9, Tile.LaserH);
+        map.SetTile(2, 5, Tile.Laser(Direction.West));
+        map.SetTile(5, 2, Tile.Laser(Direction.North));
+        map.SetTile(9, 2, Tile.Laser(Direction.North));
+        map.SetTile(12, 5, Tile.Laser(Direction.East));
+        map.SetTile(2, 9, Tile.Laser(Direction.West));
+        map.SetTile(12, 9, Tile.Laser(Direction.East));
 
         // Pits
         map.SetTile(5, 12, Tile.Pit);

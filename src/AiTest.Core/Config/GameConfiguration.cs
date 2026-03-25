@@ -35,6 +35,8 @@ public class TilePlacement
     public List<Direction>? BlockedDirections { get; init; }
     public Direction? ConveyorDir { get; init; }
     public bool? IsExpress { get; init; }
+    public bool? IsClockwise { get; init; }
+    public Direction? LaserDirection { get; init; }
 }
 
 public class CheckpointPlacement

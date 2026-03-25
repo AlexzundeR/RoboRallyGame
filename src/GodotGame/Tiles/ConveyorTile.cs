@@ -1,6 +1,7 @@
 namespace AiTest.Godot.Tiles;
 
 using Godot;
+using CoreModels = AiTest.Core.Models;
 
 public partial class ConveyorTile : Tile
 {
@@ -17,20 +18,22 @@ public partial class ConveyorTile : Tile
         _arrow = GetNode<Polygon2D>("Arrow");
     }
 
-    public void Initialize(Core.Models.Position pos, Core.Models.TileType type)
+    public void Initialize(CoreModels.Position pos, CoreModels.TileType type, CoreModels.ConveyorDirection direction, bool isExpress)
     {
         base.Initialize(pos, type);
-        _clockwise = type == Core.Models.TileType.ConveyorCW || type == Core.Models.TileType.ExpressConveyorCW;
+        _clockwise = direction is CoreModels.ConveyorDirection.North or CoreModels.ConveyorDirection.East;
         
-        var dir = type switch
+        var rotation = direction switch
         {
-            Core.Models.TileType.ConveyorCW or Core.Models.TileType.ExpressConveyorCW => 90f,
-            Core.Models.TileType.ConveyorCCW or Core.Models.TileType.ExpressConveyorCCW => -90f,
+            CoreModels.ConveyorDirection.North => 0f,
+            CoreModels.ConveyorDirection.East => 90f,
+            CoreModels.ConveyorDirection.South => 180f,
+            CoreModels.ConveyorDirection.West => -90f,
             _ => 0f
         };
         
         if (_arrow != null)
-            _arrow.RotationDegrees = dir;
+            _arrow.RotationDegrees = rotation;
     }
 
     public override void StartAnimations()
@@ -39,7 +42,7 @@ public partial class ConveyorTile : Tile
         if (_isRotating) return;
         _isRotating = true;
         
-        float speed = (TileType == Core.Models.TileType.ExpressConveyorCW || TileType == Core.Models.TileType.ExpressConveyorCCW) ? 1.0f : 2.0f;
+        float speed = 1.0f;
         float direction = _clockwise ? 360f : -360f;
         
         var tween = CreateTween();

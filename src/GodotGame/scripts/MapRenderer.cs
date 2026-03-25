@@ -67,20 +67,19 @@ public partial class MapRenderer : Node2D
             }
         }
         
-        if (tileData.Type == TileType.ConveyorCW || tileData.Type == TileType.ConveyorCCW ||
-            tileData.Type == TileType.ExpressConveyorCW || tileData.Type == TileType.ExpressConveyorCCW)
+        if (tileData.Type == TileType.Conveyor)
         {
             if (tileNode is ConveyorTile conveyorTile)
             {
-                conveyorTile.Initialize(pos, tileData.Type);
+                conveyorTile.Initialize(pos, tileData.Type, tileData.ConveyorDir ?? ConveyorDirection.North, tileData.IsExpress);
             }
         }
         
-        if (tileData.Type == TileType.GearCW || tileData.Type == TileType.GearCCW)
+        if (tileData.Type == TileType.Gear)
         {
             if (tileNode is GearTile gearTile)
             {
-                gearTile.Initialize(pos, tileData.Type);
+                gearTile.Initialize(pos, tileData.Type, tileData.IsClockwise);
             }
         }
         
@@ -102,10 +101,9 @@ public partial class MapRenderer : Node2D
             TileType.Floor => _floorTileScene,
             TileType.Wall => _wallTileScene,
             TileType.Pit => _pitTileScene,
-            TileType.ConveyorCW or TileType.ConveyorCCW or 
-            TileType.ExpressConveyorCW or TileType.ExpressConveyorCCW => _conveyorTileScene,
-            TileType.GearCW or TileType.GearCCW => _gearTileScene,
-            TileType.LaserH or TileType.LaserV => _laserTileScene,
+            TileType.Conveyor => _conveyorTileScene,
+            TileType.Gear => _gearTileScene,
+            TileType.Laser => _laserTileScene,
             TileType.Start => _startTileScene,
             TileType.Checkpoint => _checkpointTileScene,
             _ => _floorTileScene

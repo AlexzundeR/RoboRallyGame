@@ -16,23 +16,15 @@ public static class TileFactory
 
     public static Tile Start() => new(TileType.Start);
 
-    public static Tile LaserH() => new(TileType.LaserH) { HasBoardLaser = true };
-
-    public static Tile LaserV() => new(TileType.LaserV) { HasBoardLaser = true };
+    public static Tile Laser(Direction direction) => new(TileType.Laser) { LaserDirection = direction };
 
     public static Tile Conveyor(ConveyorDirection dir, bool express = false)
-    {
-        var type = express
-            ? (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ExpressConveyorCW : TileType.ExpressConveyorCCW)
-            : (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ConveyorCW : TileType.ConveyorCCW);
-
-        return new Tile(type) { ConveyorDir = dir };
-    }
+        => new(TileType.Conveyor) { ConveyorDir = dir, IsExpress = express };
 
     public static Tile Conveyor(ConveyorDirection dir, bool express, params Direction[] blockedDirections)
-        => new(typeFromConveyor(dir, express), [Blocked(blockedDirections)]) { ConveyorDir = dir };
+        => new(TileType.Conveyor, [Blocked(blockedDirections)]) { ConveyorDir = dir, IsExpress = express };
 
-    public static Tile Gear(bool clockwise = true) => new(clockwise ? TileType.GearCW : TileType.GearCCW);
+    public static Tile Gear(bool clockwise = true) => new(TileType.Gear) { IsClockwise = clockwise };
 
     public static Tile Checkpoint(int number) => new(TileType.Checkpoint) { CheckpointNumber = number };
 
@@ -49,10 +41,6 @@ public static class TileFactory
     public static Tile RepairSite() => new(TileType.RepairSite);
 
     public static Tile RepairSitePlus() => new(TileType.RepairSitePlus);
-
-    private static TileType typeFromConveyor(ConveyorDirection dir, bool express) => express
-        ? (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ExpressConveyorCW : TileType.ExpressConveyorCCW)
-        : (dir is ConveyorDirection.North or ConveyorDirection.South ? TileType.ConveyorCW : TileType.ConveyorCCW);
 
     private static BlockedMovementComponent Blocked(params Direction[] directions) 
         => new(DirectionSet.FromDirections(directions));

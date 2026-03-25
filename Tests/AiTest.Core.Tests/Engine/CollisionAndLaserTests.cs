@@ -297,7 +297,7 @@ public class LaserResolverTests
     public void PrepareShots_OnBoardLaser_ShouldAddBoardLaser()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(5, 5, Tile.LaserH);
+        map.SetTile(5, 5, Tile.Laser(Direction.North));
         var robot = new Robot(1, new Position(5, 5), Direction.East);
         
         var resolver = new LaserResolver();

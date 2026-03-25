@@ -19,10 +19,10 @@ public partial class GearTile : Tile
         _arrow = GetNode<Polygon2D>("Arrow");
     }
 
-    public void Initialize(Core.Models.Position pos, Core.Models.TileType type)
+    public void Initialize(Core.Models.Position pos, Core.Models.TileType type, bool clockwise)
     {
         base.Initialize(pos, type);
-        _clockwise = type == Core.Models.TileType.GearCW;
+        _clockwise = clockwise;
     }
 
     public override void StartAnimations()

@@ -29,45 +29,40 @@ public class TileTests
     public void Conveyor_ShouldHaveCorrectDirection()
     {
         var tile = Tile.Conveyor(ConveyorDirection.North);
-        Assert.Equal(TileType.ConveyorCW, tile.Type);
+        Assert.Equal(TileType.Conveyor, tile.Type);
         Assert.Equal(ConveyorDirection.North, tile.ConveyorDir);
     }
 
     [Fact]
-    public void Conveyor_WithEastDirection_ShouldHaveCorrectType()
+    public void Conveyor_WithExpress_ShouldHaveIsExpress()
     {
-        var tile = Tile.Conveyor(ConveyorDirection.East);
-        Assert.Equal(TileType.ConveyorCCW, tile.Type);
+        var tile = Tile.Conveyor(ConveyorDirection.East, true);
+        Assert.Equal(TileType.Conveyor, tile.Type);
+        Assert.True(tile.IsExpress);
     }
 
     [Fact]
-    public void Gear_Clockwise_ShouldHaveCorrectType()
+    public void Gear_Clockwise_ShouldHaveCorrectProperty()
     {
         var tile = Tile.Gear(true);
-        Assert.Equal(TileType.GearCW, tile.Type);
+        Assert.Equal(TileType.Gear, tile.Type);
+        Assert.True(tile.IsClockwise);
     }
 
     [Fact]
-    public void Gear_CounterClockwise_ShouldHaveCorrectType()
+    public void Gear_CounterClockwise_ShouldHaveCorrectProperty()
     {
         var tile = Tile.Gear(false);
-        Assert.Equal(TileType.GearCCW, tile.Type);
+        Assert.Equal(TileType.Gear, tile.Type);
+        Assert.False(tile.IsClockwise);
     }
 
     [Fact]
-    public void LaserH_ShouldHaveLaserAndHorizontal()
+    public void Laser_ShouldHaveCorrectDirection()
     {
-        var tile = Tile.LaserH;
-        Assert.Equal(TileType.LaserH, tile.Type);
-        Assert.True(tile.HasBoardLaser);
-    }
-
-    [Fact]
-    public void LaserV_ShouldHaveLaserAndVertical()
-    {
-        var tile = Tile.LaserV;
-        Assert.Equal(TileType.LaserV, tile.Type);
-        Assert.True(tile.HasBoardLaser);
+        var tile = Tile.Laser(Direction.East);
+        Assert.Equal(TileType.Laser, tile.Type);
+        Assert.Equal(Direction.East, tile.LaserDirection);
     }
 
     [Fact]
@@ -92,7 +87,7 @@ public class TileTests
     [InlineData(TileType.Start, 'S')]
     public void ToChar_ShouldReturnExpectedChar(TileType type, char expected)
     {
-        var tile = new Tile { Type = type };
+        var tile = new Tile(type);
         Assert.Equal(expected, tile.ToChar());
     }
 }

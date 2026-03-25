@@ -206,7 +206,7 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
-                    new() { X = 3, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.East }
+                    new() { X = 3, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East }
                 }
             }
         };
@@ -215,7 +215,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var tile = runner.Engine.State.Map.GetTile(3, 3);
-        Assert.Equal(TileType.ConveyorCW, tile.Type);
+        Assert.Equal(TileType.Conveyor, tile.Type);
         Assert.NotNull(tile.ConveyorDir);
     }
 
@@ -231,8 +231,8 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
-                    new() { X = 3, Y = 3, Type = TileType.GearCW },
-                    new() { X = 4, Y = 3, Type = TileType.GearCCW }
+                    new() { X = 3, Y = 3, Type = TileType.Gear, IsClockwise = true },
+                    new() { X = 4, Y = 3, Type = TileType.Gear, IsClockwise = false }
                 }
             }
         };
@@ -240,7 +240,9 @@ public class GameRunnerTests
         
         runner.Initialize();
 
-        Assert.Equal(TileType.GearCW, runner.Engine.State.Map.GetTile(3, 3).Type);
-        Assert.Equal(TileType.GearCCW, runner.Engine.State.Map.GetTile(4, 3).Type);
+        Assert.Equal(TileType.Gear, runner.Engine.State.Map.GetTile(3, 3).Type);
+        Assert.True(runner.Engine.State.Map.GetTile(3, 3).IsClockwise);
+        Assert.Equal(TileType.Gear, runner.Engine.State.Map.GetTile(4, 3).Type);
+        Assert.False(runner.Engine.State.Map.GetTile(4, 3).IsClockwise);
     }
 }

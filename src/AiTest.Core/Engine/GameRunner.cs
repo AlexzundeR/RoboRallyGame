@@ -66,31 +66,16 @@ public class GameRunner
 
     private static Core.Models.Tile CreateTile(TilePlacement placement)
     {
-        var type = placement.Type switch
-        {
-            TileType.Wall => TileType.Wall,
-            TileType.Pit => TileType.Pit,
-            TileType.Start => TileType.Start,
-            TileType.LaserH => TileType.LaserH,
-            TileType.LaserV => TileType.LaserV,
-            TileType.ConveyorCW => TileType.ConveyorCW,
-            TileType.ConveyorCCW => TileType.ConveyorCCW,
-            TileType.GearCW => TileType.GearCW,
-            TileType.GearCCW => TileType.GearCCW,
-            TileType.ExpressConveyorCW => TileType.ExpressConveyorCW,
-            TileType.ExpressConveyorCCW => TileType.ExpressConveyorCCW,
-            _ => TileType.Floor
-        };
+        var type = placement.Type;
 
-        var components = new List<ITileComponent>();
+        List<ITileComponent>? components = null;
         
         if (placement.BlockedDirections != null && placement.BlockedDirections.Count > 0)
         {
-            var blocked = DirectionSet.FromDirections(placement.BlockedDirections.ToArray());
-            components.Add(new BlockedMovementComponent(blocked));
+            components = [new BlockedMovementComponent(DirectionSet.FromDirections(placement.BlockedDirections.ToArray()))];
         }
 
-        if (placement.ConveyorDir.HasValue)
+        if (type == TileType.Conveyor && placement.ConveyorDir.HasValue)
         {
             var conveyorDir = placement.ConveyorDir.Value switch
             {
@@ -101,15 +86,20 @@ public class GameRunner
                 _ => ConveyorDirection.North
             };
             
-            if (components.Count > 0)
-            {
-                var tile = new Core.Models.Tile(type, components) { ConveyorDir = conveyorDir };
-                return tile;
-            }
-            return new Core.Models.Tile(type) { ConveyorDir = conveyorDir };
+            return new Core.Models.Tile(type, conveyorDir, placement.IsExpress ?? false);
         }
 
-        return components.Count > 0 
+        if (type == TileType.Gear && placement.IsClockwise.HasValue)
+        {
+            return new Core.Models.Tile(type, placement.IsClockwise.Value, true);
+        }
+
+        if (type == TileType.Laser && placement.LaserDirection.HasValue)
+        {
+            return new Core.Models.Tile(type, placement.LaserDirection.Value);
+        }
+
+        return components != null 
             ? new Core.Models.Tile(type, components) 
             : new Core.Models.Tile(type);
     }

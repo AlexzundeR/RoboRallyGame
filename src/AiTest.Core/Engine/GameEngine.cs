@@ -399,19 +399,15 @@ public sealed class GameEngine : IGameEngine
                 case TileType.Pit when !ignorePits:
                     player.Robot.LoseLifeToken();
                     break;
-                case TileType.GearCW:
-                    player.Robot.RotateRight();
+                case TileType.Gear:
+                    if (tile.IsClockwise)
+                        player.Robot.RotateRight();
+                    else
+                        player.Robot.RotateLeft();
                     break;
-                case TileType.GearCCW:
-                    player.Robot.RotateLeft();
-                    break;
-                case TileType.ConveyorCW when !ignoreConveyors:
-                case TileType.ExpressConveyorCW when !ignoreConveyors:
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCW ? 2 : 1);
-                    break;
-                case TileType.ConveyorCCW when !ignoreConveyors:
-                case TileType.ExpressConveyorCCW when !ignoreConveyors:
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCCW ? 2 : 1);
+                case TileType.Conveyor when !ignoreConveyors:
+                    var steps = tile.IsExpress ? 2 : 1;
+                    MoveOnConveyor(player, tile.ConveyorDir!.Value, steps);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
@@ -747,19 +743,15 @@ public sealed class GameEngine : IGameEngine
                 case TileType.Pit when !ignorePits:
                     HandlePit(player);
                     break;
-                case TileType.GearCW:
-                    player.Robot.RotateRight();
+                case TileType.Gear:
+                    if (tile.IsClockwise)
+                        player.Robot.RotateRight();
+                    else
+                        player.Robot.RotateLeft();
                     break;
-                case TileType.GearCCW:
-                    player.Robot.RotateLeft();
-                    break;
-                case TileType.ConveyorCW when !ignoreConveyors:
-                case TileType.ExpressConveyorCW when !ignoreConveyors:
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCW ? 2 : 1);
-                    break;
-                case TileType.ConveyorCCW when !ignoreConveyors:
-                case TileType.ExpressConveyorCCW when !ignoreConveyors:
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, tile.Type == TileType.ExpressConveyorCCW ? 2 : 1);
+                case TileType.Conveyor when !ignoreConveyors:
+                    var steps = tile.IsExpress ? 2 : 1;
+                    MoveOnConveyor(player, tile.ConveyorDir!.Value, steps);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);

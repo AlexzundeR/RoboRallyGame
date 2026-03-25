@@ -90,9 +90,9 @@ public class GameMapTests
     {
         var map = GameMap.CreateStandardMap();
         
-        Assert.Equal(TileType.ConveyorCCW, map.GetTile(4, 3).Type);
-        Assert.Equal(TileType.ConveyorCCW, map.GetTile(9, 3).Type);
-        Assert.Equal(TileType.ExpressConveyorCW, map.GetTile(3, 5).Type);
+        Assert.Equal(TileType.Conveyor, map.GetTile(4, 3).Type);
+        Assert.Equal(TileType.Conveyor, map.GetTile(9, 3).Type);
+        Assert.True(map.GetTile(3, 5).IsExpress);
     }
 
     [Fact]
@@ -109,6 +109,6 @@ public class GameMapTests
     {
         var map = GameMap.CreateStandardMap();
         
-        Assert.True(map.GetTile(2, 5).HasBoardLaser);
+        Assert.Equal(TileType.Laser, map.GetTile(2, 5).Type);
     }
 }

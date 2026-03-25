@@ -98,39 +98,39 @@ public static class GameMapConfigs
                     new() { X = 14, Y = 13, Type = TileType.Wall },
 
                     // Conveyors
-                    new() { X = 4, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.East },
-                    new() { X = 5, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.East },
-                    new() { X = 6, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.East },
-                    new() { X = 9, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.West },
-                    new() { X = 10, Y = 3, Type = TileType.ConveyorCW, ConveyorDir = Direction.West },
+                    new() { X = 4, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
+                    new() { X = 5, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
+                    new() { X = 6, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
+                    new() { X = 9, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.West },
+                    new() { X = 10, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.West },
 
-                    new() { X = 4, Y = 11, Type = TileType.ConveyorCW, ConveyorDir = Direction.East },
-                    new() { X = 10, Y = 11, Type = TileType.ConveyorCW, ConveyorDir = Direction.West },
+                    new() { X = 4, Y = 11, Type = TileType.Conveyor, ConveyorDir = Direction.East },
+                    new() { X = 10, Y = 11, Type = TileType.Conveyor, ConveyorDir = Direction.West },
 
                     // Express Conveyors
-                    new() { X = 3, Y = 5, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.South },
-                    new() { X = 3, Y = 6, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.South },
-                    new() { X = 3, Y = 8, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.North },
-                    new() { X = 3, Y = 9, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.North },
+                    new() { X = 3, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
+                    new() { X = 3, Y = 6, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
+                    new() { X = 3, Y = 8, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
+                    new() { X = 3, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
 
-                    new() { X = 11, Y = 5, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.South },
-                    new() { X = 11, Y = 6, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.South },
-                    new() { X = 11, Y = 8, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.North },
-                    new() { X = 11, Y = 9, Type = TileType.ExpressConveyorCW, ConveyorDir = Direction.North },
+                    new() { X = 11, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
+                    new() { X = 11, Y = 6, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
+                    new() { X = 11, Y = 8, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
+                    new() { X = 11, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
 
                     // Gears
-                    new() { X = 10, Y = 4, Type = TileType.GearCW },
-                    new() { X = 10, Y = 5, Type = TileType.GearCW },
-                    new() { X = 4, Y = 9, Type = TileType.GearCCW },
-                    new() { X = 4, Y = 10, Type = TileType.GearCCW },
+                    new() { X = 10, Y = 4, Type = TileType.Gear },
+                    new() { X = 10, Y = 5, Type = TileType.Gear },
+                    new() { X = 4, Y = 9, Type = TileType.Gear },
+                    new() { X = 4, Y = 10, Type = TileType.Gear },
 
-                    // Lasers
-                    new() { X = 2, Y = 5, Type = TileType.LaserH },
-                    new() { X = 5, Y = 2, Type = TileType.LaserV },
-                    new() { X = 9, Y = 2, Type = TileType.LaserV },
-                    new() { X = 12, Y = 5, Type = TileType.LaserH },
-                    new() { X = 2, Y = 9, Type = TileType.LaserH },
-                    new() { X = 12, Y = 9, Type = TileType.LaserH },
+                    // Lasers (horizontal: West/East, vertical: North/South)
+                    new() { X = 2, Y = 5, Type = TileType.Laser, LaserDirection = Direction.West },
+                    new() { X = 5, Y = 2, Type = TileType.Laser, LaserDirection = Direction.North },
+                    new() { X = 9, Y = 2, Type = TileType.Laser, LaserDirection = Direction.North },
+                    new() { X = 12, Y = 5, Type = TileType.Laser, LaserDirection = Direction.East },
+                    new() { X = 2, Y = 9, Type = TileType.Laser, LaserDirection = Direction.West },
+                    new() { X = 12, Y = 9, Type = TileType.Laser, LaserDirection = Direction.East },
 
                     // Pits
                     new() { X = 5, Y = 12, Type = TileType.Pit },

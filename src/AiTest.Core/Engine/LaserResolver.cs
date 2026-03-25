@@ -49,7 +49,7 @@ public sealed class LaserResolver
             
             var tile = map.GetTile(robot.Position);
             
-            if (tile.HasBoardLaser)
+            if (tile.Type == TileType.Laser)
             {
                 shots.Add(new LaserShot
                 {
@@ -143,12 +143,7 @@ public sealed class LaserResolver
     
     private Direction GetBoardLaserDirection(Tile tile)
     {
-        return tile.Type switch
-        {
-            TileType.LaserH => Direction.East,
-            TileType.LaserV => Direction.South,
-            _ => Direction.North
-        };
+        return tile.LaserDirection ?? Direction.North;
     }
     
     private int GetPriority(Robot robot, LaserPriorityMode mode)
