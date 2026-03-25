@@ -47,7 +47,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_WithoutAnimationService_ExecutesAllStepsSynchronously()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -78,7 +78,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_WithAnimationService_CallsPlayAndWait()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -99,7 +99,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_CompleteAll5Registers_TransitionsToNextPhase()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -157,7 +157,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_ExecuteAllSteps_CompletesRegister()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -180,7 +180,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_HandlesMultipleRegisters_Sequentially()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -212,7 +212,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_AnimationServiceReceivesAnimations()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -233,7 +233,7 @@ public class ExecutionPhaseTests
     [Fact]
     public void ExecutionPhase_PublishesCorrectEvents()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 

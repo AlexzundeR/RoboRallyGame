@@ -23,7 +23,7 @@ public class GameFlowTests
     [Fact]
     public void ProgrammingPhase_ToExecutionPhase_ShouldPublishPhaseChangedEvent()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var phaseChangedEvent = false;
@@ -61,7 +61,7 @@ public class GameFlowTests
     [Fact]
     public void ExecutionPhase_ToProgrammingPhase_ShouldIncrementRound()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var events = new List<PhaseChangedEvent>();
@@ -94,7 +94,7 @@ public class GameFlowTests
     [Fact]
     public void TwoPlayerGame_FullProgrammingPhase_ShouldTrackCurrentPlayer()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -113,7 +113,7 @@ public class GameFlowTests
     [Fact]
     public void TwoPlayerGame_Registers_ShouldStartAt0()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -126,7 +126,7 @@ public class GameFlowTests
     [Fact]
     public void ProgrammingPhase_AfterCardSelection_ShouldPublishCardSelectedEvent()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var cardSelectedEvents = new List<CardSelectedEvent>();
@@ -147,7 +147,7 @@ public class GameFlowTests
     [Fact]
     public void ExecutionPhase_AfterRegisterExecution_ShouldPublishRegisterExecutedEvent()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var registerExecutedEvents = new List<RegisterExecutedEvent>();
@@ -167,7 +167,7 @@ public class GameFlowTests
     [Fact]
     public void PlayerConfirmation_ShouldPublishPlayerConfirmedEvent()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var confirmedEvents = new List<PlayerConfirmedEvent>();
@@ -186,7 +186,7 @@ public class GameFlowTests
     [Fact]
     public void CardSelectedEvent_Published_ShouldNotifySubscribers()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var cardEvents = new List<CardSelectedEvent>();
@@ -207,7 +207,7 @@ public class GameFlowTests
     [Fact]
     public void PhaseChangedEvent_ShouldTransitionBetweenPhases()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var phaseHistory = new List<GamePhaseType>();
@@ -240,7 +240,7 @@ public class GameFlowTests
     [Fact]
     public void RegisterExecutedEvent_ShouldTrackExecution()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var executedRegisters = new List<(int Register, int Player)>();
@@ -264,7 +264,7 @@ public class GameFlowTests
     [Fact]
     public void CardSelection_ViaEvent_ShouldPublishCardSelectedEvent()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
         var cardEvents = new List<CardSelectedEvent>();
@@ -287,7 +287,7 @@ public class GameFlowTests
     [Fact]
     public void FullGameSession_TwoPlayers_SelectCardsAndExecute()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -357,7 +357,7 @@ public class GameFlowTests
     [Fact]
     public void FullGameSession_ThreeRounds_TracksRoundsCorrectly()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -449,7 +449,7 @@ public class GameFlowTests
     [Fact]
     public void ExecutionPhase_HandleInput_ExecutesRegisterOnInput()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
 
         var existingPlayer = runner.Engine.State.Players[0];
@@ -471,7 +471,7 @@ public class GameFlowTests
     [Fact]
     public void ExecutionPhase_CompleteAllRegisters_TransitionsToNextPhase()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 
@@ -504,7 +504,7 @@ public class GameFlowTests
     [Fact]
     public void FullGameSession_ViaPhaseInputMethods_CompletesFullCycle()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
 

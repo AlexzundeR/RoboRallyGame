@@ -39,7 +39,7 @@ public partial class GameManager : Node2D
 
 	private void InitializeGame()
 	{
-		_runner = new GameRunner(GameRunner.CreateDefault2Player());
+		_runner = new GameRunner(GameMapConfigs.CreateDefault2Player());
 		_runner.Initialize();
 	}
 

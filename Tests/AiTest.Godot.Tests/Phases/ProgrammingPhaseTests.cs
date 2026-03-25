@@ -36,7 +36,7 @@ public class ProgrammingPhaseTests
 
     public ProgrammingPhaseTests()
     {
-        _runner = new GameRunner(GameRunner.CreateMinimal());
+        _runner = new GameRunner(TestConfigs.CreateDefault2Player());
         _runner.Initialize();
         _dispatcher = new MessageDispatcher();
         _phase = new ProgrammingPhase();

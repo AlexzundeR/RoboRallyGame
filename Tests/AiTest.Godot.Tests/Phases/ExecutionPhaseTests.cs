@@ -1,6 +1,8 @@
 namespace AiTest.Godot.Tests.Phases;
 
+using AiTest.Core.Config;
 using AiTest.Core.Engine;
+using AiTest.Core.Entities;
 using AiTest.Core.Messages;
 using AiTest.Godot.Phases;
 using Xunit;
@@ -13,7 +15,7 @@ public class ExecutionPhaseTests
 
     public ExecutionPhaseTests()
     {
-        _runner = new GameRunner(GameRunner.CreateMinimal());
+        _runner = new GameRunner(TestConfigs.CreateDefault2Player());
         _runner.Initialize();
         _dispatcher = new MessageDispatcher();
         _phase = new ExecutionPhase();

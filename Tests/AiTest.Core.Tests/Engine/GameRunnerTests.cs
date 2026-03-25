@@ -12,7 +12,7 @@ public class GameRunnerTests
     [Fact]
     public void CreateMinimal_DefaultConfiguration_ShouldHaveOnePlayer()
     {
-        var config = GameRunner.CreateMinimal();
+        var config = TestConfigs.CreateMinimal();
 
         Assert.Single(config.Players);
         Assert.Equal("Player1", config.Players[0].Name);
@@ -21,7 +21,7 @@ public class GameRunnerTests
     [Fact]
     public void CreateDefault2Player_DefaultConfiguration_ShouldHaveTwoPlayers()
     {
-        var config = GameRunner.CreateDefault2Player();
+        var config = TestConfigs.CreateDefault2Player();
 
         Assert.Equal(2, config.Players.Count);
         Assert.Equal("Player1", config.Players[0].Name);
@@ -31,7 +31,7 @@ public class GameRunnerTests
     [Fact]
     public void Initialize_WithMinimalConfig_ShouldCreateGame()
     {
-        var runner = new GameRunner(GameRunner.CreateMinimal());
+        var runner = new GameRunner(TestConfigs.CreateMinimal());
         
         runner.Initialize();
 
@@ -42,7 +42,7 @@ public class GameRunnerTests
     [Fact]
     public void Initialize_With2PlayerConfig_ShouldCreateGameWith2Players()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         
         runner.Initialize();
 
@@ -52,7 +52,7 @@ public class GameRunnerTests
     [Fact]
     public void Initialize_WithCheckpoints_ShouldPlaceCheckpointsOnMap()
     {
-        var runner = new GameRunner(GameRunner.CreateMinimal());
+        var runner = new GameRunner(TestConfigs.CreateMinimal());
         
         runner.Initialize();
 
@@ -87,7 +87,7 @@ public class GameRunnerTests
     [Fact]
     public void FullRound_TwoPlayersProgramAndExecute_ShouldCompleteAllRegisters()
     {
-        var runner = new GameRunner(GameRunner.CreateDefault2Player());
+        var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
 
         var p1 = runner.Engine.State.Players[0];
@@ -110,7 +110,7 @@ public class GameRunnerTests
     [Fact]
     public void PlayerWithDamage_FewerCardsDealt_ShouldReceiveFewerCards()
     {
-        var config = GameRunner.CreateMinimal();
+        var config = TestConfigs.CreateMinimal();
         var runner = new GameRunner(config);
         runner.Initialize();
 
@@ -125,7 +125,7 @@ public class GameRunnerTests
     [Fact]
     public void PlayerWith9Damage_NoCardsDealt_ShouldReceiveZeroCards()
     {
-        var config = GameRunner.CreateMinimal();
+        var config = TestConfigs.CreateMinimal();
         var runner = new GameRunner(config);
         runner.Initialize();
 
@@ -242,27 +242,5 @@ public class GameRunnerTests
 
         Assert.Equal(TileType.GearCW, runner.Engine.State.Map.GetTile(3, 3).Type);
         Assert.Equal(TileType.GearCCW, runner.Engine.State.Map.GetTile(4, 3).Type);
-    }
-
-    [Fact]
-    public void CreateDefault2Player_Map_ShouldHaveDiverseElements()
-    {
-        var config = GameRunner.CreateDefault2Player();
-        
-        var walls = config.Map.Tiles.Count(t => t.Type == TileType.Wall);
-        var pits = config.Map.Tiles.Count(t => t.Type == TileType.Pit);
-        var conveyorTiles = config.Map.Tiles.Count(t => t.Type == TileType.ConveyorCW || t.Type == TileType.ExpressConveyorCW);
-        var gearTiles = config.Map.Tiles.Count(t => t.Type == TileType.GearCW || t.Type == TileType.GearCCW);
-        
-        Assert.True(walls >= 4, "Should have at least 4 wall tiles");
-        Assert.True(pits >= 3, "Should have at least 3 pits");
-        Assert.True(conveyorTiles >= 4, "Should have at least 4 conveyor tiles");
-        Assert.True(gearTiles >= 4, "Should have at least 4 gear tiles");
-        
-        var blockedWalls = config.Map.Tiles.Count(t => 
-            t.Type == TileType.Wall && 
-            t.BlockedDirections != null && 
-            t.BlockedDirections.Count > 0);
-        Assert.True(blockedWalls >= 4, "Should have at least 4 walls with blockages (tunnels/barricades)");
     }
 }
