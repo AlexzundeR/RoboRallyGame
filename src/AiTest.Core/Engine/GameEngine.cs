@@ -290,44 +290,6 @@ public sealed class GameEngine : IGameEngine
         _laserResolver.Fire(shots, State.Players);
     }
 
-    public void ExecuteRegister(int registerIndex)
-    {
-        BeginRegisterExecution(registerIndex);
-        while (TryExecuteNextStep() == StepResult.Executed) { }
-    }
-
-    public void ExecuteMovementPhase(int registerIndex)
-    {
-        var beforeState = CaptureRobotStates();
-        
-        OnMovementPhaseStarted?.Invoke(new MovementPhaseStartedEvent(registerIndex));
-        ExecuteCards(registerIndex);
-        
-        FireMoveAndRotateEvents(beforeState, CaptureRobotStates());
-    }
-
-    public void ExecuteConveyorPhase(int registerIndex)
-    {
-        var beforeState = CaptureRobotStates();
-        
-        OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(registerIndex));
-        ApplyBoardElements();
-        
-        FireMoveEvents(beforeState, CaptureRobotStates());
-    }
-
-    public void ExecuteLaserPhase(int registerIndex)
-    {
-        var beforeState = CaptureRobotStates();
-        
-        OnLaserPhaseStarted?.Invoke(new LaserPhaseStartedEvent(registerIndex));
-        FireLasers();
-        
-        FireDamageEvents(beforeState, CaptureRobotStates());
-        
-        OnPhaseExecutionComplete?.Invoke(new PhaseExecutionCompleteEvent(registerIndex));
-    }
-    
     private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureRobotStates()
     {
         var states = new Dictionary<int, (Position, Direction, int)>();

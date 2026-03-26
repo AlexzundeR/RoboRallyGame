@@ -21,6 +21,14 @@ public class GameEngineTests
         new MoveCard { Priority = 105, Spaces = 3 },
     };
 
+    private static void ExecuteRegister(GameEngine engine, int registerIndex)
+    {
+        engine.BeginRegisterExecution(registerIndex);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
+    private static void ExecuteFullRegister(GameEngine engine) => ExecuteRegister(engine, 0);
+
     private static Player CreateWithRegisters(params (ProgramCard Card, int HandIndex)[] registers)
     {
         var regArray = new RegisterCard?[5];
@@ -137,7 +145,7 @@ public class GameEngineTests
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         
         var startPos = player.Robot.Position;
-        engine.ExecuteRegister(0);
+        ExecuteFullRegister(engine);
         
         Assert.NotEqual(startPos, player.Robot.Position);
     }
@@ -152,7 +160,7 @@ public class GameEngineTests
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         
-        engine.ExecuteRegister(0);
+        ExecuteFullRegister(engine);
         
         Assert.Equal(Direction.West, player.Robot.Direction);
     }
@@ -167,7 +175,7 @@ public class GameEngineTests
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         
-        engine.ExecuteRegister(0);
+        ExecuteFullRegister(engine);
         
         Assert.Equal(new Position(5, 6), player.Robot.Position);
     }
@@ -182,7 +190,7 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
         
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(Direction.East, player.Robot.Direction);
     }
@@ -195,7 +203,7 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(5, 5));
         
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
@@ -209,7 +217,7 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
         
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
     }
@@ -226,10 +234,10 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         
         player.Robot.SetPosition(new Position(5, 5));
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         player.Robot.SetPosition(new Position(3, 3));
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
         Assert.Equal(new Position(5, 5), player.Robot.Position);
@@ -317,7 +325,7 @@ public class GameEngineTests
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         
-        engine.ExecuteRegister(0);
+        ExecuteFullRegister(engine);
         
         Assert.Equal(new Position(5, 2), player.Robot.Position);
         
@@ -326,7 +334,7 @@ public class GameEngineTests
         Assert.Equal(Direction.North, player.Robot.Direction);
         
         player.Robot.SetPosition(new Position(5, 5));
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
@@ -339,7 +347,7 @@ public class GameEngineTests
         
         var engine = CreateEngine(new GameState(new List<Player> { p1, p2 }));
         
-        engine.ExecuteRegister(0);
+        ExecuteFullRegister(engine);
         
         Assert.True(p1.Robot.IsAlive);
         Assert.True(p2.Robot.IsAlive);
@@ -360,8 +368,7 @@ public class GameEngineTests
         p2.Robot.SetPosition(new Position(4, 2));
         p2.Robot.SetDirection(Direction.North);
         
-        engine.ExecuteMovementPhase(0);
-        engine.ExecuteLaserPhase(0);
+        ExecuteFullRegister(engine);
         
         Assert.Equal(1, p2.Robot.Damage);
     }

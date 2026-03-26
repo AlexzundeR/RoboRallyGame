@@ -321,7 +321,7 @@ public class UpgradeSystemTests
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(3, 2, TileFactory.Pit());
         
-        engine.ProcessBoardElements();
+        engine.ExecuteConveyorPhase(0);
         
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
     }
