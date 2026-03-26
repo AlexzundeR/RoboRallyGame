@@ -244,17 +244,17 @@ public sealed class GameEngine : IGameEngine
 
         if (_currentStep < movementSteps)
         {
-            ExecuteAllMovementSteps();
+            ExecuteCards(_currentRegister);
             _currentStep = movementSteps;
         }
         else if (_currentStep == movementSteps && !_conveyorExecuted)
         {
-            ExecuteConveyorStep();
+            ApplyBoardElements();
             _currentStep++;
         }
         else if (_currentStep > movementSteps && !_laserExecuted)
         {
-            ExecuteLaserStep();
+            FireLasers();
             _laserExecuted = true;
             _currentStep++;
         }
@@ -271,183 +271,23 @@ public sealed class GameEngine : IGameEngine
         return _alivePlayers.Count + 3;
     }
 
-    private void ExecuteAllMovementSteps()
-    {
-        var moveIntents = new List<MoveIntent>();
-        var rotateIntents = new List<(Player Player, Direction From, Direction To)>();
-        
-        foreach (var player in _alivePlayers)
-        {
-            if (player.Robot.NeedsReboot)
-                continue;
-
-            if (_currentRegister < player.Robot.LockedRegisters)
-                continue;
-
-            var card = player.GetRegister(_currentRegister);
-            if (card == null)
-                continue;
-
-            var beforeDir = player.Robot.Direction;
-
-            if (card.Card is TurnCard turnCard)
-            {
-                if (turnCard.IsLeft)
-                    player.Robot.RotateLeft();
-                else
-                    player.Robot.RotateRight();
-                
-                if (player.Robot.Direction != beforeDir)
-                {
-                    rotateIntents.Add((player, beforeDir, player.Robot.Direction));
-                }
-            }
-            else if (card.Card is UTurnCard)
-            {
-                player.Robot.Rotate180();
-                
-                if (player.Robot.Direction != beforeDir)
-                {
-                    rotateIntents.Add((player, beforeDir, player.Robot.Direction));
-                }
-            }
-            else if (card.Card is BackUpCard)
-            {
-                var oppositeDir = player.Robot.Direction.TurnAround();
-                var currentTile = State.Map.GetTile(player.Robot.Position);
-                var targetPos = player.Robot.Position.Move(oppositeDir);
-                var targetTile = State.Map.GetTile(targetPos);
-                
-                if (State.Map.IsInBounds(targetPos) && 
-                    targetTile.CanEnterFrom(oppositeDir) && 
-                    currentTile.CanExitTo(oppositeDir))
-                {
-                    moveIntents.Add(new MoveIntent
-                    {
-                        Robot = player.Robot,
-                        From = player.Robot.Position,
-                        To = targetPos,
-                        Direction = player.Robot.Direction,
-                        Priority = card.Card.Priority,
-                        RegisterIndex = _currentRegister,
-                        Type = MoveType.Normal
-                    });
-                }
-            }
-            else if (card.Card is MoveCard moveCard)
-            {
-                var movementStrategy = GetMovementStrategy(player);
-                var cardStrategy = GetCardExecutionStrategy(player);
-                var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) + cardStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
-                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
-                
-                if (targetPos != player.Robot.Position)
-                {
-                    moveIntents.Add(new MoveIntent
-                    {
-                        Robot = player.Robot,
-                        From = player.Robot.Position,
-                        To = targetPos,
-                        Direction = player.Robot.Direction,
-                        Priority = moveCard.Priority,
-                        RegisterIndex = _currentRegister,
-                        Type = MoveType.Normal
-                    });
-                }
-            }
-        }
-        
-        if (moveIntents.Count > 0)
-        {
-            var resolver = new CollisionResolver();
-            foreach (var intent in moveIntents)
-                resolver.AddIntent(intent);
-            
-            resolver.Resolve(State.Map, _alivePlayers.Select(p => p.Robot).ToList());
-        }
-        
-        foreach (var (player, fromDir, toDir) in rotateIntents)
-        {
-            OnRotate?.Invoke(new RotateEvent(player.Robot.Id, fromDir, toDir));
-        }
-        
-        foreach (var intent in moveIntents)
-        {
-            if (intent.Robot.Position != intent.From)
-            {
-                OnMove?.Invoke(new MoveEvent(intent.Robot.Id, intent.From, intent.Robot.Position));
-            }
-        }
-    }
-
-    private void ExecuteConveyorStep()
-    {
-        var beforeStates = CaptureRobotStates();
-
-        foreach (var player in State.Players)
-        {
-            if (!player.Robot.IsAlive)
-                continue;
-
-            var conveyorStrategy = GetConveyorStrategy(player);
-            var ignoreConveyors = conveyorStrategy.ShouldIgnoreConveyors(player.Robot);
-            var ignorePits = conveyorStrategy.ShouldIgnorePits(player.Robot);
-
-            var tile = State.Map.GetTile(player.Robot.Position);
-
-            switch (tile.Type)
-            {
-                case TileType.Pit when !ignorePits:
-                    player.Robot.LoseLifeToken();
-                    break;
-                case TileType.Gear:
-                case TileType.Conveyor when !ignoreConveyors:
-                    _tileBehaviorService.ApplyPostMovement(tile, player.Robot);
-                    break;
-                case TileType.Checkpoint:
-                    HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
-                    break;
-            }
-        }
-
-        var afterStates = CaptureRobotStates();
-        foreach (var (playerId, (beforePos, beforeDir, _)) in beforeStates)
-        {
-            if (afterStates.TryGetValue(playerId, out var after))
-            {
-                if (after.Pos != beforePos)
-                {
-                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(playerId, beforePos, after.Pos));
-                }
-                if (after.Dir != beforeDir)
-                {
-                    OnRotate?.Invoke(new RotateEvent(playerId, beforeDir, after.Dir));
-                }
-            }
-        }
-
-        _conveyorExecuted = true;
-    }
-
-    private void ExecuteLaserStep()
+    private void FireLasers()
     {
         var shots = _laserResolver.PrepareShots(State.Map, State.Players);
-
+        
         foreach (var shot in shots)
         {
             var hitPlayerId = State.Players
-                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id &&
-                    p.Robot.IsAlive &&
+                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id && 
+                    p.Robot.IsAlive && 
                     shot.Path.Contains(p.Robot.Position))
                 ?.Robot.Id;
-
-            _laserResolver.Fire(new List<LaserShot> { shot }, State.Players);
-
+            
             var damage = hitPlayerId.HasValue ? 1 : 0;
             OnLaserFire?.Invoke(new LaserFireEvent(shot.Source.Id, shot.Source.Position, shot.Direction, shot.Path, hitPlayerId, damage));
         }
-
-        _laserExecuted = true;
+        
+        _laserResolver.Fire(shots, State.Players);
     }
 
     public void ExecuteRegister(int registerIndex)
@@ -461,7 +301,7 @@ public sealed class GameEngine : IGameEngine
         var beforeState = CaptureRobotStates();
         
         OnMovementPhaseStarted?.Invoke(new MovementPhaseStartedEvent(registerIndex));
-        Phase1_CardExecution(registerIndex);
+        ExecuteCards(registerIndex);
         
         FireMoveAndRotateEvents(beforeState, CaptureRobotStates());
     }
@@ -471,7 +311,7 @@ public sealed class GameEngine : IGameEngine
         var beforeState = CaptureRobotStates();
         
         OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(registerIndex));
-        Phase2_BoardElements();
+        ApplyBoardElements();
         
         FireMoveEvents(beforeState, CaptureRobotStates());
     }
@@ -481,7 +321,7 @@ public sealed class GameEngine : IGameEngine
         var beforeState = CaptureRobotStates();
         
         OnLaserPhaseStarted?.Invoke(new LaserPhaseStartedEvent(registerIndex));
-        Phase3_Lasers();
+        FireLasers();
         
         FireDamageEvents(beforeState, CaptureRobotStates());
         
@@ -498,25 +338,44 @@ public sealed class GameEngine : IGameEngine
         return states;
     }
     
-    private void FireMoveAndRotateEvents(
+    private void FireEvents(
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after,
+        bool fireMove,
+        bool fireRotate,
+        bool fireDamage)
     {
         foreach (var player in State.Players)
         {
             var id = player.Robot.Id;
             if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
             {
-                if (b.Pos != a.Pos)
+                if (fireMove && b.Pos != a.Pos)
                 {
                     OnMove?.Invoke(new MoveEvent(id, b.Pos, a.Pos));
                 }
-                if (b.Dir != a.Dir)
+                if (fireRotate && b.Dir != a.Dir)
                 {
                     OnRotate?.Invoke(new RotateEvent(id, b.Dir, a.Dir));
                 }
+                if (fireDamage && b.Damage != a.Damage)
+                {
+                    OnDamage?.Invoke(new DamageEvent(id, a.Damage - b.Damage, a.Damage));
+                    
+                    if (a.Damage >= 10)
+                    {
+                        OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
+                    }
+                }
             }
         }
+    }
+
+    private void FireMoveAndRotateEvents(
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
+    {
+        FireEvents(before, after, fireMove: true, fireRotate: true, fireDamage: false);
     }
     
     private void FireMoveEvents(
@@ -540,25 +399,10 @@ public sealed class GameEngine : IGameEngine
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
     {
-        foreach (var player in State.Players)
-        {
-            var id = player.Robot.Id;
-            if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
-            {
-                if (b.Damage != a.Damage)
-                {
-                    OnDamage?.Invoke(new DamageEvent(id, a.Damage - b.Damage, a.Damage));
-                    
-                    if (a.Damage >= 10)
-                    {
-                        OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
-                    }
-                }
-            }
-        }
+        FireEvents(before, after, fireMove: false, fireRotate: false, fireDamage: true);
     }
 
-    private void Phase1_CardExecution(int registerIndex)
+    private void ExecuteCards(int registerIndex)
     {
         var moveIntents = new List<MoveIntent>();
         
@@ -649,6 +493,33 @@ public sealed class GameEngine : IGameEngine
         }
     }
 
+    private Position CalculateMoveTarget(Robot robot, int spaces)
+    {
+        return CalculateMoveTarget(robot, spaces, DefaultMovementStrategy.Instance);
+    }
+
+    private Position CalculateMoveTarget(Robot robot, int spaces, IMovementStrategy movementStrategy)
+    {
+        var pos = robot.Position;
+        for (int i = 0; i < spaces; i++)
+        {
+            var currentTile = State.Map.GetTile(pos);
+            var next = pos.Move(robot.Direction);
+            if (State.Map.IsInBounds(next))
+            {
+                var nextTile = State.Map.GetTile(next);
+                if (!nextTile.CanEnterFrom(robot.Direction))
+                    break;
+                if (!currentTile.CanExitTo(robot.Direction))
+                    break;
+                if (!movementStrategy.CanEnterTile(robot, State.Map, next))
+                    break;
+                pos = next;
+            }
+        }
+        return movementStrategy.CalculateMove(robot, State.Map, pos);
+    }
+
     private ICardExecutionStrategy GetCardExecutionStrategy(Player player)
     {
         var strategies = new List<ICardExecutionStrategy> { DefaultCardExecutionStrategy.Instance };
@@ -677,50 +548,21 @@ public sealed class GameEngine : IGameEngine
         return new CompositeMovementStrategy(strategies);
     }
 
-    private Position CalculateCardTarget(Robot robot, ProgramCard card)
+    private IConveyorStrategy GetConveyorStrategy(Player player)
     {
-        return card switch
+        var strategies = new List<IConveyorStrategy> { DefaultConveyorStrategy.Instance };
+        
+        foreach (var upgrade in player.AllUpgrades)
         {
-            MoveCard m => CalculateMoveTarget(robot, m.Spaces),
-            TurnCard t => robot.Position,
-            UTurnCard => robot.Position,
-            _ => robot.Position
-        };
-    }
-
-    private Position CalculateMoveTarget(Robot robot, int spaces)
-    {
-        return CalculateMoveTarget(robot, spaces, DefaultMovementStrategy.Instance);
-    }
-
-    private Position CalculateMoveTarget(Robot robot, int spaces, IMovementStrategy movementStrategy)
-    {
-        var pos = robot.Position;
-        for (int i = 0; i < spaces; i++)
-        {
-            var currentTile = State.Map.GetTile(pos);
-            var next = pos.Move(robot.Direction);
-            if (State.Map.IsInBounds(next))
-            {
-                var nextTile = State.Map.GetTile(next);
-                if (!nextTile.CanEnterFrom(robot.Direction))
-                    break;
-                if (!currentTile.CanExitTo(robot.Direction))
-                    break;
-                if (!movementStrategy.CanEnterTile(robot, State.Map, next))
-                    break;
-                pos = next;
-            }
+            var strategy = upgrade.GetConveyorStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
         }
-        return movementStrategy.CalculateMove(robot, State.Map, pos);
+        
+        return new CompositeConveyorStrategy(strategies);
     }
 
-    public void ProcessBoardElements()
-    {
-        Phase2_BoardElements();
-    }
-
-    private void Phase2_BoardElements()
+    private void ApplyBoardElements()
     {
         foreach (var player in State.Players)
         {
@@ -748,44 +590,6 @@ public sealed class GameEngine : IGameEngine
                     break;
             }
         }
-    }
-
-    private IConveyorStrategy GetConveyorStrategy(Player player)
-    {
-        var strategies = new List<IConveyorStrategy> { DefaultConveyorStrategy.Instance };
-        
-        foreach (var upgrade in player.AllUpgrades)
-        {
-            var strategy = upgrade.GetConveyorStrategy();
-            if (strategy != null)
-                strategies.Add(strategy);
-        }
-        
-        return new CompositeConveyorStrategy(strategies);
-    }
-
-    public void FireLasers()
-    {
-        Phase3_Lasers();
-    }
-
-    private void Phase3_Lasers()
-    {
-        var shots = _laserResolver.PrepareShots(State.Map, State.Players);
-        
-        foreach (var shot in shots)
-        {
-            var hitPlayerId = State.Players
-                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id && 
-                    p.Robot.IsAlive && 
-                    shot.Path.Contains(p.Robot.Position))
-                ?.Robot.Id;
-            
-            var damage = hitPlayerId.HasValue ? 1 : 0;
-            OnLaserFire?.Invoke(new LaserFireEvent(shot.Source.Id, shot.Source.Position, shot.Direction, shot.Path, hitPlayerId, damage));
-        }
-        
-        _laserResolver.Fire(shots, State.Players);
     }
 
     private void HandlePit(Player player)
