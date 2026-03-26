@@ -27,10 +27,7 @@ public enum ConveyorDirection
 public sealed class Tile
 {
     public TileType Type { get; init; }
-    public ConveyorDirection? ConveyorDir { get; init; }
-    public bool IsExpress { get; init; }
     public Direction? LaserDirection { get; init; }
-    public bool IsClockwise { get; init; }
     public int? CheckpointNumber { get; set; }
     
     private readonly IReadOnlyList<ITileComponent> _components;
@@ -48,23 +45,16 @@ public sealed class Tile
 
     public Tile(TileType type, IEnumerable<ITileComponent>? components) : this(type)
     {
-        _components = components?.ToList() ?? [];
-    }
-
-    public Tile(TileType type, ConveyorDirection conveyorDir, bool isExpress) : this(type)
-    {
-        ConveyorDir = conveyorDir;
-        IsExpress = isExpress;
+        var componentList = components?.ToList() ?? [];
+        var behaviors = componentList.OfType<Components.ITileBehaviorComponent>().ToList();
+        if (behaviors.Count > 1)
+            throw new InvalidOperationException("Tile can have only one behavior component");
+        _components = componentList;
     }
 
     public Tile(TileType type, Direction laserDirection) : this(type)
     {
         LaserDirection = laserDirection;
-    }
-
-    public Tile(TileType type, bool isClockwise, bool isGear) : this(type)
-    {
-        IsClockwise = isClockwise;
     }
 
     public T? GetComponent<T>() where T : class, ITileComponent
@@ -82,13 +72,13 @@ public sealed class Tile
 
     public static Tile Laser(Direction direction) => new(TileType.Laser) { LaserDirection = direction };
 
-    public static Tile Conveyor(ConveyorDirection dir, bool express = false) => new(TileType.Conveyor)
+    public static Tile Conveyor(ConveyorDirection dir, bool express = false) 
     {
-        ConveyorDir = dir,
-        IsExpress = express
-    };
+        return new Tile(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express)]);
+    }
 
-    public static Tile Gear(bool clockwise = true) => new(TileType.Gear) { IsClockwise = clockwise };
+    public static Tile Gear(bool clockwise = true) 
+        => new Tile(TileType.Gear, [new Components.GearBehaviorComponent(clockwise)]);
 
     public static Tile Checkpoint(int number) => new(TileType.Checkpoint)
     {
@@ -103,13 +93,23 @@ public sealed class Tile
         if (Type == TileType.Laser)
             return LaserDirection is Direction.East or Direction.West ? '━' : '┃';
         
+        if (Type == TileType.Conveyor)
+        {
+            var conveyor = GetComponent<ConveyorBehaviorComponent>();
+            return conveyor?.IsExpress == true ? '⤴' : '↻';
+        }
+        
+        if (Type == TileType.Gear)
+        {
+            var gear = GetComponent<GearBehaviorComponent>();
+            return gear?.IsClockwise == true ? '↻' : '↺';
+        }
+        
         return Type switch
         {
             TileType.Floor => '·',
             TileType.Wall => '█',
             TileType.Pit => ' ',
-            TileType.Conveyor => IsExpress ? '⤴' : '↻',
-            TileType.Gear => IsClockwise ? '↻' : '↺',
             TileType.Start => 'S',
             TileType.Checkpoint => CheckpointNumber.HasValue ? CheckpointNumber.Value.ToString()[0] : 'C',
             TileType.RepairSite => '⚙',

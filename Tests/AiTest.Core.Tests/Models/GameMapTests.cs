@@ -1,6 +1,7 @@
 namespace AiTest.Core.Tests.Models;
 
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 
 public class GameMapTests
 {
@@ -92,7 +93,9 @@ public class GameMapTests
         
         Assert.Equal(TileType.Conveyor, map.GetTile(4, 3).Type);
         Assert.Equal(TileType.Conveyor, map.GetTile(9, 3).Type);
-        Assert.True(map.GetTile(3, 5).IsExpress);
+        var conveyor = map.GetTile(3, 5).GetComponent<ConveyorBehaviorComponent>();
+        Assert.NotNull(conveyor);
+        Assert.True(conveyor!.IsExpress);
     }
 
     [Fact]

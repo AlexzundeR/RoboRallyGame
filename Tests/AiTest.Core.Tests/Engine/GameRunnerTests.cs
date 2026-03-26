@@ -5,6 +5,7 @@ using AiTest.Core.Config;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 using Xunit;
 
 public class GameRunnerTests
@@ -216,7 +217,7 @@ public class GameRunnerTests
 
         var tile = runner.Engine.State.Map.GetTile(3, 3);
         Assert.Equal(TileType.Conveyor, tile.Type);
-        Assert.NotNull(tile.ConveyorDir);
+        Assert.NotNull(tile.GetComponent<ConveyorBehaviorComponent>());
     }
 
     [Fact]
@@ -240,9 +241,11 @@ public class GameRunnerTests
         
         runner.Initialize();
 
-        Assert.Equal(TileType.Gear, runner.Engine.State.Map.GetTile(3, 3).Type);
-        Assert.True(runner.Engine.State.Map.GetTile(3, 3).IsClockwise);
-        Assert.Equal(TileType.Gear, runner.Engine.State.Map.GetTile(4, 3).Type);
-        Assert.False(runner.Engine.State.Map.GetTile(4, 3).IsClockwise);
+        var gear1 = runner.Engine.State.Map.GetTile(3, 3);
+        var gear2 = runner.Engine.State.Map.GetTile(4, 3);
+        Assert.Equal(TileType.Gear, gear1.Type);
+        Assert.True(gear1.GetComponent<GearBehaviorComponent>()?.IsClockwise);
+        Assert.Equal(TileType.Gear, gear2.Type);
+        Assert.False(gear2.GetComponent<GearBehaviorComponent>()?.IsClockwise);
     }
 }

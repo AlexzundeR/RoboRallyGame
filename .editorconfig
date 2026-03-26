@@ -36,6 +36,7 @@ dotnet_style_null_propagation = true
 
 # Code quality
 dotnet_code_quality.CA1062.enable = false
+dotnet_code_quality.CA1707.remove = test_
 
 # Roslynator
 roslynator.documentation.enable_multiline_tags = false

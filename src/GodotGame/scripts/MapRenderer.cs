@@ -71,7 +71,8 @@ public partial class MapRenderer : Node2D
         {
             if (tileNode is ConveyorTile conveyorTile)
             {
-                conveyorTile.Initialize(pos, tileData.Type, tileData.ConveyorDir ?? ConveyorDirection.North, tileData.IsExpress);
+                var conveyor = tileData.GetComponent<ConveyorBehaviorComponent>();
+                conveyorTile.Initialize(pos, tileData.Type, conveyor?.Direction ?? ConveyorDirection.North, conveyor?.IsExpress ?? false);
             }
         }
         
@@ -79,7 +80,8 @@ public partial class MapRenderer : Node2D
         {
             if (tileNode is GearTile gearTile)
             {
-                gearTile.Initialize(pos, tileData.Type, tileData.IsClockwise);
+                var gear = tileData.GetComponent<GearBehaviorComponent>();
+                gearTile.Initialize(pos, tileData.Type, gear?.IsClockwise ?? true);
             }
         }
         

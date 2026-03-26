@@ -86,12 +86,20 @@ public class GameRunner
                 _ => ConveyorDirection.North
             };
             
-            return new Core.Models.Tile(type, conveyorDir, placement.IsExpress ?? false);
+            var tile = Core.Models.Tile.Conveyor(conveyorDir, placement.IsExpress ?? false);
+            
+            if (placement.BlockedDirections != null && placement.BlockedDirections.Count > 0)
+            {
+                var behavior = tile.GetComponent<ConveyorBehaviorComponent>();
+                return new Core.Models.Tile(type, [behavior!, new BlockedMovementComponent(DirectionSet.FromDirections(placement.BlockedDirections.ToArray()))]);
+            }
+            
+            return tile;
         }
 
         if (type == TileType.Gear && placement.IsClockwise.HasValue)
         {
-            return new Core.Models.Tile(type, placement.IsClockwise.Value, true);
+            return Core.Models.Tile.Gear(placement.IsClockwise.Value);
         }
 
         if (type == TileType.Laser && placement.LaserDirection.HasValue)

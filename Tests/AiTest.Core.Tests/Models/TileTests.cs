@@ -1,6 +1,7 @@
 namespace AiTest.Core.Tests.Models;
 
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 
 public class TileTests
 {
@@ -30,7 +31,9 @@ public class TileTests
     {
         var tile = Tile.Conveyor(ConveyorDirection.North);
         Assert.Equal(TileType.Conveyor, tile.Type);
-        Assert.Equal(ConveyorDirection.North, tile.ConveyorDir);
+        var conveyor = tile.GetComponent<ConveyorBehaviorComponent>();
+        Assert.NotNull(conveyor);
+        Assert.Equal(ConveyorDirection.North, conveyor!.Direction);
     }
 
     [Fact]
@@ -38,7 +41,9 @@ public class TileTests
     {
         var tile = Tile.Conveyor(ConveyorDirection.East, true);
         Assert.Equal(TileType.Conveyor, tile.Type);
-        Assert.True(tile.IsExpress);
+        var conveyor = tile.GetComponent<ConveyorBehaviorComponent>();
+        Assert.NotNull(conveyor);
+        Assert.True(conveyor!.IsExpress);
     }
 
     [Fact]
@@ -46,7 +51,9 @@ public class TileTests
     {
         var tile = Tile.Gear(true);
         Assert.Equal(TileType.Gear, tile.Type);
-        Assert.True(tile.IsClockwise);
+        var gear = tile.GetComponent<GearBehaviorComponent>();
+        Assert.NotNull(gear);
+        Assert.True(gear!.IsClockwise);
     }
 
     [Fact]
@@ -54,7 +61,9 @@ public class TileTests
     {
         var tile = Tile.Gear(false);
         Assert.Equal(TileType.Gear, tile.Type);
-        Assert.False(tile.IsClockwise);
+        var gear = tile.GetComponent<GearBehaviorComponent>();
+        Assert.NotNull(gear);
+        Assert.False(gear!.IsClockwise);
     }
 
     [Fact]

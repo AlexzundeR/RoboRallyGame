@@ -157,6 +157,7 @@ public sealed class GameEngine : IGameEngine
     private readonly Random _random = new();
     private readonly CollisionResolver _collisionResolver = new();
     private readonly LaserResolver _laserResolver = new();
+    private readonly Models.Components.TileBehaviorService _tileBehaviorService = new();
     private IDealer _dealer;
 
     private int _currentRegister = -1;
@@ -400,14 +401,8 @@ public sealed class GameEngine : IGameEngine
                     player.Robot.LoseLifeToken();
                     break;
                 case TileType.Gear:
-                    if (tile.IsClockwise)
-                        player.Robot.RotateRight();
-                    else
-                        player.Robot.RotateLeft();
-                    break;
                 case TileType.Conveyor when !ignoreConveyors:
-                    var steps = tile.IsExpress ? 2 : 1;
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, steps);
+                    _tileBehaviorService.ApplyPostMovement(tile, player.Robot);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
@@ -744,14 +739,9 @@ public sealed class GameEngine : IGameEngine
                     HandlePit(player);
                     break;
                 case TileType.Gear:
-                    if (tile.IsClockwise)
-                        player.Robot.RotateRight();
-                    else
-                        player.Robot.RotateLeft();
-                    break;
-                case TileType.Conveyor when !ignoreConveyors:
-                    var steps = tile.IsExpress ? 2 : 1;
-                    MoveOnConveyor(player, tile.ConveyorDir!.Value, steps);
+                case TileType.Conveyor:
+                    if (!ignoreConveyors)
+                        _tileBehaviorService.ApplyPostMovement(tile, player.Robot);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);

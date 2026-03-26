@@ -19,12 +19,13 @@ public static class TileFactory
     public static Tile Laser(Direction direction) => new(TileType.Laser) { LaserDirection = direction };
 
     public static Tile Conveyor(ConveyorDirection dir, bool express = false)
-        => new(TileType.Conveyor) { ConveyorDir = dir, IsExpress = express };
+        => new(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express)]);
 
     public static Tile Conveyor(ConveyorDirection dir, bool express, params Direction[] blockedDirections)
-        => new(TileType.Conveyor, [Blocked(blockedDirections)]) { ConveyorDir = dir, IsExpress = express };
+        => new(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express), Blocked(blockedDirections)]);
 
-    public static Tile Gear(bool clockwise = true) => new(TileType.Gear) { IsClockwise = clockwise };
+    public static Tile Gear(bool clockwise = true) 
+        => new(TileType.Gear, [new GearBehaviorComponent(clockwise)]);
 
     public static Tile Checkpoint(int number) => new(TileType.Checkpoint) { CheckpointNumber = number };
 
