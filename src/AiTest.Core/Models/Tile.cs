@@ -28,9 +28,10 @@ public sealed class Tile
 {
     public TileType Type { get; init; }
     public Direction? LaserDirection { get; init; }
-    public int? CheckpointNumber { get; set; }
+    public int? CheckpointNumber { get; init; }
+    public Position Position { get; init; }
     
-    private readonly IReadOnlyList<ITileComponent> _components;
+    private readonly List<ITileComponent> _components;
     public IReadOnlyList<ITileComponent> Components => _components;
 
     public Tile() : this(TileType.Floor)
@@ -45,16 +46,46 @@ public sealed class Tile
 
     public Tile(TileType type, IEnumerable<ITileComponent>? components) : this(type)
     {
-        var componentList = components?.ToList() ?? [];
+        if (components == null) return;
+        
+        var componentList = components.ToList();
         var behaviors = componentList.OfType<Components.ITileBehaviorComponent>().ToList();
         if (behaviors.Count > 1)
             throw new InvalidOperationException("Tile can have only one behavior component");
-        _components = componentList;
+        
+        foreach (var component in componentList)
+            AddComponent(component);
     }
 
     public Tile(TileType type, Direction laserDirection) : this(type)
     {
         LaserDirection = laserDirection;
+    }
+
+    public Tile(TileType type, Position position) : this(type)
+    {
+        Position = position;
+    }
+
+    public Tile(TileType type, Position position, IEnumerable<ITileComponent>? components) 
+        : this(type, components)
+    {
+        Position = position;
+    }
+
+    public void AddComponent(ITileComponent component)
+    {
+        if (component is ITileBehaviorComponent)
+        {
+            var existingBehavior = _components.OfType<ITileBehaviorComponent>().FirstOrDefault();
+            if (existingBehavior != null)
+                throw new InvalidOperationException("Tile can have only one behavior component");
+            
+            if (component is TileComponentBase tcb)
+                tcb.SetTile(this);
+        }
+        
+        _components.Add(component);
     }
 
     public T? GetComponent<T>() where T : class, ITileComponent
@@ -64,29 +95,6 @@ public sealed class Tile
                 return typed;
         return null;
     }
-
-    public static Tile Floor => new(TileType.Floor);
-    public static Tile Wall => new(TileType.Wall);
-    public static Tile Pit => new(TileType.Pit);
-    public static Tile Start => new(TileType.Start);
-
-    public static Tile Laser(Direction direction) => new(TileType.Laser) { LaserDirection = direction };
-
-    public static Tile Conveyor(ConveyorDirection dir, bool express = false) 
-    {
-        return new Tile(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express)]);
-    }
-
-    public static Tile Gear(bool clockwise = true) 
-        => new Tile(TileType.Gear, [new Components.GearBehaviorComponent(clockwise)]);
-
-    public static Tile Checkpoint(int number) => new(TileType.Checkpoint)
-    {
-        CheckpointNumber = number
-    };
-
-    public static Tile RepairSite => new(TileType.RepairSite);
-    public static Tile RepairSitePlus => new(TileType.RepairSitePlus);
 
     public char ToChar()
     {

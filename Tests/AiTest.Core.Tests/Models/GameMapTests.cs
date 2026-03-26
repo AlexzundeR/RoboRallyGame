@@ -19,7 +19,7 @@ public class GameMapTests
     public void SetTile_ShouldChangeTileType()
     {
         var map = new GameMap(5, 5);
-        map.SetTile(2, 2, Tile.Wall);
+        map.SetTile(2, 2, TileFactory.Wall());
         
         Assert.Equal(TileType.Wall, map.GetTile(2, 2).Type);
     }

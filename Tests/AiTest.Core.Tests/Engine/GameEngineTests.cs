@@ -43,11 +43,11 @@ public class GameEngineTests
     {
         var engine = new GameEngine(new RandomDealer(), state);
         var map = new GameMap(10, 10);
-        map.SetTile(1, 1, Tile.Start);
-        map.SetTile(8, 1, Tile.Start);
-        map.SetTile(1, 8, Tile.Start);
-        map.SetTile(8, 8, Tile.Start);
-        map.SetTile(5, 5, Tile.Checkpoint(1));
+        map.SetTile(1, 1, TileFactory.Start());
+        map.SetTile(8, 1, TileFactory.Start());
+        map.SetTile(1, 8, TileFactory.Start());
+        map.SetTile(8, 8, TileFactory.Start());
+        map.SetTile(5, 5, TileFactory.Checkpoint(1));
         engine.Initialize(map);
         return engine;
     }
@@ -67,9 +67,9 @@ public class GameEngineTests
         var map = new GameMap(10, 10);
         for (int i = 0; i < playerCount; i++)
         {
-            map.SetTile(1 + i * 2, 1, Tile.Start);
+            map.SetTile(1 + i * 2, 1, TileFactory.Start());
         }
-        map.SetTile(5, 5, Tile.Checkpoint(1));
+        map.SetTile(5, 5, TileFactory.Checkpoint(1));
         engine.Initialize(map);
         for (int i = 0; i < playerCount; i++)
         {
@@ -176,7 +176,7 @@ public class GameEngineTests
     public void ProcessBoardElements_Gear_ShouldRotateRobot()
     {
         var engine = CreateEngine();
-        engine.State.Map.SetTile(3, 3, Tile.Gear(true));
+        engine.State.Map.SetTile(3, 3, TileFactory.Gear(true));
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
@@ -204,7 +204,7 @@ public class GameEngineTests
     public void ProcessBoardElements_Pit_ShouldTriggerReboot()
     {
         var engine = CreateEngine();
-        engine.State.Map.SetTile(3, 3, Tile.Pit);
+        engine.State.Map.SetTile(3, 3, TileFactory.Pit());
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
@@ -218,9 +218,9 @@ public class GameEngineTests
     public void ProcessBoardElements_Pit_ShouldRespawnAtLastCheckpoint()
     {
         var engine = CreateEngine();
-        engine.State.Map.SetTile(5, 5, Tile.Checkpoint(1));
-        engine.State.Map.SetTile(7, 7, Tile.Checkpoint(2));
-        engine.State.Map.SetTile(3, 3, Tile.Pit);
+        engine.State.Map.SetTile(5, 5, TileFactory.Checkpoint(1));
+        engine.State.Map.SetTile(7, 7, TileFactory.Checkpoint(2));
+        engine.State.Map.SetTile(3, 3, TileFactory.Pit());
         
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
@@ -242,10 +242,10 @@ public class GameEngineTests
         var p2 = CreatePlayerWithRobot(2, new Position(4, 3), Direction.North, (new MoveCard { Priority = 101, Spaces = 1 }, 0));
         
         var map = new GameMap(10, 10);
-        map.SetTile(1, 1, Tile.Start);
-        map.SetTile(3, 3, Tile.Floor);
-        map.SetTile(4, 3, Tile.Floor);
-        map.SetTile(5, 3, Tile.Floor);
+        map.SetTile(1, 1, TileFactory.Start());
+        map.SetTile(3, 3, TileFactory.Floor());
+        map.SetTile(4, 3, TileFactory.Floor());
+        map.SetTile(5, 3, TileFactory.Floor());
         
         var engine = new GameEngine(new RandomDealer(), new GameState(new List<Player> { p1, p2 }));
         engine.Initialize(map);

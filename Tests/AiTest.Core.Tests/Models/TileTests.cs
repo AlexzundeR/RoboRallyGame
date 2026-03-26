@@ -8,28 +8,28 @@ public class TileTests
     [Fact]
     public void Floor_ShouldHaveFloorType()
     {
-        var tile = Tile.Floor;
+        var tile = TileFactory.Floor();
         Assert.Equal(TileType.Floor, tile.Type);
     }
 
     [Fact]
     public void Wall_ShouldHaveWallType()
     {
-        var tile = Tile.Wall;
+        var tile = TileFactory.Wall();
         Assert.Equal(TileType.Wall, tile.Type);
     }
 
     [Fact]
     public void Pit_ShouldHavePitType()
     {
-        var tile = Tile.Pit;
+        var tile = TileFactory.Pit();
         Assert.Equal(TileType.Pit, tile.Type);
     }
 
     [Fact]
     public void Conveyor_ShouldHaveCorrectDirection()
     {
-        var tile = Tile.Conveyor(ConveyorDirection.North);
+        var tile = TileFactory.Conveyor(ConveyorDirection.North);
         Assert.Equal(TileType.Conveyor, tile.Type);
         var conveyor = tile.GetComponent<ConveyorBehaviorComponent>();
         Assert.NotNull(conveyor);
@@ -39,7 +39,7 @@ public class TileTests
     [Fact]
     public void Conveyor_WithExpress_ShouldHaveIsExpress()
     {
-        var tile = Tile.Conveyor(ConveyorDirection.East, true);
+        var tile = TileFactory.Conveyor(ConveyorDirection.East, true);
         Assert.Equal(TileType.Conveyor, tile.Type);
         var conveyor = tile.GetComponent<ConveyorBehaviorComponent>();
         Assert.NotNull(conveyor);
@@ -49,7 +49,7 @@ public class TileTests
     [Fact]
     public void Gear_Clockwise_ShouldHaveCorrectProperty()
     {
-        var tile = Tile.Gear(true);
+        var tile = TileFactory.Gear(true);
         Assert.Equal(TileType.Gear, tile.Type);
         var gear = tile.GetComponent<GearBehaviorComponent>();
         Assert.NotNull(gear);
@@ -59,7 +59,7 @@ public class TileTests
     [Fact]
     public void Gear_CounterClockwise_ShouldHaveCorrectProperty()
     {
-        var tile = Tile.Gear(false);
+        var tile = TileFactory.Gear(false);
         Assert.Equal(TileType.Gear, tile.Type);
         var gear = tile.GetComponent<GearBehaviorComponent>();
         Assert.NotNull(gear);
@@ -69,7 +69,7 @@ public class TileTests
     [Fact]
     public void Laser_ShouldHaveCorrectDirection()
     {
-        var tile = Tile.Laser(Direction.East);
+        var tile = TileFactory.Laser(Direction.East);
         Assert.Equal(TileType.Laser, tile.Type);
         Assert.Equal(Direction.East, tile.LaserDirection);
     }
@@ -77,7 +77,7 @@ public class TileTests
     [Fact]
     public void Checkpoint_ShouldHaveCorrectNumber()
     {
-        var tile = Tile.Checkpoint(3);
+        var tile = TileFactory.Checkpoint(3);
         Assert.Equal(TileType.Checkpoint, tile.Type);
         Assert.Equal(3, tile.CheckpointNumber);
     }
@@ -85,7 +85,7 @@ public class TileTests
     [Fact]
     public void Start_ShouldHaveStartType()
     {
-        var tile = Tile.Start;
+        var tile = TileFactory.Start();
         Assert.Equal(TileType.Start, tile.Type);
     }
 

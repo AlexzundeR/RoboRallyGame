@@ -220,7 +220,7 @@ public class TileWithComponentsTests
     [Fact]
     public void Tile_WithoutComponent_ShouldReturnNull()
     {
-        var tile = Tile.Floor;
+        var tile = TileFactory.Floor();
         var blocked = tile.GetComponent<BlockedMovementComponent>();
         
         Assert.Null(blocked);
@@ -265,7 +265,7 @@ public class TileWithComponentsTests
     [Fact]
     public void Floor_CanExitTo_ShouldAlwaysReturnTrue()
     {
-        var tile = Tile.Floor;
+        var tile = TileFactory.Floor();
         
         Assert.True(tile.CanExitTo(Direction.North));
         Assert.True(tile.CanExitTo(Direction.South));
@@ -285,7 +285,7 @@ public class TileWithComponentsTests
     [Fact]
     public void Wall_WithoutComponent_ShouldNotBeEnterable()
     {
-        var tile = Tile.Wall;
+        var tile = TileFactory.Wall();
         
         Assert.False(tile.CanEnterFrom(Direction.North));
         Assert.False(tile.CanEnterFrom(Direction.East));
@@ -296,7 +296,7 @@ public class TileWithComponentsTests
     [Fact]
     public void Floor_ShouldBeEnterable()
     {
-        var tile = Tile.Floor;
+        var tile = TileFactory.Floor();
         
         Assert.True(tile.CanEnterFrom(Direction.North));
         Assert.True(tile.CanEnterFrom(Direction.East));

@@ -34,7 +34,7 @@ public class GameRunner
         {
             for (int y = 0; y < _config.MapHeight; y++)
             {
-                map.SetTile(x, y, Tile.Floor);
+                map.SetTile(x, y, TileFactory.Floor());
             }
         }
 
@@ -46,12 +46,12 @@ public class GameRunner
 
         foreach (var cp in _config.Map.Checkpoints)
         {
-            map.SetTile(cp.X, cp.Y, Tile.Checkpoint(cp.Number));
+            map.SetTile(cp.X, cp.Y, TileFactory.Checkpoint(cp.Number));
         }
 
         foreach (var start in _config.Map.Starts)
         {
-            map.SetTile(start.X, start.Y, Tile.Start);
+            map.SetTile(start.X, start.Y, TileFactory.Start());
         }
 
         _engine.Initialize(map);
@@ -86,7 +86,7 @@ public class GameRunner
                 _ => ConveyorDirection.North
             };
             
-            var tile = Core.Models.Tile.Conveyor(conveyorDir, placement.IsExpress ?? false);
+            var tile = Core.Models.TileFactory.Conveyor(conveyorDir, placement.IsExpress ?? false);
             
             if (placement.BlockedDirections != null && placement.BlockedDirections.Count > 0)
             {
@@ -99,7 +99,7 @@ public class GameRunner
 
         if (type == TileType.Gear && placement.IsClockwise.HasValue)
         {
-            return Core.Models.Tile.Gear(placement.IsClockwise.Value);
+            return Core.Models.TileFactory.Gear(placement.IsClockwise.Value);
         }
 
         if (type == TileType.Laser && placement.LaserDirection.HasValue)

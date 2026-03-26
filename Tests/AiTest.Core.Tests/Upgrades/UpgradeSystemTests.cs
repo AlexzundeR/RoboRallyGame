@@ -285,7 +285,7 @@ public class UpgradeSystemTests
         player.AddUpgrade(new StandardUpgrades.Brakes());
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        engine.State.Map.SetTile(4, 2, Tile.Wall);
+        engine.State.Map.SetTile(4, 2, TileFactory.Wall());
         
         engine.ExecuteRegister(0);
         
@@ -303,7 +303,7 @@ public class UpgradeSystemTests
         player.AddUpgrade(new StandardUpgrades.HoverUnit());
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        engine.State.Map.SetTile(3, 2, Tile.Conveyor(ConveyorDirection.East));
+        engine.State.Map.SetTile(3, 2, TileFactory.Conveyor(ConveyorDirection.East));
         
         engine.ExecuteRegister(0);
         
@@ -319,7 +319,7 @@ public class UpgradeSystemTests
         player.AddUpgrade(new StandardUpgrades.HoverUnit());
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        engine.State.Map.SetTile(3, 2, Tile.Pit);
+        engine.State.Map.SetTile(3, 2, TileFactory.Pit());
         
         engine.ProcessBoardElements();
         
@@ -353,8 +353,8 @@ public class UpgradeSystemTests
     {
         var engine = new GameEngine(new RandomDealer(), state);
         var map = new GameMap(10, 10);
-        map.SetTile(1, 1, Tile.Start);
-        map.SetTile(8, 1, Tile.Start);
+        map.SetTile(1, 1, TileFactory.Start());
+        map.SetTile(8, 1, TileFactory.Start());
         engine.Initialize(map);
         return engine;
     }

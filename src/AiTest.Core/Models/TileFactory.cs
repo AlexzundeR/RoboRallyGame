@@ -16,18 +16,35 @@ public static class TileFactory
 
     public static Tile Start() => new(TileType.Start);
 
-    public static Tile Laser(Direction direction) => new(TileType.Laser) { LaserDirection = direction };
+    public static Tile Laser(Direction direction) 
+    {
+        var component = new LaserBehaviorComponent(direction);
+        return new Tile(TileType.Laser, [component]) { LaserDirection = direction };
+    }
 
     public static Tile Conveyor(ConveyorDirection dir, bool express = false)
-        => new(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express)]);
+    {
+        var component = new ConveyorBehaviorComponent(dir, express);
+        return new Tile(TileType.Conveyor, [component]);
+    }
 
     public static Tile Conveyor(ConveyorDirection dir, bool express, params Direction[] blockedDirections)
-        => new(TileType.Conveyor, [new ConveyorBehaviorComponent(dir, express), Blocked(blockedDirections)]);
+    {
+        var component = new ConveyorBehaviorComponent(dir, express);
+        return new Tile(TileType.Conveyor, [component, Blocked(blockedDirections)]);
+    }
 
     public static Tile Gear(bool clockwise = true) 
-        => new(TileType.Gear, [new GearBehaviorComponent(clockwise)]);
+    {
+        var component = new GearBehaviorComponent(clockwise);
+        return new Tile(TileType.Gear, [component]);
+    }
 
-    public static Tile Checkpoint(int number) => new(TileType.Checkpoint) { CheckpointNumber = number };
+    public static Tile Checkpoint(int number) 
+    {
+        var component = new CheckpointBehaviorComponent(number);
+        return new Tile(TileType.Checkpoint, [component]) { CheckpointNumber = number };
+    }
 
     public static Tile TunnelNS() => new(TileType.Floor, [new BlockedMovementComponent(DirectionSet.FromDirections(Direction.East, Direction.West))]);
 

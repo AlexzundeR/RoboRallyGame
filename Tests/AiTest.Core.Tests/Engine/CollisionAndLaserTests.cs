@@ -69,7 +69,7 @@ public class CollisionResolverTests
     public void Resolve_PushIntoWall_Blocked()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(7, 5, Tile.Wall);
+        map.SetTile(7, 5, TileFactory.Wall());
         var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         var robot2 = new Robot(2, new Position(6, 5), Direction.North);
         
@@ -128,7 +128,7 @@ public class CollisionResolverTests
     public void Resolve_MoveIntoPit_FallsIntoPit()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(6, 5, Tile.Pit);
+        map.SetTile(6, 5, TileFactory.Pit());
         var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         
         var resolver = new CollisionResolver();
@@ -237,7 +237,7 @@ public class CollisionResolverTests
     public void Resolve_LowerPriorityTriesToMoveIntoHigherPriority_Blocked()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(7, 5, Tile.Wall);
+        map.SetTile(7, 5, TileFactory.Wall());
         var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         var robot2 = new Robot(2, new Position(6, 5), Direction.North);
         
@@ -297,7 +297,7 @@ public class LaserResolverTests
     public void PrepareShots_OnBoardLaser_ShouldAddBoardLaser()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(5, 5, Tile.Laser(Direction.North));
+        map.SetTile(5, 5, TileFactory.Laser(Direction.North));
         var robot = new Robot(1, new Position(5, 5), Direction.East);
         
         var resolver = new LaserResolver();
@@ -381,7 +381,7 @@ public class LaserResolverTests
     public void Fire_ShotBlockedByWall_ShouldNotHit()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(7, 5, Tile.Wall);
+        map.SetTile(7, 5, TileFactory.Wall());
         var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         var robot2 = new Robot(2, new Position(8, 5), Direction.North);
         
@@ -469,7 +469,7 @@ public class LaserResolverTests
     public void PrepareShots_RobotNextToWall_ShouldNotShootThroughWall()
     {
         var map = new GameMap(10, 10);
-        map.SetTile(7, 5, Tile.Wall);
+        map.SetTile(7, 5, TileFactory.Wall());
         var robot1 = new Robot(1, new Position(5, 5), Direction.East);
         var robot2 = new Robot(2, new Position(8, 5), Direction.North);
         
