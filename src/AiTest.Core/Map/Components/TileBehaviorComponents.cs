@@ -7,7 +7,8 @@ public enum TileActionResult
 {
     None,
     Moved,
-    CheckpointReached
+    CheckpointReached,
+    Repaired
 }
 
 public abstract class TileComponentBase : ITileComponent
@@ -143,23 +144,48 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
     public void ApplyOnEnter(Player player, GameState state) { }
 }
 
-public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
-{
-    public TileActionResult ApplyPostMovement(Player player, GameMap map)
+    public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
     {
-        var strategy = player.GetConveyorStrategy();
-        if (strategy.ShouldIgnorePits(player.Robot))
-            return TileActionResult.None;
-
-        player.Robot.LoseLifeToken();
-        
-        if (player.Robot.LastCheckpointPosition.HasValue)
+        public TileActionResult ApplyPostMovement(Player player, GameMap map)
         {
-            player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
+            var strategy = player.GetConveyorStrategy();
+            if (strategy.ShouldIgnorePits(player.Robot))
+                return TileActionResult.None;
+
+            player.Robot.LoseLifeToken();
+            
+            if (player.Robot.LastCheckpointPosition.HasValue)
+            {
+                player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
+            }
+            return TileActionResult.None;
         }
-        return TileActionResult.None;
+
+        public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+        public void ApplyOnEnter(Player player, GameState state) { }
     }
 
-    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
-    public void ApplyOnEnter(Player player, GameState state) { }
-}
+    public sealed class RepairSiteBehaviorComponent : TileComponentBase, ITileBehaviorComponent, IEndOfRoundComponent
+    {
+        public int RepairAmount { get; }
+
+        public RepairSiteBehaviorComponent(int repairAmount = 1)
+        {
+            RepairAmount = repairAmount;
+        }
+
+        public TileActionResult ApplyPostMovement(Player player, GameMap map) => TileActionResult.None;
+
+        public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+        public void ApplyOnEnter(Player player, GameState state) { }
+
+        public TileActionResult ApplyEndOfRound(Player player)
+        {
+            if (player.Robot.Damage > 0)
+            {
+                player.Robot.Repair(RepairAmount);
+                return TileActionResult.Repaired;
+            }
+            return TileActionResult.None;
+        }
+    }

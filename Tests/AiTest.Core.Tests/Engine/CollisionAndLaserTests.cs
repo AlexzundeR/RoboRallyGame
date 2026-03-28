@@ -409,6 +409,68 @@ public class LaserResolverTests
     }
 
     [Fact]
+    public void Fire_ShotThroughTileWithOpenSide_ShouldHit()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(7, 5, TileFactory.Floor(Direction.West));
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(8, 5), Direction.North);
+        
+        var shots = new List<LaserShot>
+        {
+            new LaserShot
+            {
+                Source = robot1,
+                From = new Position(5, 5),
+                Direction = Direction.East,
+                Priority = 100,
+                IsRobotLaser = true,
+                Path = new List<Position> { new Position(6, 5), new Position(7, 5), new Position(8, 5) }
+            }
+        };
+        
+        var resolver = new LaserResolver();
+        resolver.Fire(shots, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 }
+        });
+        
+        Assert.Equal(1, robot2.Damage);
+    }
+
+    [Fact]
+    public void Fire_ShotBlockedByTileWithNoExit_ShouldNotHit()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(7, 5, TileFactory.Floor(Direction.West, Direction.East));
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(8, 5), Direction.North);
+        
+        var shots = new List<LaserShot>
+        {
+            new LaserShot
+            {
+                Source = robot1,
+                From = new Position(5, 5),
+                Direction = Direction.East,
+                Priority = 100,
+                IsRobotLaser = true,
+                Path = new List<Position> { new Position(6, 5), new Position(7, 5) }
+            }
+        };
+        
+        var resolver = new LaserResolver();
+        resolver.Fire(shots, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 }
+        });
+        
+        Assert.Equal(0, robot2.Damage);
+    }
+
+    [Fact]
     public void CalculatePath_StraightLine_ShouldReturnAllPositions()
     {
         var map = new GameMap(10, 10);

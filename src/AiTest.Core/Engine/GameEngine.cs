@@ -176,6 +176,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<CheckpointEvent>? OnCheckpoint;
     public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
     public event Action<RobotRebootEvent>? OnRobotReboot;
+    public event Action<RobotRepairedEvent>? OnRobotRepaired;
     public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
     public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
     public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
@@ -546,6 +547,7 @@ public sealed class GameEngine : IGameEngine
     {
         State.Round++;
         State.CurrentRegister = 0;
+        State.CurrentPlayerIndex = 0;
         State.Phase = GamePhase.Programming;
         
         foreach (var player in State.Players)
@@ -554,6 +556,7 @@ public sealed class GameEngine : IGameEngine
             {
                 player.Robot.WakeUp();
                 player.Robot.Repair(player.Robot.Damage);
+                OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, player.Robot.Damage, 0));
             }
             else
             {
@@ -565,6 +568,17 @@ public sealed class GameEngine : IGameEngine
                 var spawnPos = player.Robot.LastCheckpointPosition ?? new Position(0, 0);
                 player.Robot.Reboot(spawnPos);
                 OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
+            }
+
+            var tile = State.Map.GetTile(player.Robot.Position);
+            var repairComponent = tile.GetComponent<IEndOfRoundComponent>();
+            if (repairComponent != null)
+            {
+                var result = repairComponent.ApplyEndOfRound(player);
+                if (result == TileActionResult.Repaired)
+                {
+                    OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, 1, player.Robot.Damage));
+                }
             }
         }
 

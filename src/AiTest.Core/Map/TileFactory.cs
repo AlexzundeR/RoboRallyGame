@@ -56,9 +56,9 @@ public static class TileFactory
 
     public static Tile Barricade(DirectionSet openDirections) => new(TileType.Floor, [new BlockedMovementComponent(DirectionSet.All.Except(openDirections))]);
 
-    public static Tile RepairSite() => new(TileType.RepairSite);
+    public static Tile RepairSite() => new(TileType.RepairSite, [new RepairSiteBehaviorComponent(1)]);
 
-    public static Tile RepairSitePlus() => new(TileType.RepairSitePlus);
+    public static Tile RepairSitePlus() => new(TileType.RepairSitePlus, [new RepairSiteBehaviorComponent(1)]);
 
     private static BlockedMovementComponent Blocked(params Direction[] directions) 
         => new(DirectionSet.FromDirections(directions));

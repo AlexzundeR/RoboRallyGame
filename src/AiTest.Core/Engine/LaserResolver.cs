@@ -160,17 +160,20 @@ public sealed class LaserResolver
     {
         var path = new List<Position>();
         var pos = start.Move(dir);
+        var entryDir = dir;
         
         while (map.IsInBounds(pos))
         {
             var tile = map.GetTile(pos);
-            if (tile.Type == TileType.Wall)
+            
+            if (!tile.CanEnterFrom(entryDir))
                 break;
             
-            if (!tile.CanEnterFrom(dir))
+            path.Add(pos);
+            
+            if (!tile.CanExitTo(dir))
                 break;
                 
-            path.Add(pos);
             pos = pos.Move(dir);
         }
         

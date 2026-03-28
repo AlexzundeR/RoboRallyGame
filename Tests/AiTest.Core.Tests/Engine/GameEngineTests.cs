@@ -485,6 +485,46 @@ public class GameEngineTests
         Assert.Equal(0, robot.Damage);
     }
 
+    [Fact]
+    public void NextRound_RobotOnRepairSite_ShouldRepair1Damage()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetPosition(new Position(2, 2));
+        
+        var player = new Player { Robot = robot };
+        var map = new GameMap(10, 10);
+        map.SetTile(2, 2, TileFactory.RepairSite());
+        
+        var repairTile = (AiTest.Core.Models.Components.RepairSiteBehaviorComponent?)map.GetTile(2, 2).GetComponent<AiTest.Core.Models.Components.IEndOfRoundComponent>();
+        Assert.NotNull(repairTile);
+        
+        robot.TakeDamage(3);
+        
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = new GameEngine(new RandomDealer(), state);
+        
+        engine.NextRound();
+        
+        Assert.Equal(2, robot.Damage);
+    }
+
+    [Fact]
+    public void NextRound_RobotOnRepairSiteWithNoDamage_ShouldNotRepair()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetPosition(new Position(2, 2));
+        
+        var player = new Player { Robot = robot };
+        var map = new GameMap(10, 10);
+        map.SetTile(2, 2, TileFactory.RepairSite());
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.Equal(0, robot.Damage);
+    }
+
     private static List<ProgramCard> CreateDefaultDeck()
     {
         var deck = new List<ProgramCard>();

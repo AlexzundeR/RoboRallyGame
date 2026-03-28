@@ -47,4 +47,6 @@ public sealed record RobotDestroyedEvent(int PlayerId, Position LastPosition) : 
 
 public sealed record RobotRebootEvent(int PlayerId, Position SpawnPosition) : IEvent;
 
+public sealed record RobotRepairedEvent(int PlayerId, int RepairAmount, int NewDamage) : IEvent;
+
 public sealed record PowerDownToggledEvent(int PlayerIndex, bool IsPowerDown) : IEvent;
