@@ -15,7 +15,7 @@ public class RobotNodeTests
         var robot = new Robot();
         
         AssertThat(robot.Position).IsNotNull();
-        AssertThat(robot.Direction).IsEqual(Direction.North);
+        AssertThat(robot.Direction).IsEqual(Direction.East);
         AssertThat(robot.Damage).IsEqual(0);
         AssertThat(robot.IsAlive).IsTrue();
     }

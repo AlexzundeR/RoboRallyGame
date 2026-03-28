@@ -8,6 +8,12 @@ using AiTest.Core.Upgrades;
 
 public class UpgradeSystemTests
 {
+    private static void ExecuteRegister(GameEngine engine, int registerIndex)
+    {
+        engine.BeginRegisterExecution(registerIndex);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
     private static Player CreateWithHand(params ProgramCard[] cards)
     {
         var hand = new ProgramCard?[9];
@@ -269,7 +275,7 @@ public class UpgradeSystemTests
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         
-        engine.ExecuteRegister(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(new Position(4, 2), player.Robot.Position);
     }
@@ -287,7 +293,7 @@ public class UpgradeSystemTests
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(4, 2, TileFactory.Wall());
         
-        engine.ExecuteRegister(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(new Position(3, 2), player.Robot.Position);
     }
@@ -305,7 +311,7 @@ public class UpgradeSystemTests
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(3, 2, TileFactory.Conveyor(ConveyorDirection.East));
         
-        engine.ExecuteRegister(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(new Position(3, 2), player.Robot.Position);
     }
@@ -321,7 +327,7 @@ public class UpgradeSystemTests
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(3, 2, TileFactory.Pit());
         
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
     }

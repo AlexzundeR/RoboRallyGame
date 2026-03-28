@@ -366,6 +366,7 @@ public sealed class GameEngine : IGameEngine
 
     private void ExecuteCards(int registerIndex)
     {
+        var before = CaptureRobotStates();
         var moveIntents = new List<MoveIntent>();
         
         foreach (var player in State.Players)
@@ -453,6 +454,9 @@ public sealed class GameEngine : IGameEngine
             
             resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
         }
+        
+        var after = CaptureRobotStates();
+        FireMoveAndRotateEvents(before, after);
     }
 
     private Position CalculateMoveTarget(Robot robot, int spaces)
@@ -526,6 +530,8 @@ public sealed class GameEngine : IGameEngine
 
     private void ApplyBoardElements()
     {
+        var before = CaptureRobotStates();
+        
         foreach (var player in State.Players)
         {
             if (!player.Robot.IsAlive)
@@ -552,6 +558,10 @@ public sealed class GameEngine : IGameEngine
                     break;
             }
         }
+        
+        var after = CaptureRobotStates();
+        FireMoveEvents(before, after);
+        FireDamageEvents(before, after);
     }
 
     private void HandlePit(Player player)
@@ -625,6 +635,11 @@ public sealed class GameEngine : IGameEngine
             if (player.Robot.Status == RobotStatus.PowerDown)
             {
                 player.Robot.WakeUp();
+                player.Robot.Repair(player.Robot.Damage);
+            }
+            else
+            {
+                player.ClearRegisters();
             }
             
             if (player.Robot.Status == RobotStatus.Rebooting)
@@ -633,8 +648,6 @@ public sealed class GameEngine : IGameEngine
                 player.Robot.Reboot(spawnPos);
                 OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
             }
-            
-            player.ClearRegisters();
         }
 
         DealCardsToAllPlayers();

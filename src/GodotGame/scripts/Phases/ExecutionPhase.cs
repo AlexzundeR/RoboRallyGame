@@ -96,6 +96,7 @@ public class ExecutionPhase : IGamePhase
 			_animations.Add(new MoveAnimation
 			{
 				Robot = robot,
+				From = e.From,
 				To = e.To
 			});
 		}

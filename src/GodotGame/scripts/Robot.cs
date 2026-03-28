@@ -69,8 +69,8 @@ public partial class Robot : Node2D
 	{
 		if (!IsInsideTree()) return;
 		
-		var targetPos = GetWorldPosition();
-		Position = Position.Lerp(targetPos, 0.15f);
+		if (!_isAnimating)
+			Position = GetWorldPosition();
 
 		AnimateRotation(_direction);
 
@@ -170,8 +170,7 @@ public partial class Robot : Node2D
 		if (!IsInsideTree()) return;
 		if (_isAnimating) return;
 		
-		var targetPos = GetWorldPosition();
-		Position = Position.Lerp(targetPos, 0.15f);
+		Position = GetWorldPosition();
 	}
 
 	public void SetAnimating(bool animating)

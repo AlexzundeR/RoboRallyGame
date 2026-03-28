@@ -190,7 +190,7 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
         
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(Direction.East, player.Robot.Direction);
     }
@@ -203,7 +203,7 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(5, 5));
         
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
@@ -217,7 +217,7 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
         
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
     }
@@ -234,10 +234,10 @@ public class GameEngineTests
         var player = engine.State.Players[0];
         
         player.Robot.SetPosition(new Position(5, 5));
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         player.Robot.SetPosition(new Position(3, 3));
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 0);
         
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
         Assert.Equal(new Position(5, 5), player.Robot.Position);
@@ -329,12 +329,12 @@ public class GameEngineTests
         
         Assert.Equal(new Position(5, 2), player.Robot.Position);
         
-        engine.ExecuteRegister(1);
+        ExecuteRegister(engine, 1);
         
         Assert.Equal(Direction.North, player.Robot.Direction);
         
         player.Robot.SetPosition(new Position(5, 5));
-        engine.ExecuteConveyorPhase(0);
+        ExecuteRegister(engine, 1);
         
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
@@ -427,6 +427,62 @@ public class GameEngineTests
         dealer.Deal(new[] { player }, deck);
         
         Assert.Equal(9, player.AvailableCardCount);
+    }
+
+    [Fact]
+    public void NextRound_PoweredDownRobot_ShouldWakeUpAndNotReturnOldCardsToHand()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetStatus(RobotStatus.PowerDown);
+        
+        var hand = new ProgramCard?[9];
+        hand[0] = new MoveCard { Priority = 100, Spaces = 1 };
+        var player = new Player(null, hand) { Robot = robot };
+        
+        var map = new GameMap(10, 10);
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.Equal(RobotStatus.Active, robot.Status);
+        Assert.Equal(9, player.AvailableCardCount);
+        Assert.NotEqual(1, player.AvailableCardCount);
+    }
+
+    [Fact]
+    public void NextRound_ActiveRobot_ShouldReturnCardsToHand()
+    {
+        var robot = new Robot { Id = 1 };
+        var hand = new ProgramCard?[9];
+        hand[0] = new MoveCard { Priority = 100, Spaces = 1 };
+        var player = new Player(null, hand) { Robot = robot };
+        
+        var map = new GameMap(10, 10);
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.Equal(RobotStatus.Active, robot.Status);
+        Assert.Equal(9, player.AvailableCardCount);
+    }
+
+    [Fact]
+    public void NextRound_PoweredDownRobot_ShouldRemoveAllDamage()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.AddDamage(5);
+        robot.SetStatus(RobotStatus.PowerDown);
+        
+        var player = new Player { Robot = robot };
+        var map = new GameMap(10, 10);
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.Equal(0, robot.Damage);
     }
 
     private static List<ProgramCard> CreateDefaultDeck()

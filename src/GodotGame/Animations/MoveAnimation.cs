@@ -7,17 +7,19 @@ using AiTest.Core.Models;
 public class MoveAnimation : Animation
 {
     public Robot Robot { get; init; } = null!;
+    public Position From { get; init; }
     public Position To { get; init; }
     public float Duration { get; init; } = 0.6f;
-
-    private const int TileSize = 48;
-    private const int MapOffsetY = 120;
 
     public override Task PlayAsync(Node context)
     {
         var tcs = new TaskCompletionSource<bool>();
         
         Robot.SetAnimating(true);
+        
+        var fromVec = AnimationService.PositionToVector(From);
+        var toVec = AnimationService.PositionToVector(To);
+        Robot.Position = fromVec;
         
         var tween = context.CreateTween();
         if (tween == null)
@@ -27,9 +29,9 @@ public class MoveAnimation : Animation
             return tcs.Task;
         }
         
-        tween.SetTrans(Tween.TransitionType.Linear);
-        tween.SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(Robot, "position", PositionToVector(To), Duration);
+        tween.SetTrans(Tween.TransitionType.Sine);
+        tween.SetEase(Tween.EaseType.InOut);
+        tween.TweenProperty(Robot, "position", toVec, Duration);
         tween.Finished += () => 
         {
             Robot.SetAnimating(false);
@@ -38,10 +40,5 @@ public class MoveAnimation : Animation
         tween.Play();
         
         return tcs.Task;
-    }
-
-    private Vector2 PositionToVector(Position pos)
-    {
-        return new Vector2(pos.X * TileSize + 24, pos.Y * TileSize + MapOffsetY + 24);
     }
 }

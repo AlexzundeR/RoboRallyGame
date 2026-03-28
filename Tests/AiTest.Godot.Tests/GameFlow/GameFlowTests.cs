@@ -11,6 +11,12 @@ using Xunit;
 
 public class GameFlowTests
 {
+    private static void ExecuteRegister(GameEngine engine, int registerIndex)
+    {
+        engine.BeginRegisterExecution(registerIndex);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
     private static Player CreateWithRegisters(params (ProgramCard? Card, int HandIndex)[] registers)
     {
         var regArray = new RegisterCard?[5];
@@ -432,13 +438,13 @@ public class GameFlowTests
 
         var pos0 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        gameRunner.Engine.ExecuteRegister(0);
+        ExecuteRegister(gameRunner.Engine, 0);
         var pos1 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        gameRunner.Engine.ExecuteRegister(1);
+        ExecuteRegister(gameRunner.Engine, 1);
         var pos2 = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        gameRunner.Engine.ExecuteRegister(2);
+        ExecuteRegister(gameRunner.Engine, 2);
         var pos3 = gameRunner.Engine.State.Players[0].Robot.Position;
 
         Assert.NotEqual(pos0, pos1);
@@ -463,7 +469,7 @@ public class GameFlowTests
 
         var startPos = gameRunner.Engine.State.Players[0].Robot.Position;
 
-        gameRunner.Engine.ExecuteRegister(0);
+        ExecuteRegister(gameRunner.Engine, 0);
 
         Assert.NotEqual(startPos, gameRunner.Engine.State.Players[0].Robot.Position);
     }

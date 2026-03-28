@@ -10,6 +10,12 @@ using Xunit;
 
 public class GameRunnerTests
 {
+    private static void ExecuteRegister(GameEngine engine, int registerIndex)
+    {
+        engine.BeginRegisterExecution(registerIndex);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
     [Fact]
     public void CreateMinimal_DefaultConfiguration_ShouldHaveOnePlayer()
     {
@@ -102,7 +108,7 @@ public class GameRunnerTests
 
         for (int reg = 0; reg < 5; reg++)
         {
-            runner.Engine.ExecuteRegister(reg);
+            ExecuteRegister(runner.Engine, reg);
         }
 
         Assert.Equal(GamePhase.Programming, runner.Engine.State.Phase);
