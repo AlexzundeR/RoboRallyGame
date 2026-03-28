@@ -120,13 +120,17 @@ public partial class PlayerPanel : PanelContainer
 			{
 				card.SetLocked(true);
 			}
-			else if (!isProgramming || !isCurrentPlayer)
-			{
-				card.SetFixed(true);
-			}
 			else
 			{
-				card.SetFixed(false);
+				card.SetLocked(false);
+				if (!isProgramming || !isCurrentPlayer)
+				{
+					card.SetFixed(true);
+				}
+				else
+				{
+					card.SetFixed(false);
+				}
 			}
 
 			var registerCard = player.GetRegister(i);
