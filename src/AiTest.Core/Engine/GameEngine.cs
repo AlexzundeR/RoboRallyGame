@@ -148,6 +148,7 @@ public interface IGameEngine
     void StartGame();
     void BeginRegisterExecution(int registerIndex);
     StepResult TryExecuteNextStep();
+    void NextRegister();
     void NextRound();
     bool IsGameOver();
     Player? GetWinner();
@@ -179,6 +180,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
     public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
     public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
+    public event Action? OnAllRegistersComplete;
 
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
@@ -340,30 +342,6 @@ public sealed class GameEngine : IGameEngine
         FireEvents(before, after, fireMove: true, fireRotate: true, fireDamage: false);
     }
     
-    private void FireMoveEvents(
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
-    {
-        foreach (var player in State.Players)
-        {
-            var id = player.Robot.Id;
-            if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
-            {
-                if (b.Pos != a.Pos)
-                {
-                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(id, b.Pos, a.Pos));
-                }
-            }
-        }
-    }
-    
-    private void FireDamageEvents(
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
-    {
-        FireEvents(before, after, fireMove: false, fireRotate: false, fireDamage: true);
-    }
-
     private void ExecuteCards(int registerIndex)
     {
         var before = CaptureRobotStates();
@@ -516,53 +494,40 @@ public sealed class GameEngine : IGameEngine
 
     private void ApplyBoardElements()
     {
-        var before = CaptureRobotStates();
+        var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
         
         foreach (var player in State.Players)
         {
             if (!player.Robot.IsAlive)
                 continue;
 
-            var ignorePits = player.GetConveyorStrategy().ShouldIgnorePits(player.Robot);
             var tile = State.Map.GetTile(player.Robot.Position);
-
-            switch (tile.Type)
+            var oldPos = player.Robot.Position;
+            var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
+            
+            switch (result)
             {
-                case TileType.Pit when !ignorePits:
-                    HandlePit(player);
+                case TileActionResult.Moved:
+                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(player.Robot.Id, oldPos, player.Robot.Position));
                     break;
-                case TileType.Gear:
-                case TileType.Conveyor:
-                    tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
-                    break;
-                case TileType.Checkpoint:
-                    HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
+                case TileActionResult.CheckpointReached:
+                    OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached));
                     break;
             }
         }
         
-        var after = CaptureRobotStates();
-        FireMoveEvents(before, after);
-        FireDamageEvents(before, after);
-    }
-
-    private void HandlePit(Player player)
-    {
-        player.Robot.LoseLifeToken();
-        
-        if (player.Robot.LastCheckpointPosition.HasValue)
+        foreach (var player in State.Players)
         {
-            player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
-        }
-    }
-
-    private void HandleCheckpoint(Player player, int checkpointNum)
-    {
-        if (checkpointNum == player.Robot.CheckpointsReached + 1)
-        {
-            for (int i = 0; i < checkpointNum; i++)
-                player.Robot.AddCheckpoint(player.Robot.Position);
-            OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, checkpointNum));
+            var id = player.Robot.Id;
+            var damage = player.Robot.Damage;
+            if (damageBefore.TryGetValue(id, out var before) && damage != before)
+            {
+                OnDamage?.Invoke(new DamageEvent(id, damage - before, damage));
+                if (damage >= 10)
+                {
+                    OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
+                }
+            }
         }
     }
 
@@ -572,6 +537,7 @@ public sealed class GameEngine : IGameEngine
         if (State.CurrentRegister >= 5)
         {
             State.CurrentRegister = 0;
+            OnAllRegistersComplete?.Invoke();
             NextRound();
         }
     }

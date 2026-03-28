@@ -3,6 +3,13 @@ namespace AiTest.Core.Models.Components;
 using AiTest.Core.Entities;
 using AiTest.Core.Engine;
 
+public enum TileActionResult
+{
+    None,
+    Moved,
+    CheckpointReached
+}
+
 public abstract class TileComponentBase : ITileComponent
 {
     public Tile Tile { get; private set; }
@@ -15,7 +22,7 @@ public abstract class TileComponentBase : ITileComponent
 
 public interface ITileBehaviorComponent : ITileComponent
 {
-    void ApplyPostMovement(Player player, GameMap map);
+    TileActionResult ApplyPostMovement(Player player, GameMap map);
     void ApplyOnLaserPhase(LaserShot shot, GameState state);
     void ApplyOnEnter(Player player, GameState state);
 }
@@ -32,15 +39,16 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
         Steps = isExpress ? 2 : 1;
     }
 
-    public void ApplyPostMovement(Player player, GameMap map)
+    public TileActionResult ApplyPostMovement(Player player, GameMap map)
     {
         var robot = player.Robot;
         var strategy = player.GetConveyorStrategy();
         
         if (strategy.ShouldIgnoreConveyors(robot))
-            return;
+            return TileActionResult.None;
             
-        var newPos = robot.Position;
+        var oldPos = robot.Position;
+        var newPos = oldPos;
         var dir = (Direction)Direction;
 
         for (int i = 0; i < Steps; i++)
@@ -59,7 +67,13 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
             newPos = next;
         }
 
-        robot.SetPosition(newPos);
+        if (newPos != oldPos)
+        {
+            robot.SetPosition(newPos);
+            return TileActionResult.Moved;
+        }
+        
+        return TileActionResult.None;
     }
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
@@ -75,12 +89,13 @@ public sealed class GearBehaviorComponent : TileComponentBase, ITileBehaviorComp
         IsClockwise = clockwise;
     }
 
-    public void ApplyPostMovement(Player player, GameMap map)
+    public TileActionResult ApplyPostMovement(Player player, GameMap map)
     {
         if (IsClockwise)
             player.Robot.RotateRight();
         else
             player.Robot.RotateLeft();
+        return TileActionResult.None;
     }
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
@@ -96,7 +111,7 @@ public sealed class LaserBehaviorComponent : TileComponentBase, ITileBehaviorCom
         Direction = direction;
     }
 
-    public void ApplyPostMovement(Player player, GameMap map) { }
+    public TileActionResult ApplyPostMovement(Player player, GameMap map) => TileActionResult.None;
     public void ApplyOnEnter(Player player, GameState state) { }
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state)
@@ -113,14 +128,38 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
         Number = number;
     }
 
-    public void ApplyPostMovement(Player player, GameMap map) { }
-    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
-
-    public void ApplyOnEnter(Player player, GameState state)
+    public TileActionResult ApplyPostMovement(Player player, GameMap map)
     {
         if (Number == player.Robot.CheckpointsReached + 1)
         {
-            player.Robot.AddCheckpoint(Position);
+            for (int i = 0; i < Number; i++)
+                player.Robot.AddCheckpoint(Position);
+            return TileActionResult.CheckpointReached;
         }
+        return TileActionResult.None;
     }
+
+    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+    public void ApplyOnEnter(Player player, GameState state) { }
+}
+
+public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
+{
+    public TileActionResult ApplyPostMovement(Player player, GameMap map)
+    {
+        var strategy = player.GetConveyorStrategy();
+        if (strategy.ShouldIgnorePits(player.Robot))
+            return TileActionResult.None;
+
+        player.Robot.LoseLifeToken();
+        
+        if (player.Robot.LastCheckpointPosition.HasValue)
+        {
+            player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
+        }
+        return TileActionResult.None;
+    }
+
+    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+    public void ApplyOnEnter(Player player, GameState state) { }
 }

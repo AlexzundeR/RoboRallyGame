@@ -10,9 +10,9 @@ public static class TileFactory
 
     public static Tile Wall() => new(TileType.Wall);
 
-    public static Tile Pit() => new(TileType.Pit);
+    public static Tile Pit() => new(TileType.Pit, [new PitBehaviorComponent()]);
 
-    public static Tile Pit(params Direction[] blockedDirections) => new(TileType.Pit, [Blocked(blockedDirections)]);
+    public static Tile Pit(params Direction[] blockedDirections) => new(TileType.Pit, [new PitBehaviorComponent(), Blocked(blockedDirections)]);
 
     public static Tile Start() => new(TileType.Start);
 

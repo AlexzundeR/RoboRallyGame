@@ -67,6 +67,12 @@ public class ExecutionPhase : IGamePhase
 		engine.OnDamage += OnDamage;
 		engine.OnCheckpoint += OnCheckpoint;
 		engine.OnRobotDestroyed += OnRobotDestroyed;
+		engine.OnAllRegistersComplete += OnAllRegistersComplete;
+	}
+
+	private void OnAllRegistersComplete()
+	{
+		CompleteExecutionPhase();
 	}
 
 	private string GetPlayerName(int playerId)
@@ -282,13 +288,8 @@ public class ExecutionPhase : IGamePhase
 		_dispatcher?.Publish(new RegisterExecutedEvent(state.CurrentRegister, state.CurrentPlayerIndex));
 		Log($"[color=green]Register {state.CurrentRegister + 1} complete[/color]");
 
-		state.CurrentRegister++;
+		_runner.Engine.NextRegister();
 		_inputHandled = false;
-
-		if (state.CurrentRegister >= 5)
-		{
-			CompleteExecutionPhase();
-		}
 	}
 
 	private void CompleteExecutionPhase()
