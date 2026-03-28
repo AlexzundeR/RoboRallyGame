@@ -4,6 +4,7 @@ using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 using AiTest.Core.Messages;
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 using AiTest.Core.Upgrades;
 
 public interface IDealer
@@ -157,7 +158,6 @@ public sealed class GameEngine : IGameEngine
     private readonly Random _random = new();
     private readonly CollisionResolver _collisionResolver = new();
     private readonly LaserResolver _laserResolver = new();
-    private readonly Models.Components.TileBehaviorService _tileBehaviorService = new();
     private IDealer _dealer;
 
     private int _currentRegister = -1;
@@ -551,7 +551,7 @@ public sealed class GameEngine : IGameEngine
                 case TileType.Gear:
                 case TileType.Conveyor:
                     if (!ignoreConveyors)
-                        _tileBehaviorService.ApplyPostMovement(tile, player.Robot);
+                        tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player.Robot, State.Map);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);
@@ -581,36 +581,6 @@ public sealed class GameEngine : IGameEngine
             for (int i = 0; i < checkpointNum; i++)
                 player.Robot.AddCheckpoint(player.Robot.Position);
             OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, checkpointNum));
-        }
-    }
-
-    private void MoveOnConveyor(Player player, ConveyorDirection dir, int spaces)
-    {
-        var direction = dir switch
-        {
-            ConveyorDirection.North => Direction.North,
-            ConveyorDirection.East => Direction.East,
-            ConveyorDirection.South => Direction.South,
-            ConveyorDirection.West => Direction.West,
-            _ => Direction.North
-        };
-
-        for (int i = 0; i < spaces; i++)
-        {
-            var currentTile = State.Map.GetTile(player.Robot.Position);
-            var newPos = player.Robot.Position.Move(direction);
-            if (State.Map.IsInBounds(newPos))
-            {
-                var targetTile = State.Map.GetTile(newPos);
-                if (targetTile.CanEnterFrom(direction) && currentTile.CanExitTo(direction))
-                {
-                    player.Robot.Move(newPos);
-                }
-                else
-                {
-                    break;
-                }
-            }
         }
     }
 

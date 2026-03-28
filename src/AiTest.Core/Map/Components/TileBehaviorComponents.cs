@@ -15,7 +15,7 @@ public abstract class TileComponentBase : ITileComponent
 
 public interface ITileBehaviorComponent : ITileComponent
 {
-    void ApplyPostMovement(Robot robot);
+    void ApplyPostMovement(Robot robot, GameMap map);
     void ApplyOnLaserPhase(LaserShot shot, GameState state);
     void ApplyOnEnter(Robot robot, GameState state);
 }
@@ -32,23 +32,25 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
         Steps = isExpress ? 2 : 1;
     }
 
-    public void ApplyPostMovement(Robot robot)
+    public void ApplyPostMovement(Robot robot, GameMap map)
     {
         var newPos = robot.Position;
+        var dir = (Direction)Direction;
 
         for (int i = 0; i < Steps; i++)
         {
-            var next = Direction switch
-            {
-                ConveyorDirection.North => new Position(newPos.X, newPos.Y - 1),
-                ConveyorDirection.South => new Position(newPos.X, newPos.Y + 1),
-                ConveyorDirection.East => new Position(newPos.X + 1, newPos.Y),
-                ConveyorDirection.West => new Position(newPos.X - 1, newPos.Y),
-                _ => newPos
-            };
-
-            if (newPos != next)
-                newPos = next;
+            var next = newPos.Move(dir);
+            
+            if (!map.IsInBounds(next))
+                break;
+                
+            var currentTile = map.GetTile(newPos);
+            var targetTile = map.GetTile(next);
+            
+            if (!targetTile.CanEnterFrom(dir) || !currentTile.CanExitTo(dir))
+                break;
+                
+            newPos = next;
         }
 
         robot.SetPosition(newPos);
@@ -67,7 +69,7 @@ public sealed class GearBehaviorComponent : TileComponentBase, ITileBehaviorComp
         IsClockwise = clockwise;
     }
 
-    public void ApplyPostMovement(Robot robot)
+    public void ApplyPostMovement(Robot robot, GameMap map)
     {
         if (IsClockwise)
             robot.RotateRight();
@@ -88,12 +90,11 @@ public sealed class LaserBehaviorComponent : TileComponentBase, ITileBehaviorCom
         Direction = direction;
     }
 
-    public void ApplyPostMovement(Robot robot) { }
+    public void ApplyPostMovement(Robot robot, GameMap map) { }
     public void ApplyOnEnter(Robot robot, GameState state) { }
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state)
     {
-        // Логика лазера обрабатывается в LaserResolver, этот компонент хранит направление
     }
 }
 
@@ -106,7 +107,7 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
         Number = number;
     }
 
-    public void ApplyPostMovement(Robot robot) { }
+    public void ApplyPostMovement(Robot robot, GameMap map) { }
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
 
     public void ApplyOnEnter(Robot robot, GameState state)
