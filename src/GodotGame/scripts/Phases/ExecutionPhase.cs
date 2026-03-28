@@ -234,12 +234,15 @@ public class ExecutionPhase : IGamePhase
 			return;
 		}
 
-		var register = player.GetRegister(state.CurrentRegister);
-		if (register == null)
+		if (player.GetRegister(state.CurrentRegister) == null)
 		{
-			Log($"[color=gray]{player.Name}: Register {state.CurrentRegister + 1} empty, skipping[/color]");
-			CompleteCurrentRegister();
-			return;
+			var anyPlayerHasCard = state.Players.Any(p => p.GetRegister(state.CurrentRegister) != null);
+			if (!anyPlayerHasCard)
+			{
+				Log($"[color=gray]Register {state.CurrentRegister + 1} empty for all players, skipping[/color]");
+				CompleteCurrentRegister();
+				return;
+			}
 		}
 
 		if (_currentRegisterLog != state.CurrentRegister)
