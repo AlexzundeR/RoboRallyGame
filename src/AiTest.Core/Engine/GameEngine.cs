@@ -514,20 +514,6 @@ public sealed class GameEngine : IGameEngine
         return new CompositeMovementStrategy(strategies);
     }
 
-    private IConveyorStrategy GetConveyorStrategy(Player player)
-    {
-        var strategies = new List<IConveyorStrategy> { DefaultConveyorStrategy.Instance };
-        
-        foreach (var upgrade in player.AllUpgrades)
-        {
-            var strategy = upgrade.GetConveyorStrategy();
-            if (strategy != null)
-                strategies.Add(strategy);
-        }
-        
-        return new CompositeConveyorStrategy(strategies);
-    }
-
     private void ApplyBoardElements()
     {
         var before = CaptureRobotStates();
@@ -537,10 +523,7 @@ public sealed class GameEngine : IGameEngine
             if (!player.Robot.IsAlive)
                 continue;
 
-            var conveyorStrategy = GetConveyorStrategy(player);
-            var ignoreConveyors = conveyorStrategy.ShouldIgnoreConveyors(player.Robot);
-            var ignorePits = conveyorStrategy.ShouldIgnorePits(player.Robot);
-            
+            var ignorePits = player.GetConveyorStrategy().ShouldIgnorePits(player.Robot);
             var tile = State.Map.GetTile(player.Robot.Position);
 
             switch (tile.Type)
@@ -550,8 +533,7 @@ public sealed class GameEngine : IGameEngine
                     break;
                 case TileType.Gear:
                 case TileType.Conveyor:
-                    if (!ignoreConveyors)
-                        tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player.Robot, State.Map);
+                    tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
                     break;
                 case TileType.Checkpoint:
                     HandleCheckpoint(player, tile.CheckpointNumber ?? 0);

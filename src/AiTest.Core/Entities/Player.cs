@@ -1,5 +1,6 @@
 namespace AiTest.Core.Entities;
 
+using System.Collections.Generic;
 using AiTest.Core.Cards;
 using AiTest.Core.Upgrades;
 
@@ -107,6 +108,20 @@ public sealed class Player
     }
 
     public void ClearTemporaryUpgrades() => TemporaryUpgrades.Clear();
+
+    public IConveyorStrategy GetConveyorStrategy()
+    {
+        var strategies = new List<IConveyorStrategy> { DefaultConveyorStrategy.Instance };
+        
+        foreach (var upgrade in AllUpgrades)
+        {
+            var strategy = upgrade.GetConveyorStrategy();
+            if (strategy != null)
+                strategies.Add(strategy);
+        }
+        
+        return new CompositeConveyorStrategy(strategies);
+    }
 
     public int FilledRegisterCount => _registers.Count(r => r != null);
 
