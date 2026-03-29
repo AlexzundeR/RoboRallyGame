@@ -300,7 +300,7 @@ public sealed class GameEngine : IGameEngine
         _laserResolver.Fire(shots, State.Players);
     }
 
-    private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureRobotStates()
+    private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureStates()
     {
         var states = new Dictionary<int, (Position, Direction, int)>();
         foreach (var player in State.Players)
@@ -309,13 +309,35 @@ public sealed class GameEngine : IGameEngine
         }
         return states;
     }
+
+    private Dictionary<int, int> CaptureDamageStates()
+    {
+        return State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
+    }
+
+    private void CheckDamageOrDestroy(Dictionary<int, int> damageBefore)
+    {
+        foreach (var player in State.Players)
+        {
+            var id = player.Robot.Id;
+            if (damageBefore.TryGetValue(id, out var before))
+            {
+                var current = player.Robot.Damage;
+                if (current != before)
+                {
+                    OnDamage?.Invoke(new DamageEvent(id, current - before, current));
+                    if (current >= 10)
+                        OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
+                }
+            }
+        }
+    }
     
     private void FireEvents(
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> after,
         bool fireMove,
-        bool fireRotate,
-        bool fireDamage)
+        bool fireRotate)
     {
         foreach (var player in State.Players)
         {
@@ -330,15 +352,6 @@ public sealed class GameEngine : IGameEngine
                 {
                     OnRotate?.Invoke(new RotateEvent(id, b.Dir, a.Dir));
                 }
-                if (fireDamage && b.Damage != a.Damage)
-                {
-                    OnDamage?.Invoke(new DamageEvent(id, a.Damage - b.Damage, a.Damage));
-                    
-                    if (a.Damage >= 10)
-                    {
-                        OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
-                    }
-                }
             }
         }
     }
@@ -347,12 +360,12 @@ public sealed class GameEngine : IGameEngine
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
     {
-        FireEvents(before, after, fireMove: true, fireRotate: true, fireDamage: false);
+        FireEvents(before, after, fireMove: true, fireRotate: true);
     }
     
     private void ExecuteCards(int registerIndex)
     {
-        var before = CaptureRobotStates();
+        var before = CaptureStates();
         var moveIntents = new List<MoveIntent>();
         
         foreach (var player in State.Players)
@@ -441,8 +454,9 @@ public sealed class GameEngine : IGameEngine
             resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
         }
         
-        var after = CaptureRobotStates();
+        var after = CaptureStates();
         FireMoveAndRotateEvents(before, after);
+        CheckDamageOrDestroy(before.ToDictionary(x => x.Key, x => x.Value.Damage));
     }
 
     private Position CalculateMoveTarget(Robot robot, int spaces)
@@ -502,7 +516,7 @@ public sealed class GameEngine : IGameEngine
 
     private void ApplyNonConveyorEffects()
     {
-        var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
+        var damageBefore = CaptureDamageStates();
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
         
         foreach (var player in State.Players)
@@ -515,7 +529,6 @@ public sealed class GameEngine : IGameEngine
             if (tile.GetComponent<ConveyorBehaviorComponent>() != null)
                 continue;
             
-            var oldPos = player.Robot.Position;
             var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
             
             switch (result)
@@ -532,25 +545,12 @@ public sealed class GameEngine : IGameEngine
             }
         }
         
-        foreach (var player in State.Players)
-        {
-            var id = player.Robot.Id;
-            var damage = player.Robot.Damage;
-            if (damageBefore.TryGetValue(id, out var before) && damage != before)
-            {
-                OnDamage?.Invoke(new DamageEvent(id, damage - before, damage));
-                if (damage >= 10)
-                {
-                    OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
-                }
-            }
-        }
+        CheckDamageOrDestroy(damageBefore);
     }
 
     private void ProcessConveyorPhase()
     {
         var conveyorIntents = new List<MoveIntent>();
-        var totalCheckpoints = State.Map.GetTotalCheckpoints();
         
         foreach (var player in State.Players)
         {
@@ -574,13 +574,14 @@ public sealed class GameEngine : IGameEngine
         if (conveyorIntents.Count == 0)
             return;
         
+        var damageBefore = CaptureDamageStates();
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
+        
         var resolver = new CollisionResolver();
         foreach (var intent in conveyorIntents)
             resolver.AddIntent(intent);
         
         resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
-        
-        var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
         
         foreach (var player in State.Players)
         {
@@ -604,15 +605,7 @@ public sealed class GameEngine : IGameEngine
             }
         }
         
-        foreach (var player in State.Players)
-        {
-            var id = player.Robot.Id;
-            var damage = player.Robot.Damage;
-            if (damageBefore.TryGetValue(id, out var before) && damage != before)
-            {
-                OnDamage?.Invoke(new DamageEvent(id, damage - before, damage));
-            }
-        }
+        CheckDamageOrDestroy(damageBefore);
     }
 
     private void CheckGameOver()
