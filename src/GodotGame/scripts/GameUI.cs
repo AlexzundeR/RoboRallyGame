@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 using AiTest.Core.Entities;
 
 namespace AiTest.Godot;
@@ -15,6 +16,8 @@ public partial class GameUI : CanvasLayer
 	private Button _infoButton;
 	private Button _closeButton;
 	private PanelContainer _statusModal;
+	private PanelContainer _winModal;
+	private Label _winLabel;
 
 	private HBoxContainer _playerPanelsContainer;
 	private readonly List<PlayerPanel> _playerPanels = new();
@@ -43,6 +46,8 @@ public partial class GameUI : CanvasLayer
 		_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
 		_closeButton = GetNode<Button>("StatusModal/VBox/CloseButton");
 		_statusModal = GetNode<PanelContainer>("StatusModal");
+		_winModal = GetNodeOrNull<PanelContainer>("WinModal");
+		_winLabel = GetNodeOrNull<Label>("WinModal/VBox/WinLabel");
 		_playerPanelsContainer = GetNode<HBoxContainer>("BottomHBox/BottomPanel/HBox");
 
 		InitializePlayerPanels();
@@ -118,5 +123,31 @@ public partial class GameUI : CanvasLayer
 			_playerPanels[0].Update(p1, currentPlayerIndex == 0, programming, currentRegister, selectedRegister);
 			_playerPanels[1].Update(p2, currentPlayerIndex == 1, programming, currentRegister, selectedRegister);
 		}
+	}
+
+	public void UpdateCheckpointProgress(int playerId, int checkpointsReached, int totalCheckpoints)
+	{
+		if (!IsInsideTree()) return;
+		var panelIndex = playerId - 1;
+		if (panelIndex >= 0 && panelIndex < _playerPanels.Count)
+		{
+			_playerPanels[panelIndex].UpdateCheckpoints(checkpointsReached, totalCheckpoints);
+		}
+	}
+
+	public void ShowGameOver(IReadOnlyList<int> winnerIds, bool isTie, IReadOnlyList<Player> allPlayers)
+	{
+		if (!IsInsideTree() || _winModal == null || _winLabel == null) return;
+		
+		var winnerNames = winnerIds
+			.Select(id => allPlayers.FirstOrDefault(p => p.Id == id)?.Name ?? $"Player {id}")
+			.ToList();
+		
+		var message = isTie
+			? $"TIE! {string.Join(" & ", winnerNames)}"
+			: $"{winnerNames[0]} WINS!";
+		
+		_winLabel.Text = message;
+		_winModal.Visible = true;
 	}
 }

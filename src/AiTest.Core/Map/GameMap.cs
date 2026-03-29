@@ -47,6 +47,20 @@ public sealed class GameMap
     public bool IsInBounds(Position pos) => IsInBounds(pos.X, pos.Y);
     public bool IsInBounds(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
+    public int GetTotalCheckpoints()
+    {
+        int count = 0;
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                if (_tiles[x, y].Type == TileType.Checkpoint)
+                    count++;
+            }
+        }
+        return count;
+    }
+
     public static GameMap CreateStandardMap()
     {
         var map = new GameMap(15, 15, "Factory Floor Test Map");

@@ -15,6 +15,10 @@ public sealed class Robot
     public RobotStatus Status { get; private set; } = RobotStatus.Active;
     public int CheckpointsReached { get; private set; }
     public Position? LastCheckpointPosition { get; private set; }
+    
+    private readonly HashSet<int> _collectedCheckpoints = new();
+
+    public IReadOnlyCollection<int> CollectedCheckpoints => _collectedCheckpoints;
 
     public bool IsAlive => Status != RobotStatus.Destroyed;
     public int LockedRegisters => Damage >= 5 ? Math.Min(Damage - 4, 5) : 0;
@@ -94,14 +98,21 @@ public sealed class Robot
         Status = RobotStatus.Active;
         Damage = 2;
         CheckpointsReached = 0;
+        _collectedCheckpoints.Clear();
     }
 
     public void SetStatus(RobotStatus newStatus) => Status = newStatus;
     public void PowerDown() => Status = RobotStatus.PowerDown;
     public void WakeUp() => Status = RobotStatus.Active;
 
-    public void AddCheckpoint(Position pos)
+    public bool HasCheckpoint(int number) => _collectedCheckpoints.Contains(number);
+
+    public void AddCheckpoint(int number, Position pos)
     {
+        if (_collectedCheckpoints.Contains(number))
+            return;
+            
+        _collectedCheckpoints.Add(number);
         CheckpointsReached++;
         LastCheckpointPosition = pos;
     }

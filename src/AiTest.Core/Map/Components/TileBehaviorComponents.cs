@@ -132,10 +132,12 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
 
     public TileActionResult ApplyPostMovement(Player player, GameMap map)
     {
+        if (player.Robot.HasCheckpoint(Number))
+            return TileActionResult.None;
+            
         if (Number == player.Robot.CheckpointsReached + 1)
         {
-            for (int i = 0; i < Number; i++)
-                player.Robot.AddCheckpoint(Position);
+            player.Robot.AddCheckpoint(Number, Position);
             return TileActionResult.CheckpointReached;
         }
         return TileActionResult.None;

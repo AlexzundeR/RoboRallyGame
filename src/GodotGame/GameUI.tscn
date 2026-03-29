@@ -136,6 +136,36 @@ offset_top = -220.0
 offset_right = 250.0
 offset_bottom = 220.0
 
+[node name="WinModal" type="PanelContainer" parent="." unique_id=38284603]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+
+[node name="ColorRect" type="ColorRect" parent="WinModal" unique_id=38284604]
+layout_mode = 2
+color = Color(0.1, 0.3, 0.1, 0.98)
+
+[node name="VBox" type="VBoxContainer" parent="WinModal" unique_id=1170889837]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="WinLabel" type="Label" parent="WinModal/VBox" unique_id=1206824382]
+layout_mode = 2
+text = "PLAYER WINS!"
+horizontal_alignment = 1
+
+[node name="Subtext" type="Label" parent="WinModal/VBox" unique_id=1206824383]
+layout_mode = 2
+text = "Press ESC to restart"
+horizontal_alignment = 1
+
 [node name="ColorRect" type="ColorRect" parent="StatusModal" unique_id=38284602]
 layout_mode = 2
 color = Color(0.15, 0.15, 0.2, 0.98)

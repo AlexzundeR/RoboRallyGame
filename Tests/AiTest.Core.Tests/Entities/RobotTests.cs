@@ -94,8 +94,8 @@ public class RobotTests
         var robot = new Robot();
         robot.AddDamage(5);
         robot.SetStatus(RobotStatus.Rebooting);
-        robot.AddCheckpoint(new Position(1, 1));
-        robot.AddCheckpoint(new Position(1, 1));
+        robot.AddCheckpoint(1, new Position(1, 1));
+        robot.AddCheckpoint(2, new Position(1, 1));
         
         robot.Reboot(new Position(1, 1));
         
@@ -178,9 +178,9 @@ public class RobotTests
     public void Reboot_ShouldResetCheckpoints()
     {
         var robot = new Robot();
-        robot.AddCheckpoint(new Position(1, 1));
-        robot.AddCheckpoint(new Position(1, 1));
-        robot.AddCheckpoint(new Position(1, 1));
+        robot.AddCheckpoint(1, new Position(1, 1));
+        robot.AddCheckpoint(2, new Position(2, 2));
+        robot.AddCheckpoint(3, new Position(3, 3));
         
         robot.Reboot(new Position(0, 0));
         
@@ -251,10 +251,21 @@ public class RobotTests
     {
         var robot = new Robot();
         
-        robot.AddCheckpoint(new Position(1, 1));
-        robot.AddCheckpoint(new Position(1, 1));
+        robot.AddCheckpoint(1, new Position(1, 1));
+        robot.AddCheckpoint(2, new Position(2, 2));
         
         Assert.Equal(2, robot.CheckpointsReached);
+    }
+
+    [Fact]
+    public void AddCheckpoint_Duplicate_ShouldNotIncrement()
+    {
+        var robot = new Robot();
+        
+        robot.AddCheckpoint(1, new Position(1, 1));
+        robot.AddCheckpoint(1, new Position(1, 1));
+        
+        Assert.Equal(1, robot.CheckpointsReached);
     }
 
     [Fact]

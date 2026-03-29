@@ -288,16 +288,17 @@ public class GameEngineTests
     }
 
     [Fact]
-    public void GetWinner_WhenPlayerWins_ShouldReturnPlayer()
+    public void GetWinners_WhenPlayerWins_ShouldReturnPlayer()
     {
         var engine = CreateEngine();
         engine.AddPlayer("Player1");
         var player = engine.State.Players[0];
         player.Robot.SetCheckpointsReached(4);
         
-        var winner = engine.GetWinner();
+        var winners = engine.GetWinners();
         
-        Assert.Equal(player, winner);
+        Assert.Single(winners);
+        Assert.Equal(player, winners[0]);
     }
 
     [Fact]
@@ -384,7 +385,42 @@ public class GameEngineTests
         player.Robot.SetCheckpointsReached(4);
         
         Assert.True(engine.IsGameOver());
-        Assert.Equal(player, engine.GetWinner());
+        var winners = engine.GetWinners();
+        Assert.Single(winners);
+        Assert.Equal(player, winners[0]);
+    }
+
+    [Fact]
+    public void GetWinners_WhenMultiplePlayersWin_ShouldReturnAll()
+    {
+        var engine = CreateEngine();
+        engine.AddPlayer("Player1");
+        engine.AddPlayer("Player2");
+        
+        engine.State.Players[0].Robot.SetCheckpointsReached(4);
+        engine.State.Players[1].Robot.SetCheckpointsReached(4);
+        
+        var winners = engine.GetWinners();
+        
+        Assert.Equal(2, winners.Count);
+        Assert.Contains(engine.State.Players[0], winners);
+        Assert.Contains(engine.State.Players[1], winners);
+    }
+
+    [Fact]
+    public void IsGameOver_WithCustomCheckpointCount_ShouldUseMapCheckpoints()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(5, 5, TileFactory.Checkpoint(1));
+        var state = new GameState(new List<Player>(), map);
+        var engine = new GameEngine(new RandomDealer(), state);
+        engine.AddPlayer("Player1");
+        
+        var player = engine.State.Players[0];
+        Assert.False(engine.IsGameOver());
+        
+        player.Robot.SetCheckpointsReached(1);
+        Assert.True(engine.IsGameOver());
     }
 
     [Fact]

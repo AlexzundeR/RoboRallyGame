@@ -151,8 +151,15 @@ public partial class PlayerPanel : PanelContainer
 	{
 		var hp = player.Robot.LifeTokens;
 		var damage = player.Robot.Damage;
+		var checkpoints = player.Robot.CheckpointsReached;
 		var powerDown = player.Robot.IsPowerDown ? " | ⚡ OFF" : "";
-		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage}{powerDown}";
+		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage} | ⭐ {checkpoints}{powerDown}";
+	}
+
+	public void UpdateCheckpoints(int checkpointsReached, int totalCheckpoints)
+	{
+		if (!IsInsideTree()) return;
+		_status.Text = _status.Text.Replace($"⭐ {checkpointsReached - 1}", $"⭐ {checkpointsReached}");
 	}
 
 	private string GetCardSymbol(ProgramCard card)

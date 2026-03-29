@@ -41,7 +41,7 @@ public sealed record DamageEvent(int PlayerId, int Damage, int NewHealth) : IEve
 
 public sealed record ConveyorMoveEvent(int PlayerId, Position From, Position To) : IEvent;
 
-public sealed record CheckpointEvent(int PlayerId, int CheckpointNumber) : IEvent;
+public sealed record CheckpointEvent(int PlayerId, int CheckpointNumber, int TotalCheckpoints) : IEvent;
 
 public sealed record RobotDestroyedEvent(int PlayerId, Position LastPosition) : IEvent;
 
@@ -52,3 +52,5 @@ public sealed record RobotRepairedEvent(int PlayerId, int RepairAmount, int NewD
 public sealed record LifeTokenLostEvent(int PlayerId, int RemainingTokens) : IEvent;
 
 public sealed record PowerDownToggledEvent(int PlayerIndex, bool IsPowerDown) : IEvent;
+
+public sealed record GameOverEvent(IReadOnlyList<int> WinnerIds, bool IsTie) : IEvent;

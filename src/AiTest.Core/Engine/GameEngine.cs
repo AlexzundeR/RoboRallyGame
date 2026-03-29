@@ -151,7 +151,7 @@ public interface IGameEngine
     void NextRegister();
     void NextRound();
     bool IsGameOver();
-    Player? GetWinner();
+    IReadOnlyList<Player> GetWinners();
 }
 
 public sealed class GameEngine : IGameEngine
@@ -183,6 +183,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
     public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
     public event Action? OnAllRegistersComplete;
+    public event Action<GameOverEvent>? OnGameOver;
 
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
@@ -400,7 +401,7 @@ public sealed class GameEngine : IGameEngine
                         Robot = player.Robot,
                         From = player.Robot.Position,
                         To = targetPos,
-                        Direction = player.Robot.Direction,
+                        Direction = oppositeDir,
                         Priority = card.Card.Priority,
                         RegisterIndex = registerIndex,
                         Type = MoveType.Normal
@@ -499,6 +500,7 @@ public sealed class GameEngine : IGameEngine
     private void ApplyBoardElements()
     {
         var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
         
         foreach (var player in State.Players)
         {
@@ -516,7 +518,7 @@ public sealed class GameEngine : IGameEngine
                     OnConveyorMove?.Invoke(new ConveyorMoveEvent(player.Robot.Id, oldPos, player.Robot.Position));
                     break;
                 case TileActionResult.CheckpointReached:
-                    OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached));
+                    OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
                     break;
                 case TileActionResult.FellIntoPit:
                     var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
@@ -539,6 +541,15 @@ public sealed class GameEngine : IGameEngine
                     OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
                 }
             }
+        }
+        
+        if (IsGameOver() && State.Phase != GamePhase.GameOver)
+        {
+            State.Phase = GamePhase.GameOver;
+            var winners = GetWinners();
+            OnGameOver?.Invoke(new GameOverEvent(
+                winners.Select(w => w.Id).ToList(),
+                winners.Count > 1));
         }
     }
 
@@ -597,12 +608,16 @@ public sealed class GameEngine : IGameEngine
 
     public bool IsGameOver()
     {
-        return State.Players.Any(p => p.Robot.CheckpointsReached >= 4);
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
+        return State.Players.Any(p => p.Robot.CheckpointsReached >= totalCheckpoints);
     }
 
-    public Player? GetWinner()
+    public IReadOnlyList<Player> GetWinners()
     {
-        return State.Players.FirstOrDefault(p => p.Robot.CheckpointsReached >= 4);
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
+        return State.Players
+            .Where(p => p.Robot.CheckpointsReached >= totalCheckpoints)
+            .ToList();
     }
 
     private List<Position> FindStartTiles()

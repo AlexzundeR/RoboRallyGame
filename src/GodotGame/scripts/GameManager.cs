@@ -105,6 +105,24 @@ public partial class GameManager : Node2D
 		_dispatcher.Subscribe<RegisterSelectionChangedEvent>(OnRegisterSelectionChanged);
 		_dispatcher.Subscribe<ExecutionStartedEvent>(OnExecutionStarted);
 		_dispatcher.Subscribe<RegistersClearedEvent>(OnRegistersCleared);
+		_dispatcher.Subscribe<CheckpointEvent>(OnCheckpoint);
+		
+		_runner!.Engine.OnCheckpoint += OnCheckpointEngine;
+		_runner!.Engine.OnGameOver += OnGameOver;
+	}
+
+	private void OnCheckpointEngine(CheckpointEvent e)
+	{
+		_gameUI?.UpdateCheckpointProgress(e.PlayerId, e.CheckpointNumber, e.TotalCheckpoints);
+	}
+
+	private void OnCheckpoint(CheckpointEvent e)
+	{
+	}
+
+	private void OnGameOver(GameOverEvent e)
+	{
+		_gameUI?.ShowGameOver(e.WinnerIds, e.IsTie, _runner!.Engine.State.Players);
 	}
 
 	private void OnExecutionStarted(ExecutionStartedEvent e)

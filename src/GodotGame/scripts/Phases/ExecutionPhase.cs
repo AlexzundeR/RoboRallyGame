@@ -192,7 +192,7 @@ public class ExecutionPhase : IGamePhase
 	{
 		var color = GetPlayerColor(e.PlayerId);
 		var name = GetPlayerName(e.PlayerId);
-		Log($"[color=green]{name}[/color] reached checkpoint {e.CheckpointNumber}!");
+		Log($"[color=green]{name}[/color] reached checkpoint {e.CheckpointNumber}/{e.TotalCheckpoints}!");
 	}
 
 	private void OnRobotDestroyed(RobotDestroyedEvent e)
