@@ -76,20 +76,21 @@ public partial class ConveyorTile : Tile
 
     public override void StartAnimations()
     {
-        if (!IsInsideTree()) return;
-        if (_isRotating) return;
+        if (!IsInsideTree() || _isRotating || _arrow == null)
+            return;
+        
         _isRotating = true;
         
         float speed = 1.0f;
-        float direction = _clockwise ? 360f : -360f;
+        float rotation = _clockwise ? 360f : -360f;
         
         var tween = CreateTween();
         tween.SetLoops();
-        tween.TweenProperty(_arrow, "rotation_degrees", direction / speed, speed);
+        tween.TweenProperty(_arrow, "rotation_degrees", rotation / speed, speed);
         
         if (_isExpress && _arrow2 != null)
         {
-            tween.TweenProperty(_arrow2, "rotation_degrees", direction / speed, speed);
+            tween.TweenProperty(_arrow2, "rotation_degrees", rotation / speed, speed);
         }
     }
 

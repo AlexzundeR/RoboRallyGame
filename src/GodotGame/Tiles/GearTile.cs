@@ -46,16 +46,21 @@ public partial class GearTile : Tile
 
     public override void StartAnimations()
     {
-        if (!IsInsideTree() || _gear == null) return;
-        if (_isRotating) return;
+        if (!IsInsideTree() || _isRotating || _gear == null)
+            return;
+        
         _isRotating = true;
         
-        float direction = _clockwise ? 360f : -360f;
+        float rotation = _clockwise ? 360f : -360f;
         
         var tween = CreateTween();
         tween.SetLoops();
-        tween.TweenProperty(_gear, "rotation_degrees", direction / 3f, 3f);
-        tween.TweenProperty(_arrow, "rotation_degrees", direction / 3f, 3f);
+        tween.TweenProperty(_gear, "rotation_degrees", rotation / 3f, 3f);
+        
+        if (_arrow != null)
+        {
+            tween.TweenProperty(_arrow, "rotation_degrees", rotation / 3f, 3f);
+        }
     }
 
     public override void StopAnimations()
