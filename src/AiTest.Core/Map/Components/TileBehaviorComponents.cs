@@ -9,7 +9,8 @@ public enum TileActionResult
     Moved,
     CheckpointReached,
     Repaired,
-    FellIntoPit
+    FellIntoPit,
+    ReadyToFall
 }
 
 public abstract class TileComponentBase : ITileComponent
@@ -27,6 +28,7 @@ public interface ITileBehaviorComponent : ITileComponent
     TileActionResult ApplyPostMovement(Player player, GameMap map);
     void ApplyOnLaserPhase(LaserShot shot, GameState state);
     void ApplyOnEnter(Player player, GameState state);
+    TileActionResult ApplyOnTouch(Robot robot, GameMap map);
 }
 
 public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehaviorComponent
@@ -80,6 +82,43 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
     public void ApplyOnEnter(Player player, GameState state) { }
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
+
+    public MoveIntent? TryCreateIntent(Robot robot, GameMap map)
+    {
+        var dir = (Direction)Direction;
+        var newPos = robot.Position;
+
+        for (int i = 0; i < Steps; i++)
+        {
+            var next = newPos.Move(dir);
+            
+            if (!map.IsInBounds(next))
+                break;
+                
+            var currentTile = map.GetTile(newPos);
+            var targetTile = map.GetTile(next);
+            
+            if (!targetTile.CanEnterFrom(dir) || !currentTile.CanExitTo(dir))
+                break;
+                
+            newPos = next;
+        }
+
+        if (newPos == robot.Position)
+            return null;
+
+        return new MoveIntent
+        {
+            Robot = robot,
+            From = robot.Position,
+            To = newPos,
+            Direction = dir,
+            Priority = 0,
+            RegisterIndex = -1,
+            Type = MoveType.Conveyor
+        };
+    }
 }
 
 public sealed class GearBehaviorComponent : TileComponentBase, ITileBehaviorComponent
@@ -102,6 +141,7 @@ public sealed class GearBehaviorComponent : TileComponentBase, ITileBehaviorComp
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
     public void ApplyOnEnter(Player player, GameState state) { }
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
 }
 
 public sealed class LaserBehaviorComponent : TileComponentBase, ITileBehaviorComponent
@@ -119,6 +159,8 @@ public sealed class LaserBehaviorComponent : TileComponentBase, ITileBehaviorCom
     public void ApplyOnLaserPhase(LaserShot shot, GameState state)
     {
     }
+
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
 }
 
 public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehaviorComponent
@@ -145,22 +187,28 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
     public void ApplyOnEnter(Player player, GameState state) { }
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
 }
 
     public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
     {
         public TileActionResult ApplyPostMovement(Player player, GameMap map)
         {
-            var strategy = player.GetConveyorStrategy();
-            if (strategy.ShouldIgnorePits(player.Robot))
-                return TileActionResult.None;
-
-            player.Robot.LoseLifeToken();
-            return TileActionResult.FellIntoPit;
+            if (map.GetTile(player.Robot.Position).Type == TileType.Pit)
+            {
+                player.Robot.LoseLifeToken();
+                return TileActionResult.FellIntoPit;
+            }
+            return TileActionResult.None;
         }
 
         public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
         public void ApplyOnEnter(Player player, GameState state) { }
+
+        public TileActionResult ApplyOnTouch(Robot robot, GameMap map)
+        {
+            return TileActionResult.ReadyToFall;
+        }
     }
 
     public sealed class RepairSiteBehaviorComponent : TileComponentBase, ITileBehaviorComponent, IEndOfRoundComponent
@@ -176,6 +224,7 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
 
         public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
         public void ApplyOnEnter(Player player, GameState state) { }
+        public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
 
         public TileActionResult ApplyEndOfRound(Player player)
         {

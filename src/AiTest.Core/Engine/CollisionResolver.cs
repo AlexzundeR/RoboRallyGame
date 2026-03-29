@@ -2,6 +2,7 @@ namespace AiTest.Core.Engine;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Models.Components;
 
 public enum CollisionResult
 {
@@ -26,7 +27,8 @@ public enum MoveType
 {
     Normal,
     Push,
-    Board
+    Board,
+    Conveyor
 }
 
 public sealed class CollisionResolver
@@ -76,7 +78,10 @@ public sealed class CollisionResolver
             if (!CanPassThrough(from, stepPos, dir, map))
                 return CollisionResult.Blocked;
             
-            if (map.GetTile(stepPos).Type == TileType.Pit)
+            var tile = map.GetTile(stepPos);
+            var touchResult = tile.GetComponent<ITileBehaviorComponent>()?.ApplyOnTouch(intent.Robot, map);
+            
+            if (touchResult == TileActionResult.ReadyToFall)
             {
                 intent.Robot.SetPosition(stepPos);
                 return CollisionResult.Success;

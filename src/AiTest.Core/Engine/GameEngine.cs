@@ -256,7 +256,10 @@ public sealed class GameEngine : IGameEngine
         }
         else if (_currentStep == movementSteps && !_conveyorExecuted)
         {
-            ApplyBoardElements();
+            ApplyNonConveyorEffects();
+            ProcessConveyorPhase();
+            CheckGameOver();
+            _conveyorExecuted = true;
             _currentStep++;
         }
         else if (_currentStep > movementSteps && !_laserExecuted)
@@ -497,7 +500,7 @@ public sealed class GameEngine : IGameEngine
         return new CompositeMovementStrategy(strategies);
     }
 
-    private void ApplyBoardElements()
+    private void ApplyNonConveyorEffects()
     {
         var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
@@ -508,15 +511,15 @@ public sealed class GameEngine : IGameEngine
                 continue;
 
             var tile = State.Map.GetTile(player.Robot.Position);
-            var oldPos = player.Robot.Position;
             
+            if (tile.GetComponent<ConveyorBehaviorComponent>() != null)
+                continue;
+            
+            var oldPos = player.Robot.Position;
             var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
             
             switch (result)
             {
-                case TileActionResult.Moved:
-                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(player.Robot.Id, oldPos, player.Robot.Position));
-                    break;
                 case TileActionResult.CheckpointReached:
                     OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
                     break;
@@ -542,7 +545,78 @@ public sealed class GameEngine : IGameEngine
                 }
             }
         }
+    }
+
+    private void ProcessConveyorPhase()
+    {
+        var conveyorIntents = new List<MoveIntent>();
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
         
+        foreach (var player in State.Players)
+        {
+            if (!player.Robot.IsAlive)
+                continue;
+            
+            var tile = State.Map.GetTile(player.Robot.Position);
+            var component = tile.GetComponent<ConveyorBehaviorComponent>();
+            
+            if (component == null)
+                continue;
+                
+            if (player.GetConveyorStrategy().ShouldIgnoreConveyors(player.Robot))
+                continue;
+            
+            var intent = component.TryCreateIntent(player.Robot, State.Map);
+            if (intent != null)
+                conveyorIntents.Add(intent);
+        }
+        
+        if (conveyorIntents.Count == 0)
+            return;
+        
+        var resolver = new CollisionResolver();
+        foreach (var intent in conveyorIntents)
+            resolver.AddIntent(intent);
+        
+        resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
+        
+        var damageBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
+        
+        foreach (var player in State.Players)
+        {
+            if (!player.Robot.IsAlive)
+                continue;
+
+            var tile = State.Map.GetTile(player.Robot.Position);
+            var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
+            
+            switch (result)
+            {
+                case TileActionResult.CheckpointReached:
+                    OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
+                    break;
+                case TileActionResult.FellIntoPit:
+                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
+                    player.Robot.Reboot(spawnPos);
+                    OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
+                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
+                    break;
+            }
+        }
+        
+        foreach (var player in State.Players)
+        {
+            var id = player.Robot.Id;
+            var damage = player.Robot.Damage;
+            if (damageBefore.TryGetValue(id, out var before) && damage != before)
+            {
+                OnDamage?.Invoke(new DamageEvent(id, damage - before, damage));
+            }
+        }
+    }
+
+    private void CheckGameOver()
+    {
         if (IsGameOver() && State.Phase != GamePhase.GameOver)
         {
             State.Phase = GamePhase.GameOver;
