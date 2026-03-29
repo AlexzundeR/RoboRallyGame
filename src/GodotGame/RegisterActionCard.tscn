@@ -76,6 +76,7 @@ clip_text = true
 [node name="Symbol" type="Label" parent="GridContainer" unique_id=435667108]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 label_settings = ExtResource("2_7207c")
 horizontal_alignment = 1
 vertical_alignment = 1

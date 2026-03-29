@@ -25,7 +25,7 @@ public partial class GearTile : Tile
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-        _directionLabel.AddThemeFontSizeOverride("font_size", 14);
+        _directionLabel.AddThemeFontSizeOverride("font_size", 20);
         
         var anchor = new Node2D { Name = "LabelAnchor", Position = new Vector2(24, 24) };
         anchor.AddChild(_directionLabel);
