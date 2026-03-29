@@ -1,5 +1,6 @@
 namespace AiTest.Godot.Components;
 
+using System;
 using System.Collections.Generic;
 using Godot;
 using AiTest.Core.Models;
@@ -17,32 +18,30 @@ public partial class BarricadeRenderer : Node2D
 
     public override void _Ready()
     {
-        CreateCrossStripes(Direction.North, new Vector2(24, 0), true);
-        CreateCrossStripes(Direction.South, new Vector2(24, 48), true);
-        CreateCrossStripes(Direction.East, new Vector2(48, 24), false);
-        CreateCrossStripes(Direction.West, new Vector2(0, 24), false);
+        CreateEdgeStripes(Direction.North, 0);
+        CreateEdgeStripes(Direction.South, 48);
+        CreateEdgeStripes(Direction.East, 48);
+        CreateEdgeStripes(Direction.West, 0);
         
         HideAll();
     }
 
-    private void CreateCrossStripes(Direction direction, Vector2 edgePosition, bool horizontal)
+    private void CreateEdgeStripes(Direction direction, float edgePos)
     {
         var stripes = new List<Polygon2D>();
-        float totalWidth = StripeCount * StripeWidth;
         
-        for (int i = 0; i < StripeCount; i++)
+        for (int i = 0; i < 8; i++)
         {
             bool isYellow = i % 2 == 0;
-            Polygon2D stripe;
             
-            if (horizontal)
+            Polygon2D stripe = direction switch
             {
-                stripe = CreateHorizontalEdgeStripe(edgePosition, totalWidth, i, isYellow);
-            }
-            else
-            {
-                stripe = CreateVerticalEdgeStripe(edgePosition, totalWidth, i, isYellow);
-            }
+                Direction.North => CreateNorthStripe(edgePos, i, isYellow),
+                Direction.South => CreateSouthStripe(edgePos, i, isYellow),
+                Direction.East => CreateEastStripe(edgePos, i, isYellow),
+                Direction.West => CreateWestStripe(edgePos, i, isYellow),
+                _ => throw new ArgumentException($"Unknown direction: {direction}")
+            };
             
             AddChild(stripe);
             stripes.Add(stripe);
@@ -51,42 +50,64 @@ public partial class BarricadeRenderer : Node2D
         _stripesByDirection[direction] = stripes;
     }
 
-    private Polygon2D CreateHorizontalEdgeStripe(Vector2 edgePos, float totalWidth, int index, bool isYellow)
+    private Polygon2D CreateNorthStripe(float edgeY, int index, bool isYellow)
     {
-        float startX = index * StripeWidth - totalWidth / 2;
+        float startX = index * StripeWidth;
         
         var points = new Vector2[]
         {
-            new Vector2(startX, edgePos.Y - 4),
-            new Vector2(startX + StripeWidth, edgePos.Y - 4 + StripeWidth),
-            new Vector2(startX + StripeWidth, edgePos.Y + StripeWidth),
-            new Vector2(startX, edgePos.Y)
+            new Vector2(startX, 0),
+            new Vector2(startX + StripeWidth, StripeWidth),
+            new Vector2(startX + StripeWidth, 0),
+            new Vector2(startX, 0)
         };
 
-        return new Polygon2D
-        {
-            Polygon = points,
-            Color = isYellow ? Yellow : Black
-        };
+        return new Polygon2D { Polygon = points, Color = isYellow ? Yellow : Black };
     }
 
-    private Polygon2D CreateVerticalEdgeStripe(Vector2 edgePos, float totalWidth, int index, bool isYellow)
+    private Polygon2D CreateSouthStripe(float edgeY, int index, bool isYellow)
     {
-        float startY = index * StripeWidth - totalWidth / 2;
+        float startX = index * StripeWidth;
         
         var points = new Vector2[]
         {
-            new Vector2(edgePos.X - 4, startY),
-            new Vector2(edgePos.X - 4 + StripeWidth, startY + StripeWidth),
-            new Vector2(edgePos.X + StripeWidth, startY + StripeWidth),
-            new Vector2(edgePos.X, startY)
+            new Vector2(startX, 48 - StripeWidth),
+            new Vector2(startX + StripeWidth, 48),
+            new Vector2(startX + StripeWidth, 48 - StripeWidth),
+            new Vector2(startX, 48 - StripeWidth)
         };
 
-        return new Polygon2D
+        return new Polygon2D { Polygon = points, Color = isYellow ? Yellow : Black };
+    }
+
+    private Polygon2D CreateEastStripe(float edgeX, int index, bool isYellow)
+    {
+        float startY = index * StripeWidth;
+        
+        var points = new Vector2[]
         {
-            Polygon = points,
-            Color = isYellow ? Yellow : Black
+            new Vector2(48 - StripeWidth, startY),
+            new Vector2(48, startY + StripeWidth),
+            new Vector2(48 - StripeWidth, startY + StripeWidth),
+            new Vector2(48 - StripeWidth, startY)
         };
+
+        return new Polygon2D { Polygon = points, Color = isYellow ? Yellow : Black };
+    }
+
+    private Polygon2D CreateWestStripe(float edgeX, int index, bool isYellow)
+    {
+        float startY = index * StripeWidth;
+        
+        var points = new Vector2[]
+        {
+            new Vector2(0, startY),
+            new Vector2(StripeWidth, startY + StripeWidth),
+            new Vector2(StripeWidth, startY),
+            new Vector2(0, startY)
+        };
+
+        return new Polygon2D { Polygon = points, Color = isYellow ? Yellow : Black };
     }
 
     private void HideAll()

@@ -34,6 +34,20 @@ scale = Vector2(1.5, 1.5)
 polygon = PackedVector2Array(0, -10, 8, 4, 0, 0, -8, 4)
 color = Color(0.7, 0.9, 1, 1)
 
+[node name="SpeedLabelBg" type="ColorRect" parent="."]
+anchors_preset = 4
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 31.0
+offset_bottom = 31.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.2, 0.3, 0.9)
+
 [node name="SpeedLabel" type="Label" parent="."]
 anchors_preset = 4
 anchor_left = 0.5
@@ -43,7 +57,7 @@ anchor_bottom = 0.5
 offset_left = 18.0
 offset_top = 18.0
 offset_right = 30.0
-offset_bottom = 36.0
+offset_bottom = 30.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "1"
