@@ -12,6 +12,17 @@ public abstract partial class Tile : Node2D
 	protected abstract Color BaseColor { get; }
 	protected abstract Color BorderColor { get; }
 
+	public override void _Ready()
+	{
+		OnReady();
+		
+		var baseTile = GetNode<ColorRect>("BaseTile");
+		var borderTile = GetNode<ColorRect>("BorderTile");
+		
+		baseTile.Color = BaseColor;
+		borderTile.Color = BorderColor;
+	}
+
 	protected virtual void OnReady()
 	{
 	}
@@ -25,14 +36,6 @@ public abstract partial class Tile : Node2D
 			position.X * TileSize,
 			position.Y * TileSize + MapOffsetY
 		);
-		
-		if (!IsInsideTree()) return;
-		
-		var baseTile = GetNode<ColorRect>("BaseTile");
-		var borderTile = GetNode<ColorRect>("BorderTile");
-		
-		baseTile.Color = BaseColor;
-		borderTile.Color = BorderColor;
 	}
 
 	public virtual void StartAnimations()

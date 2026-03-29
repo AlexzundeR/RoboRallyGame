@@ -5,7 +5,6 @@ using Godot;
 public partial class GearTile : Tile
 {
     private Polygon2D _gear = null!;
-    private Polygon2D _arrow = null!;
     private Label _directionLabel = null!;
     private bool _isRotating;
     private bool _clockwise;
@@ -17,17 +16,7 @@ public partial class GearTile : Tile
     {
         base.OnReady();
         _gear = GetNode<Polygon2D>("Gear");
-        _arrow = GetNode<Polygon2D>("Arrow");
-        
-        _directionLabel = new Label
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        _directionLabel.AddThemeFontSizeOverride("font_size", 20);
-        _directionLabel.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 1f));
-        
-        AddChild(_directionLabel);
+        _directionLabel = GetNode<Label>("DirectionLabel");
     }
 
     public void Initialize(Core.Models.Position pos, Core.Models.TileType type, bool clockwise)
@@ -53,11 +42,6 @@ public partial class GearTile : Tile
         var tween = CreateTween();
         tween.SetLoops();
         tween.TweenProperty(_gear, "rotation_degrees", rotation / 3f, 3f);
-        
-        if (_arrow != null)
-        {
-            tween.TweenProperty(_arrow, "rotation_degrees", rotation / 3f, 3f);
-        }
     }
 
     public override void StopAnimations()

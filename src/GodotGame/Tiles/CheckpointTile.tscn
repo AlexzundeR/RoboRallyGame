@@ -31,3 +31,31 @@ color = Color(1, 0.84, 0, 0.5)
 position = Vector2(24, 24)
 polygon = PackedVector2Array(0, -7, 1.5, -2.5, 6, -2.5, 2.5, 1, 4, 6, 0, 3, -4, 6, -2.5, 1, -6, -2.5, -1.5, -2.5)
 color = Color(1, 0.84, 0, 0.9)
+
+[node name="LabelAnchor" type="Node2D" parent="."]
+position = Vector2(38, 38)
+
+[node name="LabelBg" type="ColorRect" parent="LabelAnchor"]
+offset_left = -10.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 8.0
+color = Color(0.1, 0.08, 0.02, 0.7)
+
+[node name="CheckpointLabel" type="Label" parent="LabelAnchor"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -6.0
+offset_right = 8.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "★1"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 12

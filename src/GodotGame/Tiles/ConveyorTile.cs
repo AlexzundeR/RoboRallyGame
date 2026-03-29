@@ -5,13 +5,10 @@ using CoreModels = AiTest.Core.Models;
 
 public partial class ConveyorTile : Tile
 {
-	private Polygon2D _arrow = null!;
-	private Polygon2D _arrow2 = null!;
-	private Label _speedLabel = null!;
-	private ColorRect _speedLabelBg = null!;
-	private bool _isRotating;
-	private CoreModels.ConveyorDirection _direction;
-	private bool _isExpress;
+	private Polygon2D _arrow1Vertical = null!;
+	private Polygon2D _arrow2Vertical = null!;
+	private Polygon2D _arrow1Horizontal = null!;
+	private Polygon2D _arrow2Horizontal = null!;
 
 	protected override Color BaseColor => new(0.25f, 0.4f, 0.5f);
 	protected override Color BorderColor => new(0.35f, 0.5f, 0.6f);
@@ -19,75 +16,36 @@ public partial class ConveyorTile : Tile
 	protected override void OnReady()
 	{
 		base.OnReady();
-		_arrow = GetNode<Polygon2D>("Arrow");
-		_arrow2 = GetNode<Polygon2D>("Arrow2");
-		_speedLabel = GetNode<Label>("SpeedLabel");
-		_speedLabelBg = GetNode<ColorRect>("SpeedLabelBg");
+		
+		_arrow1Vertical = GetNode<Polygon2D>("ArrowVertical");
+		_arrow2Vertical = GetNode<Polygon2D>("Arrow2Vertical");
+		_arrow1Horizontal = GetNode<Polygon2D>("ArrowHorizontal");
+		_arrow2Horizontal = GetNode<Polygon2D>("Arrow2Horizontal");
 	}
 
 	public void Initialize(CoreModels.Position pos, CoreModels.TileType type, CoreModels.ConveyorDirection direction, bool isExpress)
 	{
 		base.Initialize(pos, type);
-		_direction = direction;
-		_isExpress = isExpress;
 		
-		float rotation = direction switch
-		{
-			CoreModels.ConveyorDirection.North => 0f,
-			CoreModels.ConveyorDirection.East => 90f,
-			CoreModels.ConveyorDirection.South => 180f,
-			CoreModels.ConveyorDirection.West => -90f,
-			_ => 0f
-		};
+		bool isVertical = direction == CoreModels.ConveyorDirection.North || direction == CoreModels.ConveyorDirection.South;
 		
-		if (_arrow != null)
+		_arrow1Vertical.Visible = isVertical;
+		_arrow2Vertical.Visible = isVertical && isExpress;
+		_arrow1Horizontal.Visible = !isVertical;
+		_arrow2Horizontal.Visible = !isVertical && isExpress;
+		
+		if (isVertical)
 		{
-			_arrow.RotationDegrees = rotation;
-			_arrow.Visible = true;
+			_arrow1Vertical.Position = isExpress ? new Vector2(24, 17) : new Vector2(24, 24);
+			_arrow2Vertical.Position = new Vector2(24, 31);
 		}
-		
-		if (_arrow2 != null)
+		else
 		{
-			_arrow2.RotationDegrees = rotation;
-			_arrow2.Visible = isExpress;
-		}
-		
-		if (_speedLabel != null && _speedLabelBg != null)
-		{
-			_speedLabel.Text = isExpress ? "2" : "1";
-			_speedLabel.AddThemeColorOverride("font_color", isExpress ? new Color(1f, 0.8f, 0.2f) : new Color(0.6f, 0.8f, 0.9f));
-			_speedLabelBg.Visible = true;
+			_arrow1Horizontal.Position = isExpress ? new Vector2(17, 24) : new Vector2(24, 24);
+			_arrow2Horizontal.Position = new Vector2(31, 24);
 		}
 	}
 
-	public override void StartAnimations()
-	{
-		if (!IsInsideTree() || _isRotating || _arrow == null)
-			return;
-		
-		_isRotating = true;
-		
-		float rotation = _direction switch
-		{
-			CoreModels.ConveyorDirection.North => -360f,
-			CoreModels.ConveyorDirection.South => 360f,
-			CoreModels.ConveyorDirection.East => -360f,
-			CoreModels.ConveyorDirection.West => 360f,
-			_ => -360f
-		};
-		
-		var tween = CreateTween();
-		tween.SetLoops();
-		tween.TweenProperty(_arrow, "rotation_degrees", rotation, 1f);
-		
-		if (_isExpress && _arrow2 != null)
-		{
-			tween.TweenProperty(_arrow2, "rotation_degrees", rotation, 1f);
-		}
-	}
-
-	public override void StopAnimations()
-	{
-		_isRotating = false;
-	}
+	public override void StartAnimations() { }
+	public override void StopAnimations() { }
 }

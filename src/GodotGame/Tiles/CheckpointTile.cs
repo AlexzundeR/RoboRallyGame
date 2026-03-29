@@ -14,19 +14,7 @@ public partial class CheckpointTile : Tile
 	{
 		base.OnReady();
 		
-		_label = new Label
-		{
-			Name = "CheckpointLabel",
-			Text = "★1",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center
-		};
-		_label.AddThemeFontSizeOverride("font_size", 20);
-		_label.AddThemeColorOverride("font_color", new Color(1.0f, 0.84f, 0.0f));
-		
-		var anchor = new Node2D { Name = "LabelAnchor", Position = new Vector2(24, 24) };
-		anchor.AddChild(_label);
-		AddChild(anchor);
+		_label = GetNode<Label>("LabelAnchor/CheckpointLabel");
 	}
 
 	public void Initialize(Core.Models.Position pos, Core.Models.TileType type, int checkpointNumber)

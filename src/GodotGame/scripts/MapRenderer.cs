@@ -56,8 +56,8 @@ public partial class MapRenderer : Node2D
         var tileNode = scene.Instantiate<Tile>();
         
         tileNode.Initialize(pos, tileData.Type);
-        AddChild(tileNode);
         _tiles[pos] = tileNode;
+        AddChild(tileNode);
 
         if (tileData.Type == TileType.Checkpoint)
         {
