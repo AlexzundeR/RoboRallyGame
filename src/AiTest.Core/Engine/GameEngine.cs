@@ -177,6 +177,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
     public event Action<RobotRebootEvent>? OnRobotReboot;
     public event Action<RobotRepairedEvent>? OnRobotRepaired;
+    public event Action<LifeTokenLostEvent>? OnLifeTokenLost;
     public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
     public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
     public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
@@ -213,7 +214,9 @@ public sealed class GameEngine : IGameEngine
         var startTiles = FindStartTiles();
         if (startTiles.Count > player.Id - 1)
         {
-            player.Robot.SetPosition(startTiles[player.Id - 1]);
+            var startPos = startTiles[player.Id - 1];
+            player.Robot.SetPosition(startPos);
+            player.Robot.SetStartPosition(startPos);
         }
     }
 
@@ -504,6 +507,7 @@ public sealed class GameEngine : IGameEngine
 
             var tile = State.Map.GetTile(player.Robot.Position);
             var oldPos = player.Robot.Position;
+            
             var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
             
             switch (result)
@@ -513,6 +517,12 @@ public sealed class GameEngine : IGameEngine
                     break;
                 case TileActionResult.CheckpointReached:
                     OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached));
+                    break;
+                case TileActionResult.FellIntoPit:
+                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
+                    player.Robot.Reboot(spawnPos);
+                    OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
+                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
                     break;
             }
         }

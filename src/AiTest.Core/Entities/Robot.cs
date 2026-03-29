@@ -7,6 +7,7 @@ public sealed class Robot
     public int Id { get; init; }
     public string Name { get; init; } = "Robot";
     public Position Position { get; private set; }
+    public Position StartPosition { get; private set; }
     public Direction Direction { get; private set; } = Direction.North;
     public int Damage { get; private set; }
     public int Energy { get; private set; } = 3;
@@ -30,6 +31,7 @@ public sealed class Robot
     public Robot(Position position, Direction direction)
     {
         Position = position;
+        StartPosition = position;
         Direction = direction;
     }
 
@@ -37,10 +39,12 @@ public sealed class Robot
     {
         Id = id;
         Position = position;
+        StartPosition = position;
         Direction = direction;
     }
 
     public void SetPosition(Position newPos) => Position = newPos;
+    public void SetStartPosition(Position pos) => StartPosition = pos;
     public void Move(Position newPos) => Position = newPos;
 
     public void SetDirection(Direction direction) => Direction = direction;

@@ -219,7 +219,8 @@ public class GameEngineTests
         
         ExecuteRegister(engine, 0);
         
-        Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
+        Assert.Equal(RobotStatus.Active, player.Robot.Status);
+        Assert.Equal(2, player.Robot.Damage);
     }
 
     [Fact]

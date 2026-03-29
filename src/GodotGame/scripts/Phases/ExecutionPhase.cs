@@ -69,12 +69,18 @@ public class ExecutionPhase : IGamePhase
 		engine.OnRobotDestroyed += OnRobotDestroyed;
 		engine.OnRobotReboot += OnRobotReboot;
 		engine.OnRobotRepaired += OnRobotRepaired;
+		engine.OnLifeTokenLost += OnLifeTokenLost;
 		engine.OnAllRegistersComplete += OnAllRegistersComplete;
 	}
 
 	private void OnAllRegistersComplete()
 	{
 		CompleteExecutionPhase();
+	}
+
+	private void OnLifeTokenLost(LifeTokenLostEvent e)
+	{
+		Log($"[color=red]{GetPlayerName(e.PlayerId)} lost a life token! ({e.RemainingTokens} remaining)[/color]");
 	}
 
 	private void OnRobotReboot(RobotRebootEvent e)

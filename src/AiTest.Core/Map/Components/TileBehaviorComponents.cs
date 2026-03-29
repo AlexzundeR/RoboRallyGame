@@ -8,7 +8,8 @@ public enum TileActionResult
     None,
     Moved,
     CheckpointReached,
-    Repaired
+    Repaired,
+    FellIntoPit
 }
 
 public abstract class TileComponentBase : ITileComponent
@@ -153,12 +154,7 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
                 return TileActionResult.None;
 
             player.Robot.LoseLifeToken();
-            
-            if (player.Robot.LastCheckpointPosition.HasValue)
-            {
-                player.Robot.Reboot(player.Robot.LastCheckpointPosition.Value);
-            }
-            return TileActionResult.None;
+            return TileActionResult.FellIntoPit;
         }
 
         public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }

@@ -107,6 +107,21 @@ public class GameRunner
             return new Core.Models.Tile(type, placement.LaserDirection.Value);
         }
 
+        if (type == TileType.Pit)
+        {
+            return Core.Models.TileFactory.Pit();
+        }
+
+        if (type == TileType.RepairSite)
+        {
+            return Core.Models.TileFactory.RepairSite();
+        }
+
+        if (type == TileType.RepairSitePlus)
+        {
+            return Core.Models.TileFactory.RepairSitePlus();
+        }
+
         return components != null 
             ? new Core.Models.Tile(type, components) 
             : new Core.Models.Tile(type);

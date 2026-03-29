@@ -16,25 +16,18 @@ public class LaserAnimation : Animation
     {
         var tcs = new TaskCompletionSource<bool>();
         
+        if (Path.Count == 0)
+        {
+            tcs.SetResult(true);
+            return tcs.Task;
+        }
+        
         var points = new List<Vector2>();
         points.Add(AnimationService.PositionToVectorCentered(Source));
         
         foreach (var pos in Path)
         {
             points.Add(AnimationService.PositionToVectorCentered(pos));
-        }
-
-        if (points.Count < 2)
-        {
-            var offset = Direction switch
-            {
-                Direction.North => new Vector2(0, -96),
-                Direction.South => new Vector2(0, 96),
-                Direction.East => new Vector2(96, 0),
-                Direction.West => new Vector2(-96, 0),
-                _ => new Vector2(0, -96)
-            };
-            points.Add(points[0] + offset);
         }
 
         var endPos = points[points.Count - 1];

@@ -160,7 +160,7 @@ public sealed class LaserResolver
     {
         var path = new List<Position>();
         var pos = start.Move(dir);
-        var entryDir = dir;
+        var entryDir = dir.TurnAround();
         
         while (map.IsInBounds(pos))
         {

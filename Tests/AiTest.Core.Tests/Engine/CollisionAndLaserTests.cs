@@ -149,6 +149,30 @@ public class CollisionResolverTests
     }
 
     [Fact]
+    public void Resolve_MoveOverPit_FallsIntoPit()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(6, 5, TileFactory.Pit());
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        
+        var resolver = new CollisionResolver();
+        resolver.AddIntent(new MoveIntent
+        {
+            Robot = robot1,
+            From = new Position(5, 5),
+            To = new Position(8, 5),
+            Direction = Direction.East,
+            Priority = 100,
+            RegisterIndex = 0,
+            Type = MoveType.Normal
+        });
+        
+        resolver.Resolve(map, new List<Robot> { robot1 });
+        
+        Assert.Equal(new Position(6, 5), robot1.Position);
+    }
+
+    [Fact]
     public void Resolve_ChainPush_TwoRobotsPushed()
     {
         var map = new GameMap(10, 10);
@@ -491,6 +515,64 @@ public class LaserResolverTests
     }
 
     [Fact]
+    public void CalculatePath_ThroughTileWithOpenEntry_ShouldContinue()
+    {
+        var map = new GameMap(10, 10);
+        var blockedComponent = new BlockedMovementComponent(DirectionSet.FromDirections(Direction.North));
+        map.SetTile(6, 5, new Tile(TileType.Floor, new[] { blockedComponent }));
+        
+        var start = new Position(5, 5);
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = new Robot(1, start, Direction.East) }
+        });
+        
+        var path = shots[0].Path;
+        
+        Assert.Contains(new Position(6, 5), path);
+        Assert.Contains(new Position(7, 5), path);
+    }
+
+    [Fact]
+    public void CalculatePath_IntoTileWithBlockedEntry_ShouldStopBefore()
+    {
+        var map = new GameMap(10, 10);
+        var blockedComponent = new BlockedMovementComponent(DirectionSet.FromDirections(Direction.West));
+        map.SetTile(6, 5, new Tile(TileType.Floor, new[] { blockedComponent }));
+        
+        var start = new Position(5, 5);
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = new Robot(1, start, Direction.East) }
+        });
+        
+        var path = shots[0].Path;
+        
+        Assert.DoesNotContain(new Position(6, 5), path);
+    }
+
+    [Fact]
+    public void CalculatePath_ThroughTileWithoutExit_ShouldStopAtTile()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(6, 5, TileFactory.Floor(Direction.East));
+        
+        var start = new Position(5, 5);
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = new Robot(1, start, Direction.East) }
+        });
+        
+        var path = shots[0].Path;
+        
+        Assert.Contains(new Position(6, 5), path);
+        Assert.DoesNotContain(new Position(7, 5), path);
+    }
+
+    [Fact]
     public void Priority_ByPosition_ShouldOrderByXY()
     {
         var map = new GameMap(10, 10);
@@ -511,7 +593,19 @@ public class LaserResolverTests
     }
 
     [Fact]
-    public void CalculatePath_PartialWall_ShouldAllowFromOpenSide()
+    public void CalculatePath_RobotAtMapEdge_ShouldReturnEmptyPath()
+    {
+        var map = new GameMap(10, 10);
+        var robot = new Robot(1, new Position(5, 0), Direction.North);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> { new Player { Id = 1, Robot = robot } });
+        
+        Assert.Empty(shots[0].Path);
+    }
+
+    [Fact]
+    public void CalculatePath_PartialWall_ShouldStopAtWall()
     {
         var map = new GameMap(10, 10);
         var blockedComponent = new BlockedMovementComponent(DirectionSet.FromDirections(Direction.West));
@@ -524,7 +618,8 @@ public class LaserResolverTests
         
         var shot = shots.First(s => s.IsRobotLaser);
         
-        Assert.Contains(new Position(7, 5), shot.Path);
+        Assert.Contains(new Position(6, 5), shot.Path);
+        Assert.DoesNotContain(new Position(7, 5), shot.Path);
     }
 
     [Fact]
