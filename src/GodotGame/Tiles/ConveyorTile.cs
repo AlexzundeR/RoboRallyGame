@@ -10,7 +10,7 @@ public partial class ConveyorTile : Tile
 	private Label _speedLabel = null!;
 	private ColorRect _speedLabelBg = null!;
 	private bool _isRotating;
-	private bool _clockwise;
+	private CoreModels.ConveyorDirection _direction;
 	private bool _isExpress;
 
 	protected override Color BaseColor => new(0.25f, 0.4f, 0.5f);
@@ -28,7 +28,7 @@ public partial class ConveyorTile : Tile
 	public void Initialize(CoreModels.Position pos, CoreModels.TileType type, CoreModels.ConveyorDirection direction, bool isExpress)
 	{
 		base.Initialize(pos, type);
-		_clockwise = direction is CoreModels.ConveyorDirection.North or CoreModels.ConveyorDirection.East;
+		_direction = direction;
 		_isExpress = isExpress;
 		
 		float rotation = direction switch
@@ -43,6 +43,7 @@ public partial class ConveyorTile : Tile
 		if (_arrow != null)
 		{
 			_arrow.RotationDegrees = rotation;
+			_arrow.Visible = true;
 		}
 		
 		if (_arrow2 != null)
@@ -66,16 +67,22 @@ public partial class ConveyorTile : Tile
 		
 		_isRotating = true;
 		
-		float speed = 1.0f;
-		float rotation = _clockwise ? 360f : -360f;
+		float rotation = _direction switch
+		{
+			CoreModels.ConveyorDirection.North => -360f,
+			CoreModels.ConveyorDirection.South => 360f,
+			CoreModels.ConveyorDirection.East => -360f,
+			CoreModels.ConveyorDirection.West => 360f,
+			_ => -360f
+		};
 		
 		var tween = CreateTween();
 		tween.SetLoops();
-		tween.TweenProperty(_arrow, "rotation_degrees", rotation / speed, speed);
+		tween.TweenProperty(_arrow, "rotation_degrees", rotation, 1f);
 		
 		if (_isExpress && _arrow2 != null)
 		{
-			tween.TweenProperty(_arrow2, "rotation_degrees", rotation / speed, speed);
+			tween.TweenProperty(_arrow2, "rotation_degrees", rotation, 1f);
 		}
 	}
 

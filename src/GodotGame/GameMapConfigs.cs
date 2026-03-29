@@ -97,7 +97,7 @@ public static class GameMapConfigs
                     new() { X = 14, Y = 12, Type = TileType.Wall },
                     new() { X = 14, Y = 13, Type = TileType.Wall },
 
-                    // Conveyors
+                    // Conveyors (speed 1)
                     new() { X = 4, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
                     new() { X = 5, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
                     new() { X = 6, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East },
@@ -107,7 +107,13 @@ public static class GameMapConfigs
                     new() { X = 4, Y = 11, Type = TileType.Conveyor, ConveyorDir = Direction.East },
                     new() { X = 10, Y = 11, Type = TileType.Conveyor, ConveyorDir = Direction.West },
 
-                    // Express Conveyors
+                    // South/North conveyors (speed 1)
+                    new() { X = 7, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.South },
+                    new() { X = 7, Y = 6, Type = TileType.Conveyor, ConveyorDir = Direction.South },
+                    new() { X = 7, Y = 8, Type = TileType.Conveyor, ConveyorDir = Direction.North },
+                    new() { X = 7, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.North },
+
+                    // Express Conveyors (speed 2)
                     new() { X = 3, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
                     new() { X = 3, Y = 6, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
                     new() { X = 3, Y = 8, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
@@ -117,6 +123,12 @@ public static class GameMapConfigs
                     new() { X = 11, Y = 6, Type = TileType.Conveyor, ConveyorDir = Direction.South, IsExpress = true },
                     new() { X = 11, Y = 8, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
                     new() { X = 11, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.North, IsExpress = true },
+
+                    // More variety - East/West express
+                    new() { X = 5, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.East, IsExpress = true },
+                    new() { X = 5, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.West, IsExpress = true },
+                    new() { X = 9, Y = 5, Type = TileType.Conveyor, ConveyorDir = Direction.East, IsExpress = true },
+                    new() { X = 9, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.West, IsExpress = true },
 
                     // Gears
                     new() { X = 10, Y = 4, Type = TileType.Gear },
