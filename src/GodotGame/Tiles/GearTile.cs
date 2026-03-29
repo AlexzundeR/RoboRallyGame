@@ -6,6 +6,7 @@ public partial class GearTile : Tile
 {
     private Polygon2D _gear = null!;
     private Polygon2D _arrow = null!;
+    private Label _directionLabel = null!;
     private bool _isRotating;
     private bool _clockwise;
 
@@ -17,12 +18,30 @@ public partial class GearTile : Tile
         base.OnReady();
         _gear = GetNode<Polygon2D>("Gear");
         _arrow = GetNode<Polygon2D>("Arrow");
+        
+        _directionLabel = new Label
+        {
+            Name = "DirectionLabel",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        _directionLabel.AddThemeFontSizeOverride("font_size", 14);
+        
+        var anchor = new Node2D { Name = "LabelAnchor", Position = new Vector2(24, 24) };
+        anchor.AddChild(_directionLabel);
+        AddChild(anchor);
     }
 
     public void Initialize(Core.Models.Position pos, Core.Models.TileType type, bool clockwise)
     {
         base.Initialize(pos, type);
         _clockwise = clockwise;
+        
+        if (_directionLabel != null)
+        {
+            _directionLabel.Text = clockwise ? "↻" : "↺";
+            _directionLabel.AddThemeColorOverride("font_color", clockwise ? new Color(1f, 0.6f, 0.4f) : new Color(0.6f, 0.8f, 1f));
+        }
     }
 
     public override void StartAnimations()

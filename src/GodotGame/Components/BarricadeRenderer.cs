@@ -8,70 +8,112 @@ using AiTest.Core.Models.Components;
 public partial class BarricadeRenderer : Node2D
 {
     private const float StripeWidth = 6f;
-    private const float StripeCount = 3f;
+    private const int StripeCount = 8;
     
-    private readonly Dictionary<Direction, Polygon2D> _stripes = new();
+    private readonly Dictionary<Direction, List<Polygon2D>> _stripesByDirection = new();
+
+    private static readonly Color Yellow = new(0.9f, 0.7f, 0, 1);
+    private static readonly Color Black = new(0.05f, 0.05f, 0.05f, 1);
 
     public override void _Ready()
     {
-        CreateStripe(Direction.North, new Vector2(24, 0), 48f, false);
-        CreateStripe(Direction.South, new Vector2(24, 48), 48f, false);
-        CreateStripe(Direction.East, new Vector2(48, 24), 48f, true);
-        CreateStripe(Direction.West, new Vector2(0, 24), 48f, true);
+        CreateDiagonalStripes(Direction.North, new Vector2(24, 2), false);
+        CreateDiagonalStripes(Direction.South, new Vector2(24, 46), false);
+        CreateDiagonalStripes(Direction.East, new Vector2(46, 24), true);
+        CreateDiagonalStripes(Direction.West, new Vector2(2, 24), true);
         
-        foreach (var stripe in _stripes.Values)
-            stripe.Hide();
+        HideAll();
     }
 
-    private void CreateStripe(Direction direction, Vector2 position, float length, bool vertical)
+    private void CreateDiagonalStripes(Direction direction, Vector2 center, bool vertical)
     {
-        Vector2[] points;
-        if (vertical)
+        var stripes = new List<Polygon2D>();
+        float totalWidth = StripeCount * StripeWidth;
+        
+        for (int i = 0; i < StripeCount; i++)
         {
-            points = new Vector2[]
+            bool isYellow = i % 2 == 0;
+            
+            Polygon2D stripe;
+            if (vertical)
             {
-                new Vector2(0, -StripeWidth * StripeCount / 2),
-                new Vector2(StripeWidth, -StripeWidth * StripeCount / 2),
-                new Vector2(StripeWidth, StripeWidth * StripeCount / 2),
-                new Vector2(0, StripeWidth * StripeCount / 2)
-            };
-        }
-        else
-        {
-            points = new Vector2[]
+                stripe = CreateVerticalDiagonalStripe(center, totalWidth, i, isYellow);
+            }
+            else
             {
-                new Vector2(-StripeWidth * StripeCount / 2, 0),
-                new Vector2(StripeWidth * StripeCount / 2, 0),
-                new Vector2(StripeWidth * StripeCount / 2, StripeWidth),
-                new Vector2(-StripeWidth * StripeCount / 2, StripeWidth)
-            };
+                stripe = CreateHorizontalDiagonalStripe(center, totalWidth, i, isYellow);
+            }
+            
+            AddChild(stripe);
+            stripes.Add(stripe);
         }
+        
+        _stripesByDirection[direction] = stripes;
+    }
 
-        var stripe = new Polygon2D
+    private Polygon2D CreateVerticalDiagonalStripe(Vector2 center, float totalWidth, int index, bool isYellow)
+    {
+        float startOffset = index * StripeWidth - totalWidth / 2;
+        
+        var points = new Vector2[]
         {
-            Position = position,
-            Polygon = points,
-            Color = new Color(0.9f, 0.7f, 0, 1)
+            new Vector2(startOffset, -8),
+            new Vector2(startOffset + StripeWidth, -8 + StripeWidth),
+            new Vector2(startOffset + StripeWidth, -8 + StripeWidth + 48),
+            new Vector2(startOffset, -8 + 48)
         };
 
-        AddChild(stripe);
-        _stripes[direction] = stripe;
+        return new Polygon2D
+        {
+            Polygon = points,
+            Color = isYellow ? Yellow : Black
+        };
+    }
+
+    private Polygon2D CreateHorizontalDiagonalStripe(Vector2 center, float totalWidth, int index, bool isYellow)
+    {
+        float startOffset = index * StripeWidth - totalWidth / 2;
+        
+        var points = new Vector2[]
+        {
+            new Vector2(-8, startOffset),
+            new Vector2(-8 + StripeWidth, startOffset + StripeWidth),
+            new Vector2(-8 + 48, startOffset + StripeWidth),
+            new Vector2(-8 + 48, startOffset)
+        };
+
+        return new Polygon2D
+        {
+            Polygon = points,
+            Color = isYellow ? Yellow : Black
+        };
+    }
+
+    private void HideAll()
+    {
+        foreach (var stripes in _stripesByDirection.Values)
+        {
+            foreach (var stripe in stripes)
+                stripe.Hide();
+        }
     }
 
     public void RenderBlockages(DirectionSet blockedDirections)
     {
+        HideAll();
+        
         foreach (var direction in blockedDirections.AllDirections())
         {
-            if (_stripes.TryGetValue(direction, out var stripe))
+            if (_stripesByDirection.TryGetValue(direction, out var stripes))
             {
-                stripe.Show();
+                foreach (var stripe in stripes)
+                    stripe.Show();
             }
         }
     }
 
     public void Clear()
     {
-        foreach (var stripe in _stripes.Values)
-            stripe.Hide();
+        HideAll();
     }
 }
