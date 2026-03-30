@@ -5,6 +5,8 @@ using AiTest.Core.Engine;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
+using AiTest.Core.Upgrades.Permanent;
+using AiTest.Core.Upgrades.Temporary;
 
 public class UpgradeSystemTests
 {
@@ -23,27 +25,52 @@ public class UpgradeSystemTests
     }
 
     [Fact]
-    public void UpgradeEffect_ShouldHaveCorrectName()
+    public void UpgradeCatalog_ShouldHaveAll26Upgrades()
     {
-        var upgrade = new StandardUpgrades.DoubleBarrelLaser();
-        
-        Assert.Equal("Double Barrel Laser", upgrade.Name);
+        Assert.Equal(26, UpgradeCatalog.AllUpgrades.Count);
     }
 
     [Fact]
-    public void UpgradeEffect_ShouldHaveCorrectType()
+    public void UpgradeCatalog_ShouldContainDoubleBarrelLaser()
     {
-        var permanent = new StandardUpgrades.DoubleBarrelLaser();
-        var temporary = new StandardUpgrades.Boink();
+        var upgrade = UpgradeCatalog.Get("double_barrel_laser");
         
-        Assert.Equal(UpgradeType.Permanent, permanent.Type);
-        Assert.Equal(UpgradeType.Temporary, temporary.Type);
+        Assert.NotNull(upgrade);
+        Assert.Equal("Double-Barreled Laser", upgrade.Name);
+        Assert.Equal(UpgradeType.Permanent, upgrade.Type);
     }
 
     [Fact]
-    public void UpgradeEffect_ShouldProvideLaserStrategy()
+    public void UpgradeCatalog_ShouldContainRearFiringLaser()
     {
-        var upgrade = new StandardUpgrades.DoubleBarrelLaser();
+        var upgrade = UpgradeCatalog.Get("rear_firing_laser");
+        
+        Assert.NotNull(upgrade);
+        Assert.Equal("Rear-Firing Laser", upgrade.Name);
+    }
+
+    [Fact]
+    public void UpgradeCatalog_ShouldContainMiniHowitzer()
+    {
+        var upgrade = UpgradeCatalog.Get("mini_howitzer");
+        
+        Assert.NotNull(upgrade);
+        Assert.Equal(5, upgrade.MaxUses);
+        Assert.Equal(UpgradeType.Temporary, upgrade.Type);
+    }
+
+    [Fact]
+    public void UpgradeCatalog_GetUnknown_ShouldReturnNull()
+    {
+        var upgrade = UpgradeCatalog.Get("unknown_upgrade");
+        
+        Assert.Null(upgrade);
+    }
+
+    [Fact]
+    public void DoubleBarrelLaser_ShouldHaveLaserStrategy()
+    {
+        var upgrade = new DoubleBarrelLaser();
         
         var strategy = upgrade.GetLaserStrategy();
         
@@ -51,29 +78,139 @@ public class UpgradeSystemTests
     }
 
     [Fact]
-    public void UpgradeEffect_ShouldProvideConveyorStrategy()
+    public void DoubleBarrelLaser_LaserStrategy_ShouldReturn3Directions()
     {
-        var upgrade = new StandardUpgrades.HoverUnit();
+        var upgrade = new DoubleBarrelLaser();
+        var strategy = upgrade.GetLaserStrategy()!;
+        var robot = new Robot(Direction.North);
+        
+        var directions = strategy.GetFireDirections(robot, Direction.North).ToList();
+        
+        Assert.Equal(3, directions.Count);
+        Assert.Contains(Direction.North, directions);
+        Assert.Contains(Direction.West, directions);
+        Assert.Contains(Direction.East, directions);
+    }
+
+    [Fact]
+    public void RearFiringLaser_ShouldHaveLaserStrategy()
+    {
+        var upgrade = new RearFiringLaser();
+        
+        var strategy = upgrade.GetLaserStrategy();
+        
+        Assert.NotNull(strategy);
+        Assert.True(strategy.ShouldFireRearLaser(new Robot()));
+    }
+
+    [Fact]
+    public void GyroscopicStabilizer_ShouldHaveConveyorStrategy()
+    {
+        var upgrade = new GyroscopicStabilizer();
         
         var strategy = upgrade.GetConveyorStrategy();
         
         Assert.NotNull(strategy);
         Assert.True(strategy.ShouldIgnoreConveyors(new Robot()));
-        Assert.True(strategy.ShouldIgnorePits(new Robot()));
     }
 
     [Fact]
-    public void UpgradeContext_ShouldStoreMetadata()
+    public void AblativeCoat_ShouldHaveDamageStrategy()
     {
-        var context = new UpgradeContext
-        {
-            Robot = new Robot { Id = 1 },
-            Metadata = new Dictionary<string, object>()
-        };
+        var upgrade = new AblativeCoat();
         
-        context.Metadata["TestKey"] = "TestValue";
+        var strategy = upgrade.GetDamageStrategy();
         
-        Assert.Equal("TestValue", context.Metadata["TestKey"]);
+        Assert.NotNull(strategy);
+    }
+
+    [Fact]
+    public void AblativeCoat_ShouldHave3Charges()
+    {
+        var upgrade = new AblativeCoat();
+        
+        Assert.Equal(3, upgrade.RemainingCharges);
+    }
+
+    [Fact]
+    public void RammingGear_ShouldAddCollisionDamage()
+    {
+        var upgrade = new RammingGear();
+        var strategy = upgrade.GetDamageStrategy()!;
+        var robot = new Robot();
+        
+        var collisionDamage = strategy.GetCollisionDamage(robot);
+        
+        Assert.Equal(1, collisionDamage);
+    }
+
+    [Fact]
+    public void Brakes_ShouldHaveMovementStrategy()
+    {
+        var upgrade = new Brakes();
+        
+        var strategy = upgrade.GetMovementStrategy();
+        
+        Assert.NotNull(strategy);
+        Assert.True(strategy.ShouldStopAtObstacle(new Robot()));
+    }
+
+    [Fact]
+    public void TemporaryUpgrades_ShouldHaveCorrectTypes()
+    {
+        Assert.Equal(UpgradeType.Temporary, new AbortSwitch().Type);
+        Assert.Equal(UpgradeType.Temporary, new ConditionalProgram().Type);
+        Assert.Equal(UpgradeType.Temporary, new Flywheel().Type);
+        Assert.Equal(UpgradeType.Temporary, new MiniHowitzer().Type);
+        Assert.Equal(UpgradeType.Temporary, new Recompile().Type);
+    }
+
+    [Fact]
+    public void PermanentUpgrades_ShouldHaveCorrectTypes()
+    {
+        Assert.Equal(UpgradeType.Permanent, new DoubleBarrelLaser().Type);
+        Assert.Equal(UpgradeType.Permanent, new RearFiringLaser().Type);
+        Assert.Equal(UpgradeType.Permanent, new Brakes().Type);
+    }
+
+    [Fact]
+    public void MiniHowitzer_ShouldHave5Uses()
+    {
+        var upgrade = new MiniHowitzer();
+        
+        Assert.Equal(5, upgrade.UsesRemaining);
+    }
+
+    [Fact]
+    public void Recompile_ShouldHave1Use()
+    {
+        var upgrade = new Recompile();
+        
+        Assert.Equal(1, upgrade.UsesRemaining);
+    }
+
+    [Fact]
+    public void Flywheel_ShouldAllowSavingCard()
+    {
+        var upgrade = new Flywheel();
+        var card = new MoveCard { Priority = 1, Spaces = 1 };
+        
+        upgrade.SavedCard = card;
+        
+        Assert.NotNull(upgrade.SavedCard);
+        Assert.Equal(card.Priority, upgrade.SavedCard.Priority);
+    }
+
+    [Fact]
+    public void ConditionalProgram_ShouldAllowSavingCard()
+    {
+        var upgrade = new ConditionalProgram();
+        var card = new MoveCard { Priority = 2, Spaces = 2 };
+        
+        upgrade.SavedCard = card;
+        
+        Assert.NotNull(upgrade.SavedCard);
+        Assert.Equal(1, upgrade.UsesRemaining);
     }
 
     [Fact]
@@ -91,8 +228,8 @@ public class UpgradeSystemTests
     public void Player_AddUpgrade_ShouldAddToCorrectList()
     {
         var player = new Player();
-        var permanent = new StandardUpgrades.DoubleBarrelLaser();
-        var temporary = new StandardUpgrades.Boink();
+        var permanent = new DoubleBarrelLaser();
+        var temporary = new Recompile();
         
         player.AddUpgrade(permanent);
         player.AddUpgrade(temporary);
@@ -105,7 +242,7 @@ public class UpgradeSystemTests
     public void Player_RemoveUpgrade_ShouldRemoveFromCorrectList()
     {
         var player = new Player();
-        var permanent = new StandardUpgrades.DoubleBarrelLaser();
+        var permanent = new DoubleBarrelLaser();
         
         player.AddUpgrade(permanent);
         player.RemoveUpgrade(permanent);
@@ -117,8 +254,8 @@ public class UpgradeSystemTests
     public void Player_ClearTemporaryUpgrades_ShouldRemoveOnlyTemporary()
     {
         var player = new Player();
-        var permanent = new StandardUpgrades.DoubleBarrelLaser();
-        var temporary = new StandardUpgrades.Boink();
+        var permanent = new DoubleBarrelLaser();
+        var temporary = new Recompile();
         
         player.AddUpgrade(permanent);
         player.AddUpgrade(temporary);
@@ -132,8 +269,8 @@ public class UpgradeSystemTests
     public void Player_AllUpgrades_ShouldCombineBothLists()
     {
         var player = new Player();
-        var permanent = new StandardUpgrades.DoubleBarrelLaser();
-        var temporary = new StandardUpgrades.Boink();
+        var permanent = new DoubleBarrelLaser();
+        var temporary = new Recompile();
         
         player.AddUpgrade(permanent);
         player.AddUpgrade(temporary);
@@ -144,89 +281,34 @@ public class UpgradeSystemTests
     }
 
     [Fact]
-    public void UpgradeRegistry_ShouldRegisterAndCreate()
+    public void UpgradeEffects_RegisterAll_ShouldRegisterAll26Upgrades()
     {
-        StandardUpgrades.RegisterAll();
+        UpgradeEffects.RegisterAll();
         
-        var upgrade = UpgradeRegistry.Create("Double Barrel Laser");
+        Assert.Equal(26, UpgradeRegistry.All.Count);
+    }
+
+    [Fact]
+    public void UpgradeRegistry_Create_ShouldReturnCorrectType()
+    {
+        UpgradeEffects.RegisterAll();
+        
+        var upgrade = UpgradeRegistry.Create("double_barrel_laser");
         
         Assert.NotNull(upgrade);
-        Assert.IsType<StandardUpgrades.DoubleBarrelLaser>(upgrade);
+        Assert.IsType<DoubleBarrelLaser>(upgrade);
     }
 
     [Fact]
-    public void UpgradeRegistry_ShouldReturnNullForUnknown()
+    public void UpgradeRegistry_CreateFromDefinition_ShouldWork()
     {
-        var upgrade = UpgradeRegistry.Create("Unknown Upgrade");
+        UpgradeEffects.RegisterAll();
+        var definition = UpgradeCatalog.DoubleBarrelLaser;
         
-        Assert.Null(upgrade);
-    }
-
-    [Fact]
-    public void DoubleBarrelLaser_ShouldProvideLaserStrategy()
-    {
-        var upgrade = new StandardUpgrades.DoubleBarrelLaser();
-        var strategy = upgrade.GetLaserStrategy();
-        var robot = new Robot(Direction.North);
+        var effect = UpgradeCatalog.CreateEffect(definition);
         
-        var directions = strategy.GetFireDirections(robot, Direction.North).ToList();
-        
-        Assert.Contains(Direction.North, directions);
-        Assert.Contains(Direction.West, directions);
-        Assert.Contains(Direction.East, directions);
-    }
-
-    [Fact]
-    public void HoverUnit_ShouldProvideConveyorStrategy()
-    {
-        var upgrade = new StandardUpgrades.HoverUnit();
-        var strategy = upgrade.GetConveyorStrategy();
-        var robot = new Robot();
-        
-        Assert.True(strategy.ShouldIgnoreConveyors(robot));
-        Assert.True(strategy.ShouldIgnorePits(robot));
-    }
-
-    [Fact]
-    public void Spiky_ShouldProvideDamageStrategy()
-    {
-        var upgrade = new StandardUpgrades.Spiky();
-        var strategy = upgrade.GetDamageStrategy();
-        var robot = new Robot();
-        
-        Assert.Equal(1, strategy.GetCollisionDamage(robot));
-    }
-
-    [Fact]
-    public void Boink_ShouldProvideDamageStrategy()
-    {
-        var upgrade = new StandardUpgrades.Boink();
-        var strategy = upgrade.GetDamageStrategy();
-        var robot = new Robot();
-        
-        var canBounce = strategy.CanBounceBack(robot, out var distance);
-        
-        Assert.True(canBounce);
-        Assert.Equal(2, distance);
-    }
-
-    [Fact]
-    public void AllStandardUpgrades_ShouldBeRegistered()
-    {
-        StandardUpgrades.RegisterAll();
-        
-        var upgradeNames = new[] 
-        { 
-            "Double Barrel Laser", "Rear Laser", "Hover Unit", 
-            "Power Slide", "Drifting", "Spiky", "Deflector Shield",
-            "Brakes", "Boink", "Overclocked" 
-        };
-        
-        foreach (var name in upgradeNames)
-        {
-            var upgrade = UpgradeRegistry.Create(name);
-            Assert.NotNull(upgrade);
-        }
+        Assert.NotNull(effect);
+        Assert.IsType<DoubleBarrelLaser>(effect);
     }
 
     [Fact]
@@ -234,8 +316,8 @@ public class UpgradeSystemTests
     {
         var strategies = new List<ILaserStrategy>
         {
-            new StandardUpgrades.DoubleBarrelLaser().GetLaserStrategy()!,
-            new StandardUpgrades.RearLaser().GetLaserStrategy()!
+            new DoubleBarrelLaser().GetLaserStrategy()!,
+            new RearFiringLaser().GetLaserStrategy()!
         };
         
         var composite = new CompositeLaserStrategy(strategies);
@@ -244,7 +326,7 @@ public class UpgradeSystemTests
         var directions = composite.GetFireDirections(robot, Direction.North).ToList();
         var fireRear = composite.ShouldFireRearLaser(robot);
         
-        Assert.True(directions.Count >= 3);
+        Assert.True(directions.Count >= 4);
         Assert.True(fireRear);
     }
 
@@ -253,31 +335,27 @@ public class UpgradeSystemTests
     {
         var strategies = new List<IConveyorStrategy>
         {
-            new StandardUpgrades.HoverUnit().GetConveyorStrategy()!
+            new GyroscopicStabilizer().GetConveyorStrategy()!
         };
         
         var composite = new CompositeConveyorStrategy(strategies);
         var robot = new Robot();
         
         Assert.True(composite.ShouldIgnoreConveyors(robot));
-        Assert.True(composite.ShouldIgnorePits(robot));
     }
 
     [Fact]
-    public void PowerSlide_PlayerWithUpgrade_MovesExtraSpace()
+    public void UpgradeContext_ShouldStoreMetadata()
     {
-        var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
-        var player = CreateWithHand(moveCard);
-        player.Robot.SetPosition(new Position(2, 2));
-        player.Robot.SetDirection(Direction.East);
-        player.AssignCardToRegister(0, 0);
-        player.AddUpgrade(new StandardUpgrades.PowerSlide());
+        var context = new UpgradeContext
+        {
+            Robot = new Robot { Id = 1 },
+            Metadata = new Dictionary<string, object>()
+        };
         
-        var engine = CreateEngine(new GameState(new List<Player> { player }));
+        context.Metadata["TestKey"] = "TestValue";
         
-        ExecuteRegister(engine, 0);
-        
-        Assert.Equal(new Position(4, 2), player.Robot.Position);
+        Assert.Equal("TestValue", context.Metadata["TestKey"]);
     }
 
     [Fact]
@@ -288,7 +366,7 @@ public class UpgradeSystemTests
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
         player.AssignCardToRegister(0, 0);
-        player.AddUpgrade(new StandardUpgrades.Brakes());
+        player.AddUpgrade(new Brakes());
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(4, 2, TileFactory.Wall());
@@ -299,14 +377,14 @@ public class UpgradeSystemTests
     }
 
     [Fact]
-    public void HoverUnit_PlayerWithUpgrade_IgnoresConveyor()
+    public void GyroscopicStabilizer_PlayerWithUpgrade_IgnoresConveyor()
     {
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
         var player = CreateWithHand(moveCard);
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
         player.AssignCardToRegister(0, 0);
-        player.AddUpgrade(new StandardUpgrades.HoverUnit());
+        player.AddUpgrade(new GyroscopicStabilizer());
         
         var engine = CreateEngine(new GameState(new List<Player> { player }));
         engine.State.Map.SetTile(3, 2, TileFactory.Conveyor(ConveyorDirection.East));
@@ -317,42 +395,13 @@ public class UpgradeSystemTests
     }
 
     [Fact]
-    public void HoverUnit_PlayerWithUpgrade_IgnoresPit()
+    public void All26Upgrades_ShouldHaveDescriptions()
     {
-        var player = new Player();
-        player.Robot.SetPosition(new Position(3, 2));
-        player.Robot.SetDirection(Direction.East);
-        player.AddUpgrade(new StandardUpgrades.HoverUnit());
-        
-        var engine = CreateEngine(new GameState(new List<Player> { player }));
-        engine.State.Map.SetTile(3, 2, TileFactory.Pit());
-        
-        ExecuteRegister(engine, 0);
-        
-        Assert.Equal(RobotStatus.Active, player.Robot.Status);
-    }
-
-    [Fact]
-    public void DeflectorShield_PlayerWithUpgrade_ProvidesDeflect()
-    {
-        var upgrade = new StandardUpgrades.DeflectorShield();
-        var strategy = upgrade.GetDamageStrategy()!;
-        var robot = new Robot();
-        
-        var damage = strategy.CalculateDamage(robot, 2);
-        
-        Assert.Equal(1, damage);
-        Assert.True(strategy.CanDeflect(robot));
-    }
-
-    [Fact]
-    public void Overclocked_PlayerWithUpgrade_ProvidesCardExecutionStrategy()
-    {
-        var upgrade = new StandardUpgrades.Overclocked();
-        var strategy = upgrade.GetCardExecutionStrategy()!;
-        var robot = new Robot();
-        
-        Assert.True(strategy.ShouldRepeatLastRegister(robot));
+        foreach (var upgrade in UpgradeCatalog.AllUpgrades)
+        {
+            Assert.False(string.IsNullOrEmpty(upgrade.Description), 
+                $"Upgrade {upgrade.Id} should have a description");
+        }
     }
 
     private static GameEngine CreateEngine(GameState state)
