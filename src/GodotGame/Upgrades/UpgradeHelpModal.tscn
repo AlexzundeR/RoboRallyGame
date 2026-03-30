@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://upgrade_help_modal_scene"]
+
+[ext_resource type="Script" uid="uid://upgrade_help_modal_script" path="res://Upgrades/UpgradeHelpModal.cs" id="1"]
+
+[node name="UpgradeHelpModal" type="PanelContainer"]
+visible = false
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBox/Header"]
+layout_mode = 2
+text = "Upgrade Help"
+
+[node name="CloseButton" type="Button" parent="VBox/Header"]
+layout_mode = 2
+text = "X"
+
+[node name="FilterContainer" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="AllButton" type="Button" parent="VBox/FilterContainer"]
+layout_mode = 2
+text = "All"
+
+[node name="PermanentButton" type="Button" parent="VBox/FilterContainer"]
+layout_mode = 2
+text = "Permanent"
+
+[node name="TemporaryButton" type="Button" parent="VBox/FilterContainer"]
+layout_mode = 2
+text = "Temporary"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="UpgradesList" type="VBoxContainer" parent="VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://upgrade_card_scene"]
+
+[ext_resource type="Script" uid="uid://upgrade_card_script" path="res://Upgrades/UpgradeCard.cs" id="1"]
+
+[node name="UpgradeCard" type="PanelContainer"]
+custom_minimum_size = Vector2(60, 80)
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "⚡"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Upgrade"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Charges" type="Label" parent="VBox"]
+layout_mode = 2
+text = "∞"
+horizontal_alignment = 1

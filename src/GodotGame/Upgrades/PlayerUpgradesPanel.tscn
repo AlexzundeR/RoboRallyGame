@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://player_upgrades_panel_scene"]
+
+[ext_resource type="Script" uid="uid://player_upgrades_panel_script" path="res://Upgrades/PlayerUpgradesPanel.cs" id="1"]
+[ext_resource type="PackedScene" uid="uid://upgrade_card_scene" path="res://Upgrades/UpgradeCard.tscn" id="2"]
+
+[node name="PlayerUpgradesPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(300, 100)
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBox/Header"]
+layout_mode = 2
+text = "Upgrades"
+
+[node name="Spacer" type="Control" parent="VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HelpButton" type="Button" parent="VBox/Header"]
+layout_mode = 2
+text = "?"
+
+[node name="PermanentSection" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="SectionHeader" type="HBoxContainer" parent="VBox/PermanentSection"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/PermanentSection/SectionHeader"]
+layout_mode = 2
+text = "Permanent"
+
+[node name="Count" type="Label" parent="VBox/PermanentSection/SectionHeader"]
+layout_mode = 2
+text = "(0)"
+
+[node name="CardsScroll" type="ScrollContainer" parent="VBox/PermanentSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="CardsContainer" type="HBoxContainer" parent="VBox/PermanentSection/CardsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TemporarySection" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="SectionHeader" type="HBoxContainer" parent="VBox/TemporarySection"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/TemporarySection/SectionHeader"]
+layout_mode = 2
+text = "Temporary"
+
+[node name="Count" type="Label" parent="VBox/TemporarySection/SectionHeader"]
+layout_mode = 2
+text = "(0)"
+
+[node name="CardsScroll" type="ScrollContainer" parent="VBox/TemporarySection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="CardsContainer" type="HBoxContainer" parent="VBox/TemporarySection/CardsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AttachedSection" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="SectionHeader" type="HBoxContainer" parent="VBox/AttachedSection"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/AttachedSection/SectionHeader"]
+layout_mode = 2
+text = "Attached to Registers"
+
+[node name="Count" type="Label" parent="VBox/AttachedSection/SectionHeader"]
+layout_mode = 2
+text = "(0)"
+
+[node name="RegistersGrid" type="HBoxContainer" parent="VBox/AttachedSection"]
+layout_mode = 2
