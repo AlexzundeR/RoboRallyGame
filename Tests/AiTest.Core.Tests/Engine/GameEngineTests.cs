@@ -3,6 +3,7 @@ namespace AiTest.Core.Tests.Engine;
 using AiTest.Core.Cards;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
+using AiTest.Core.Messages;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
 
@@ -50,19 +51,19 @@ public class GameEngineTests
     private GameEngine CreateEngine(GameState state)
     {
         var engine = new GameEngine(new RandomDealer(), state);
+        engine.Initialize(state.Map);
+        return engine;
+    }
+    
+    private GameEngine CreateEngine()
+    {
         var map = new GameMap(10, 10);
         map.SetTile(1, 1, TileFactory.Start());
         map.SetTile(8, 1, TileFactory.Start());
         map.SetTile(1, 8, TileFactory.Start());
         map.SetTile(8, 8, TileFactory.Start());
         map.SetTile(5, 5, TileFactory.Checkpoint(1));
-        engine.Initialize(map);
-        return engine;
-    }
-    
-    private GameEngine CreateEngine()
-    {
-        return CreateEngine(new GameState());
+        return CreateEngine(new GameState(new List<Player>(), map));
     }
 
     private GameEngine CreateEngineWithPlayers(int playerCount)
@@ -325,7 +326,11 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
         
-        var engine = CreateEngine(new GameState(new List<Player> { player }));
+        var map = new GameMap(10, 10);
+        map.SetTile(1, 1, TileFactory.Start());
+        map.SetTile(2, 2, TileFactory.Floor());
+        map.SetTile(5, 5, TileFactory.Checkpoint(1));
+        var engine = CreateEngine(new GameState(new List<Player> { player }, map));
         
         ExecuteFullRegister(engine);
         
@@ -562,6 +567,91 @@ public class GameEngineTests
         Assert.Equal(0, robot.Damage);
     }
 
+    [Fact]
+    public void ExpressConveyor_ShouldMoveRobot2Tiles()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(4, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(5, 3, TileFactory.Floor());
+        
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(new Position(5, 3), player.Robot.Position);
+    }
+
+    [Fact]
+    public void ExpressConveyor_TargetOnAnotherConveyor_ShouldContinueMoving()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(4, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(5, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.North, express: false));
+        
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(new Position(5, 2), player.Robot.Position);
+    }
+
+    [Fact]
+    public void ExpressConveyor_BlockedByWall_ShouldStopBeforeWall()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(4, 3, TileFactory.Floor());
+        map.SetTile(5, 3, TileFactory.Wall());
+        
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(new Position(4, 3), player.Robot.Position);
+    }
+
+    [Fact]
+    public void ConveyorMove_ShouldFireConveyorMoveEvent()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: false));
+        map.SetTile(4, 3, TileFactory.Floor());
+        
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        ConveyorMoveEvent? capturedEvent = null;
+        engine.OnConveyorMove += e => capturedEvent = e;
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.NotNull(capturedEvent);
+        Assert.Equal(1, capturedEvent!.PlayerId);
+        Assert.Equal(new Position(3, 3), capturedEvent.From);
+        Assert.Equal(new Position(4, 3), capturedEvent.To);
+    }
+    
     private static List<ProgramCard> CreateDefaultDeck()
     {
         var deck = new List<ProgramCard>();

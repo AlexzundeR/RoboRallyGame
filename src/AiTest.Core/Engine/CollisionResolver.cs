@@ -15,9 +15,9 @@ public enum CollisionResult
 public sealed class MoveIntent
 {
     public required Robot Robot { get; init; }
-    public Position From { get; init; }
-    public Position To { get; init; }
-    public Direction Direction { get; init; }
+    public required Position From { get; init; }
+    public required Position To { get; init; }
+    public required Direction Direction { get; init; }
     public int Priority { get; init; }
     public int RegisterIndex { get; init; }
     public MoveType Type { get; init; }
@@ -31,14 +31,19 @@ public enum MoveType
     Conveyor
 }
 
+public sealed record RobotMovement(int RobotId, Position From, Position To, CollisionResult Result);
+
+public sealed record CollisionResolutionResult(IReadOnlyList<RobotMovement> Movements);
+
 public sealed class CollisionResolver
 {
     public List<MoveIntent> Intents { get; } = new();
     
     public void AddIntent(MoveIntent intent) => Intents.Add(intent);
     
-    public void Resolve(GameMap map, IReadOnlyList<Robot> robots)
+    public CollisionResolutionResult Resolve(GameMap map, IReadOnlyList<Robot> robots)
     {
+        var movements = new List<RobotMovement>();
         var resolvedPositions = new Dictionary<int, Position>();
         var robotsById = robots.ToDictionary(r => r.Id);
         
@@ -49,9 +54,14 @@ public sealed class CollisionResolver
             
             var result = TryMove(intent, map, robotsById, resolvedPositions);
             
-            if (result != CollisionResult.Blocked)
+            if (result.Result != CollisionResult.Blocked)
+            {
                 resolvedPositions[intent.Robot.Id] = intent.Robot.Position;
+                movements.Add(result);
+            }
         }
+        
+        return new CollisionResolutionResult(movements);
     }
     
     private static bool CanPassThrough(Position from, Position to, Direction dir, GameMap map)
@@ -64,7 +74,7 @@ public sealed class CollisionResolver
         return toTile.CanEnterFrom(dir) && fromTile.CanExitTo(dir);
     }
     
-    private CollisionResult TryMove(MoveIntent intent, GameMap map, Dictionary<int, Robot> robotsById, Dictionary<int, Position> resolvedPositions)
+    private RobotMovement TryMove(MoveIntent intent, GameMap map, Dictionary<int, Robot> robotsById, Dictionary<int, Position> resolvedPositions)
     {
         var from = intent.From;
         var to = intent.To;
@@ -73,46 +83,48 @@ public sealed class CollisionResolver
         
         for (int i = 1; i <= steps; i++)
         {
-            var stepPos = from.Move(dir);
+            var currentPos = from;
+            var nextPos = from.Move(dir);
             
-            if (!CanPassThrough(from, stepPos, dir, map))
-                return CollisionResult.Blocked;
+            if (!CanPassThrough(currentPos, nextPos, dir, map))
+                return new RobotMovement(intent.Robot.Id, intent.From, from, CollisionResult.Blocked);
             
-            var tile = map.GetTile(stepPos);
+            var tile = map.GetTile(nextPos);
             var touchResult = tile.GetComponent<ITileBehaviorComponent>()?.ApplyOnTouch(intent.Robot, map);
             
             if (touchResult == TileActionResult.ReadyToFall)
             {
-                intent.Robot.SetPosition(stepPos);
-                return CollisionResult.Success;
+                intent.Robot.SetPosition(nextPos);
+                return new RobotMovement(intent.Robot.Id, intent.From, nextPos, CollisionResult.Success);
             }
             
-            if (resolvedPositions.ContainsValue(stepPos))
-                return CollisionResult.Blocked;
+            if (resolvedPositions.ContainsValue(nextPos))
+                return new RobotMovement(intent.Robot.Id, intent.From, from, CollisionResult.Blocked);
             
             var robotOnTile = robotsById.Values.FirstOrDefault(r => 
                 r.Id != intent.Robot.Id && 
-                r.Position == stepPos &&
+                r.Position == nextPos &&
                 r.IsAlive &&
                 !resolvedPositions.ContainsKey(r.Id));
             
             if (robotOnTile != null)
             {
-                if (i < steps) return CollisionResult.Blocked;
+                if (i < steps)
+                    return new RobotMovement(intent.Robot.Id, intent.From, from, CollisionResult.Blocked);
                 
-                var pushTarget = stepPos.Move(dir);
-                if (!CanPassThrough(stepPos, pushTarget, dir, map))
-                    return CollisionResult.Blocked;
+                var pushTarget = nextPos.Move(dir);
+                if (!CanPassThrough(nextPos, pushTarget, dir, map))
+                    return new RobotMovement(intent.Robot.Id, intent.From, from, CollisionResult.Blocked);
                     
                 robotOnTile.SetPosition(pushTarget);
-                intent.Robot.SetPosition(stepPos);
-                return CollisionResult.Pushed;
+                intent.Robot.SetPosition(nextPos);
+                return new RobotMovement(intent.Robot.Id, intent.From, nextPos, CollisionResult.Pushed);
             }
             
-            from = stepPos;
+            from = nextPos;
         }
         
         intent.Robot.SetPosition(to);
-        return CollisionResult.Success;
+        return new RobotMovement(intent.Robot.Id, intent.From, to, CollisionResult.Success);
     }
 }

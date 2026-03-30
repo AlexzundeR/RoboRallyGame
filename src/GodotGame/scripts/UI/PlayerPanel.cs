@@ -168,7 +168,7 @@ public partial class PlayerPanel : PanelContainer
 		{
 			MoveCard m => $"M{m.Spaces}",
 			TurnCard t => t.IsLeft ? "↺" : "↻",
-			UTurnCard => "⟲",
+					UTurnCard => "⤵",
 			BackUpCard => "⬇",
 			_ => "?"
 		};

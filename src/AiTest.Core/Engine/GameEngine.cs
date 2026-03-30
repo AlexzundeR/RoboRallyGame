@@ -581,7 +581,12 @@ public sealed class GameEngine : IGameEngine
         foreach (var intent in conveyorIntents)
             resolver.AddIntent(intent);
         
-        resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
+        var result = resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
+        
+        foreach (var movement in result.Movements)
+        {
+            OnConveyorMove?.Invoke(new ConveyorMoveEvent(movement.RobotId, movement.From, movement.To));
+        }
         
         foreach (var player in State.Players)
         {
@@ -589,9 +594,9 @@ public sealed class GameEngine : IGameEngine
                 continue;
 
             var tile = State.Map.GetTile(player.Robot.Position);
-            var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
+            var postResult = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
             
-            switch (result)
+            switch (postResult)
             {
                 case TileActionResult.CheckpointReached:
                     OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
