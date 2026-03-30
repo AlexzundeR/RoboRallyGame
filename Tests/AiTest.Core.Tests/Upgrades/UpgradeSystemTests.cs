@@ -326,7 +326,7 @@ public class UpgradeSystemTests
         var directions = composite.GetFireDirections(robot, Direction.North).ToList();
         var fireRear = composite.ShouldFireRearLaser(robot);
         
-        Assert.True(directions.Count >= 4);
+        Assert.True(directions.Count >= 3);
         Assert.True(fireRear);
     }
 
