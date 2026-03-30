@@ -131,10 +131,10 @@ public static class GameMapConfigs
                     new() { X = 9, Y = 9, Type = TileType.Conveyor, ConveyorDir = Direction.West, IsExpress = true },
 
                     // Gears
-                    new() { X = 10, Y = 4, Type = TileType.Gear },
-                    new() { X = 10, Y = 5, Type = TileType.Gear },
-                    new() { X = 4, Y = 9, Type = TileType.Gear },
-                    new() { X = 4, Y = 10, Type = TileType.Gear },
+                    new() { X = 10, Y = 4, Type = TileType.Gear, IsClockwise = true },
+                    new() { X = 10, Y = 5, Type = TileType.Gear, IsClockwise = false },
+                    new() { X = 4, Y = 9, Type = TileType.Gear, IsClockwise = false },
+                    new() { X = 4, Y = 10, Type = TileType.Gear, IsClockwise = true },
 
                     // Lasers (horizontal: West/East, vertical: North/South)
                     new() { X = 2, Y = 5, Type = TileType.Laser, LaserDirection = Direction.West },

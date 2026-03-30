@@ -7,6 +7,7 @@ using AiTest.Core.Models;
 public class RotateAnimation : Animation
 {
 	public Robot Robot { get; init; } = null!;
+	public Direction From { get; init; }
 	public Direction To { get; init; }
 	public float Duration { get; init; } = 0.4f;
 
@@ -20,21 +21,19 @@ public class RotateAnimation : Animation
 			tcs.SetResult(false);
 			return tcs.Task;
 		}
-		GD.Print($"Anime {Duration}");
+		
 		tween.SetTrans(Tween.TransitionType.Sine);
 		tween.SetEase(Tween.EaseType.InOut);
-		tween.TweenProperty(Robot, "rotation_degrees", DirectionToAngle(To), Duration);
-		tween.Finished += () =>
-		{
-		  GD.Print($"Anime finished {Duration}");  
-		  tcs.SetResult(true);
-		};  
+		
+		var targetAngle = CalculateShortestAngle(From, To);
+		tween.TweenProperty(Robot, "rotation_degrees", targetAngle, Duration);
+		tween.Finished += () => tcs.SetResult(true);
 		tween.Play();
 		
 		return tcs.Task;
 	}
 
-	private float DirectionToAngle(Direction dir) => dir switch
+	private static float DirectionToAngle(Direction dir) => dir switch
 	{
 		Direction.North => 0f,
 		Direction.East => 90f,
@@ -42,4 +41,16 @@ public class RotateAnimation : Animation
 		Direction.West => 270f,
 		_ => 0f
 	};
+
+	private static float CalculateShortestAngle(Direction from, Direction to)
+	{
+		var fromAngle = DirectionToAngle(from);
+		var toAngle = DirectionToAngle(to);
+		var diff = toAngle - fromAngle;
+		
+		if (diff > 180) diff -= 360;
+		if (diff < -180) diff += 360;
+		
+		return fromAngle + diff;
+	}
 }

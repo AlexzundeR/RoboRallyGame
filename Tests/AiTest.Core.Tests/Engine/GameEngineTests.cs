@@ -651,6 +651,66 @@ public class GameEngineTests
         Assert.Equal(new Position(3, 3), capturedEvent.From);
         Assert.Equal(new Position(4, 3), capturedEvent.To);
     }
+
+    [Fact]
+    public void Gear_RobotOnClockwiseGear_ShouldRotateRight()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        player.Robot.SetDirection(Direction.North);
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Gear(clockwise: true));
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(Direction.East, player.Robot.Direction);
+    }
+
+    [Fact]
+    public void Gear_RobotOnCounterClockwiseGear_ShouldRotateLeft()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        player.Robot.SetDirection(Direction.North);
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Gear(clockwise: false));
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.Equal(Direction.West, player.Robot.Direction);
+    }
+
+    [Fact]
+    public void Gear_ShouldFireRotateEvent()
+    {
+        var player = new Player { Robot = new Robot { Id = 1 } };
+        player.Robot.SetPosition(new Position(3, 3));
+        player.Robot.SetDirection(Direction.North);
+        
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Gear(clockwise: true));
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        RotateEvent? capturedEvent = null;
+        engine.OnRotate += e => capturedEvent = e;
+        
+        engine.BeginRegisterExecution(0);
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+        
+        Assert.NotNull(capturedEvent);
+        Assert.Equal(1, capturedEvent!.PlayerId);
+        Assert.Equal(Direction.North, capturedEvent.From);
+        Assert.Equal(Direction.East, capturedEvent.To);
+    }
     
     private static List<ProgramCard> CreateDefaultDeck()
     {

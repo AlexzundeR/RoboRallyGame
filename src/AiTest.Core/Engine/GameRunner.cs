@@ -97,9 +97,9 @@ public class GameRunner
             return tile;
         }
 
-        if (type == TileType.Gear && placement.IsClockwise.HasValue)
+        if (type == TileType.Gear)
         {
-            return Core.Models.TileFactory.Gear(placement.IsClockwise.Value);
+            return Core.Models.TileFactory.Gear(placement.IsClockwise ?? true);
         }
 
         if (type == TileType.Laser && placement.LaserDirection.HasValue)

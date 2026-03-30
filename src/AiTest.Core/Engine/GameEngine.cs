@@ -251,11 +251,14 @@ public sealed class GameEngine : IGameEngine
 
         if (_currentStep < movementSteps)
         {
+            if (_currentStep == 0)
+                OnMovementPhaseStarted?.Invoke(new MovementPhaseStartedEvent(_currentRegister));
             ExecuteCards(_currentRegister);
             _currentStep = movementSteps;
         }
         else if (_currentStep == movementSteps && !_conveyorExecuted)
         {
+            OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(_currentRegister));
             ApplyNonConveyorEffects();
             ProcessConveyorPhase();
             CheckGameOver();
@@ -264,6 +267,7 @@ public sealed class GameEngine : IGameEngine
         }
         else if (_currentStep > movementSteps && !_laserExecuted)
         {
+            OnLaserPhaseStarted?.Invoke(new LaserPhaseStartedEvent(_currentRegister));
             FireLasers();
             _laserExecuted = true;
             _currentStep++;
@@ -518,6 +522,7 @@ public sealed class GameEngine : IGameEngine
     {
         var damageBefore = CaptureDamageStates();
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
+        var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
         
         foreach (var player in State.Players)
         {
@@ -542,6 +547,17 @@ public sealed class GameEngine : IGameEngine
                     OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
                     OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
                     break;
+            }
+        }
+        
+        foreach (var player in State.Players)
+        {
+            if (!player.Robot.IsAlive)
+                continue;
+            
+            if (directionsBefore.TryGetValue(player.Robot.Id, out var beforeDir) && beforeDir != player.Robot.Direction)
+            {
+                OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
             }
         }
         
@@ -576,6 +592,7 @@ public sealed class GameEngine : IGameEngine
         
         var damageBefore = CaptureDamageStates();
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
+        var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
         
         var resolver = new CollisionResolver();
         foreach (var intent in conveyorIntents)
@@ -607,6 +624,17 @@ public sealed class GameEngine : IGameEngine
                     OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
                     OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
                     break;
+            }
+        }
+        
+        foreach (var player in State.Players)
+        {
+            if (!player.Robot.IsAlive)
+                continue;
+            
+            if (directionsBefore.TryGetValue(player.Robot.Id, out var beforeDir) && beforeDir != player.Robot.Direction)
+            {
+                OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
             }
         }
         
