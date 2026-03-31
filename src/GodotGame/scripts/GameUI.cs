@@ -2,68 +2,65 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using AiTest.Core.Entities;
+using AiTest.Godot.UI;
 
 namespace AiTest.Godot;
 
 public partial class GameUI : CanvasLayer
 {
-	private Label _roundLabel;
-	private Label _phaseLabel;
-	private Label _priorityLabel;
-	private Label _registerLabel;
-	private Label _actionPrompt;
-	private Label _helpLabel;
-	private Button _infoButton;
-	private Button _closeButton;
-	private PanelContainer _statusModal;
-	private PanelContainer _winModal;
-	private Label _winLabel;
-
-	private HBoxContainer _playerPanelsContainer;
-	private readonly List<PlayerPanel> _playerPanels = new();
-
-	private bool _modalVisible = false;
+	[Signal] public delegate void GiveUpgradeEventHandler();
+	[Signal] public delegate void GiveDamageEventHandler();
 
 	public PackedScene PlayerPanelScene { get; set; }
 
-	public string PriorityText
-	{
-		set
-		{
-			if (!IsInsideTree()) return;
-			_priorityLabel.Text = value;
-		}
-	}
+	private TopPanel _topPanel = null!;
+	private ActionLog _actionLog = null!;
+	private DebugMenu _debugMenu = null!;
+	private PlayerStatusModal _playerStatusModal = null!;
+	private InfoModal _infoModal = null!;
+	private WinModal _winModal = null!;
+
+	private HBoxContainer _playerPanelsContainer = null!;
+	private readonly List<PlayerPanel> _playerPanels = new();
+	private List<Player> _allPlayers = new();
 
 	public override void _Ready()
 	{
-		_roundLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/RoundLabel");
-		_phaseLabel = GetNode<Label>("TopPanel/HBox/LeftPanel/PhaseLabel");
-		_priorityLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/PriorityLabel");
-		_registerLabel = GetNode<Label>("TopPanel/HBox/MiddlePanel/RegisterLabel");
-		_actionPrompt = GetNode<Label>("TopPanel/HBox/MiddlePanel/ActionPrompt");
-		_helpLabel = GetNode<Label>("TopPanel/HBox/RightPanel/HelpLabel");
-		_infoButton = GetNode<Button>("TopPanel/HBox/InfoButton");
-		_closeButton = GetNode<Button>("StatusModal/VBox/CloseButton");
-		_statusModal = GetNode<PanelContainer>("StatusModal");
-		_winModal = GetNodeOrNull<PanelContainer>("WinModal");
-		_winLabel = GetNodeOrNull<Label>("WinModal/VBox/WinLabel");
-		_playerPanelsContainer = GetNode<HBoxContainer>("BottomHBox/BottomPanel/HBox");
+		_topPanel = GetNode<TopPanel>("UIRoot/MainContainer/MainHBox/LeftContent/TopSection/TopPanel");
+		_topPanel.InfoPressed += OnInfoPressed;
+
+		_actionLog = GetNode<ActionLog>("UIRoot/MainContainer/MainHBox/ActionLog");
+
+		_debugMenu = GetNode<DebugMenu>("UIRoot/ModalContainer/ModalVBox/DebugMenu");
+		_debugMenu.GiveUpgrade += () => EmitSignal(SignalName.GiveUpgrade);
+		_debugMenu.GiveDamage += () => EmitSignal(SignalName.GiveDamage);
+		_debugMenu.Visible = false;
+
+		_playerStatusModal = GetNode<PlayerStatusModal>("UIRoot/ModalContainer/ModalVBox/PlayerStatusModal");
+		_playerStatusModal.Visible = false;
+
+		_infoModal = GetNode<InfoModal>("UIRoot/ModalContainer/ModalVBox/InfoModal");
+		_infoModal.Visible = false;
+
+		_winModal = GetNode<WinModal>("UIRoot/ModalContainer/ModalVBox/WinModal");
+		_winModal.Visible = false;
 
 		InitializePlayerPanels();
-		_infoButton.Pressed += OnInfoPressed;
-		_closeButton.Pressed += OnClosePressed;
 	}
 
 	private void InitializePlayerPanels()
 	{
-		if (!IsInsideTree()) return;
-		if (PlayerPanelScene == null) return;
+		if (!IsInsideTree() || PlayerPanelScene == null) return;
+
+		_playerPanelsContainer = GetNode<HBoxContainer>("UIRoot/MainContainer/MainHBox/LeftContent/BottomSection/BottomPanel/PlayerHBox");
 
 		for (int i = 0; i < 2; i++)
 		{
 			var panel = PlayerPanelScene.Instantiate<PlayerPanel>();
 			panel.RegisterClicked += OnRegisterClicked;
+			panel.UpgradesClicked += OnUpgradesClicked;
+			panel.LayoutMode = 2;
+			panel.SizeFlagsHorizontal = (Control.SizeFlags)3;
 			_playerPanelsContainer.AddChild(panel);
 			_playerPanels.Add(panel);
 		}
@@ -74,50 +71,98 @@ public partial class GameUI : CanvasLayer
 		GD.Print($"Register clicked: {registerIndex}");
 	}
 
-	private void OnInfoPressed()
+	private void OnUpgradesClicked()
 	{
-		if (!IsInsideTree()) return;
-		_modalVisible = !_modalVisible;
-		_statusModal.Visible = _modalVisible;
+		OpenPlayerStatusModal();
 	}
 
-	private void OnClosePressed()
+	private void OnInfoPressed()
 	{
-		if (!IsInsideTree()) return;
-		_modalVisible = false;
-		_statusModal.Visible = false;
+		if (_infoModal != null)
+			_infoModal.Visible = !_infoModal.Visible;
+	}
+
+	public void OpenDebugMenu()
+	{
+		if (_debugMenu != null)
+			_debugMenu.Visible = true;
+	}
+
+	public void OpenPlayerStatusModal()
+	{
+		if (_playerStatusModal == null || _allPlayers.Count == 0) return;
+		_playerStatusModal.SetPlayers(_allPlayers);
+		_playerStatusModal.Visible = true;
+	}
+
+	public void CloseAllModals()
+	{
+		if (_infoModal != null) _infoModal.Visible = false;
+		if (_winModal != null) _winModal.Visible = false;
+		if (_debugMenu != null) _debugMenu.Visible = false;
+		if (_playerStatusModal != null) _playerStatusModal.Visible = false;
+	}
+
+	public override void _Input(InputEvent @event)
+	{
+		if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo)
+		{
+			if (keyEvent.Keycode == Key.Escape)
+			{
+				if (_winModal?.Visible == true) return;
+				CloseAllModals();
+			}
+			else if (keyEvent.Keycode == Key.I)
+			{
+				CloseAllModals();
+				OpenPlayerStatusModal();
+			}
+			else if (keyEvent.Keycode == Key.U)
+			{
+				EmitSignal(SignalName.GiveUpgrade);
+			}
+			else if (keyEvent.Keycode == Key.D)
+			{
+				EmitSignal(SignalName.GiveDamage);
+			}
+		}
 	}
 
 	public void UpdateRound(int round)
 	{
-		if (!IsInsideTree()) return;
-		_roundLabel.Text = $"Round: {round}";
+		_topPanel?.UpdateRound(round);
 	}
 
 	public void UpdatePhase(bool programming)
 	{
-		if (!IsInsideTree()) return;
-		_phaseLabel.Text = programming ? "PROGRAMMING" : "EXECUTION";
-		_phaseLabel.AddThemeColorOverride("font_color", programming ? Colors.Yellow : Colors.Green);
+		_topPanel?.UpdatePhase(programming);
 	}
 
 	public void UpdateRegisterPrompt(int currentRegister, int selectedRegister, string playerName)
 	{
-		if (!IsInsideTree()) return;
-		_registerLabel.Text = $"{playerName}: Register [{selectedRegister + 1}]/5";
-		_actionPrompt.Text = $"SELECT {playerName.ToUpper()}: <- -> SELECT REGISTER | 1-9 SELECT CARD";
+		_topPanel?.UpdateRegisterPrompt(currentRegister, selectedRegister, playerName);
 	}
 
 	public void UpdateExecutionPrompt(int currentRegister, string playerName)
 	{
-		if (!IsInsideTree()) return;
-		_registerLabel.Text = $"{playerName}: Executing register {currentRegister + 1}/5";
-		_actionPrompt.Text = $"EXECUTING {playerName.ToUpper()}: REGISTER {currentRegister + 1} (PRESS SPACE)";
+		_topPanel?.UpdateExecutionPrompt(currentRegister, playerName);
+	}
+
+	public string PriorityText
+	{
+		set
+		{
+			if (_topPanel != null)
+				_topPanel.PriorityText = value;
+		}
 	}
 
 	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
 	{
 		if (!IsInsideTree()) return;
+
+		_allPlayers = new List<Player> { p1, p2 };
+
 		if (_playerPanels.Count >= 2)
 		{
 			_playerPanels[0].Update(p1, currentPlayerIndex == 0, programming, currentRegister, selectedRegister);
@@ -137,17 +182,22 @@ public partial class GameUI : CanvasLayer
 
 	public void ShowGameOver(IReadOnlyList<int> winnerIds, bool isTie, IReadOnlyList<Player> allPlayers)
 	{
-		if (!IsInsideTree() || _winModal == null || _winLabel == null) return;
-		
+		if (_winModal == null) return;
+
 		var winnerNames = winnerIds
 			.Select(id => allPlayers.FirstOrDefault(p => p.Id == id)?.Name ?? $"Player {id}")
 			.ToList();
-		
+
 		var message = isTie
 			? $"TIE! {string.Join(" & ", winnerNames)}"
 			: $"{winnerNames[0]} WINS!";
-		
-		_winLabel.Text = message;
+
+		_winModal.SetMessage(message);
 		_winModal.Visible = true;
+	}
+
+	public void Log(string message)
+	{
+		_actionLog?.Log(message);
 	}
 }

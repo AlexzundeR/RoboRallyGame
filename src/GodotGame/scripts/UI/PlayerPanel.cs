@@ -1,11 +1,13 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 using AiTest.Core.Cards;
 using AiTest.Core.Entities;
 
 public partial class PlayerPanel : PanelContainer
 {
 	[Signal] public delegate void RegisterClickedEventHandler(int registerIndex);
+	[Signal] public delegate void UpgradesClickedEventHandler();
 
 	private Label _header;
 	private HBoxContainer _handCardholder;
@@ -27,7 +29,17 @@ public partial class PlayerPanel : PanelContainer
 		_cardTheme = GD.Load<Theme>("res://card_theme.tres");
 		_cardScene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
 
+		_status.GuiInput += OnStatusClicked;
+		
 		InitializeCards();
+	}
+
+	private void OnStatusClicked(InputEvent @event)
+	{
+		if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
+		{
+			EmitSignal(SignalName.UpgradesClicked);
+		}
 	}
 
 	private void InitializeCards()
@@ -152,8 +164,24 @@ public partial class PlayerPanel : PanelContainer
 		var hp = player.Robot.LifeTokens;
 		var damage = player.Robot.Damage;
 		var checkpoints = player.Robot.CheckpointsReached;
+		var upgrades = player.AllUpgrades.ToList();
 		var powerDown = player.Robot.IsPowerDown ? " | ⚡ OFF" : "";
-		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage} | ⭐ {checkpoints}{powerDown}";
+		
+		string upgradeText;
+		if (upgrades.Count == 0)
+		{
+			upgradeText = "";
+		}
+		else if (upgrades.Count == 1)
+		{
+			upgradeText = $" | ⚙ {upgrades[0].Name}";
+		}
+		else
+		{
+			upgradeText = $" | ⚙ {upgrades.Count} upgrades";
+		}
+		
+		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage} | ⭐ {checkpoints}{upgradeText}{powerDown}";
 	}
 
 	public void UpdateCheckpoints(int checkpointsReached, int totalCheckpoints)

@@ -54,3 +54,5 @@ public sealed record LifeTokenLostEvent(int PlayerId, int RemainingTokens) : IEv
 public sealed record PowerDownToggledEvent(int PlayerIndex, bool IsPowerDown) : IEvent;
 
 public sealed record GameOverEvent(IReadOnlyList<int> WinnerIds, bool IsTie) : IEvent;
+
+public sealed record UpgradeAcquiredEvent(int PlayerId, string UpgradeId) : IEvent;

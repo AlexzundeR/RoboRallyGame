@@ -58,7 +58,7 @@ public static class TileFactory
 
     public static Tile RepairSite() => new(TileType.RepairSite, [new RepairSiteBehaviorComponent(1)]);
 
-    public static Tile RepairSitePlus() => new(TileType.RepairSitePlus, [new RepairSiteBehaviorComponent(1)]);
+    public static Tile RepairSitePlus() => new(TileType.RepairSitePlus, [new RepairSiteBehaviorComponent(1, grantsUpgrade: true)]);
 
     private static BlockedMovementComponent Blocked(params Direction[] directions) 
         => new(DirectionSet.FromDirections(directions));

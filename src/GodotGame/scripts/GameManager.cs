@@ -1,8 +1,10 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AiTest.Core.Engine;
 using AiTest.Core.Entities;
+using AiTest.Core.Upgrades;
 using AiTest.Godot;
 using AiTest.Godot.Animations;
 using AiTest.Godot.Phases;
@@ -45,6 +47,47 @@ public partial class GameManager : Node2D
 	public override void _Input(InputEvent @event)
 	{
 		HandleCameraInput(@event);
+		HandleSecretKeyInput(@event);
+	}
+
+	private void HandleSecretKeyInput(InputEvent @event)
+	{
+		if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo)
+		{
+			if (keyEvent.Keycode == Key.U)
+			{
+				GiveRandomUpgradeToCurrentPlayer();
+			}
+			else if (keyEvent.Keycode == Key.I)
+			{
+				GiveDamageToCurrentPlayer();
+			}
+		}
+	}
+
+	private void GiveRandomUpgradeToCurrentPlayer()
+	{
+		if (_runner == null)
+			return;
+
+		var player = _runner.Engine.State.Players.FirstOrDefault();
+		if (player == null)
+			return;
+
+		_runner.Engine.GrantRandomUpgrade(player.Id);
+	}
+
+	private void GiveDamageToCurrentPlayer()
+	{
+		if (_runner == null)
+			return;
+
+		var player = _runner.Engine.State.Players.FirstOrDefault();
+		if (player == null)
+			return;
+
+		player.Robot.TakeDamage(1);
+		GD.Print($"[SECRET] Player {player.Id} took 1 damage (total: {player.Robot.Damage})");
 	}
 
 	private void HandleCameraInput(InputEvent @event)
@@ -212,6 +255,23 @@ public partial class GameManager : Node2D
 
 		_gameUI = GetNodeOrNull<GameUI>("UILayer/GameUI");
 		GD.Print("[GameManager] GameUI loaded from scene: " + (_gameUI != null));
+		
+		if (_gameUI != null)
+		{
+			_gameUI.GiveUpgrade += OnGiveUpgrade;
+			_gameUI.GiveDamage += OnGiveDamage;
+			GD.Print("[GameManager] Debug signals connected");
+		}
+	}
+
+	private void OnGiveUpgrade()
+	{
+		GiveRandomUpgradeToCurrentPlayer();
+	}
+
+	private void OnGiveDamage()
+	{
+		GiveDamageToCurrentPlayer();
 	}
 
 	private void InitializeAnimationController()
@@ -224,15 +284,10 @@ public partial class GameManager : Node2D
 		
 		GD.Print("[GameManager] AnimationService initialized");
 		
-		var logLabel = GetNodeOrNull<RichTextLabel>("UILayer/GameUI/ActionLogPanel/VBox/ScrollContainer/LogLabel");
-		if (logLabel != null)
+		if (_gameUI != null)
 		{
-			_executionPhase.SetActionLog(logLabel);
+			_executionPhase.SetLogAction(_gameUI.Log);
 			GD.Print("[GameManager] ActionLog connected to ExecutionPhase");
-		}
-		else
-		{
-			GD.PrintErr("[GameManager] ActionLog not found in scene!");
 		}
 		
 		GD.Print("[GameManager] Animation setup complete");

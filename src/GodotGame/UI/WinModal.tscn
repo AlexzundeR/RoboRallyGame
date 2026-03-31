@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://win_modal_scene"]
+
+[ext_resource type="Script" uid="uid://win_modal_script" path="res://UI/WinModal.cs" id="1"]
+
+[node name="WinModal" type="PanelContainer"]
+script = ExtResource("1")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 2
+color = Color(0.1, 0.3, 0.1, 0.98)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="WinLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "PLAYER WINS!"
+horizontal_alignment = 1
+
+[node name="Subtext" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Press ESC to restart"
+horizontal_alignment = 1

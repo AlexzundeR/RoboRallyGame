@@ -7,6 +7,7 @@ using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
 using AiTest.Core.Upgrades.Permanent;
 using AiTest.Core.Upgrades.Temporary;
+using AiTest.Core.Entities;
 
 public class UpgradeSystemTests
 {
@@ -402,6 +403,47 @@ public class UpgradeSystemTests
             Assert.False(string.IsNullOrEmpty(upgrade.Description), 
                 $"Upgrade {upgrade.Id} should have a description");
         }
+    }
+
+    [Fact]
+    public void Player_GetLaserStrategy_ShouldCombineUpgrades()
+    {
+        var player = new Player();
+        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.DoubleBarrelLaser());
+        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.RearFiringLaser());
+        
+        var strategy = player.GetLaserStrategy();
+        var robot = new Robot(Direction.North);
+        
+        var directions = strategy.GetFireDirections(robot, Direction.North).ToList();
+        var fireRear = strategy.ShouldFireRearLaser(robot);
+        
+        Assert.Equal(3, directions.Count);
+        Assert.True(fireRear);
+    }
+
+    [Fact]
+    public void Player_GetMovementStrategy_ShouldCombineUpgrades()
+    {
+        var player = new Player();
+        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.Brakes());
+        
+        var strategy = player.GetMovementStrategy();
+        var robot = new Robot();
+        
+        Assert.True(strategy.ShouldStopAtObstacle(robot));
+    }
+
+    [Fact]
+    public void Player_GetDamageStrategy_ShouldCombineUpgrades()
+    {
+        var player = new Player();
+        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.RammingGear());
+        
+        var strategy = player.GetDamageStrategy();
+        var robot = new Robot();
+        
+        Assert.Equal(1, strategy.GetCollisionDamage(robot));
     }
 
     private static GameEngine CreateEngine(GameState state)

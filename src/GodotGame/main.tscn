@@ -1,7 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/GameManager.cs" id="1"]
 [ext_resource type="PackedScene" path="res://GameUI.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://PlayerPanel.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://UI/TopPanel.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://UI/ActionLog.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://UI/DebugMenu.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://UI/PlayerStatusModal.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://UI/InfoModal.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://UI/WinModal.tscn" id="9"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")

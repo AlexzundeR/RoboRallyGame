@@ -2,6 +2,7 @@ namespace AiTest.Core.Models.Components;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Engine;
+using AiTest.Core.Upgrades;
 
 public enum TileActionResult
 {
@@ -190,49 +191,72 @@ public sealed class CheckpointBehaviorComponent : TileComponentBase, ITileBehavi
     public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
 }
 
-    public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
+public sealed class PitBehaviorComponent : TileComponentBase, ITileBehaviorComponent
+{
+    public TileActionResult ApplyPostMovement(Player player, GameMap map)
     {
-        public TileActionResult ApplyPostMovement(Player player, GameMap map)
+        if (map.GetTile(player.Robot.Position).Type == TileType.Pit)
         {
-            if (map.GetTile(player.Robot.Position).Type == TileType.Pit)
-            {
-                player.Robot.LoseLifeToken();
-                return TileActionResult.FellIntoPit;
-            }
-            return TileActionResult.None;
+            player.Robot.LoseLifeToken();
+            return TileActionResult.FellIntoPit;
         }
-
-        public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
-        public void ApplyOnEnter(Player player, GameState state) { }
-
-        public TileActionResult ApplyOnTouch(Robot robot, GameMap map)
-        {
-            return TileActionResult.ReadyToFall;
-        }
+        return TileActionResult.None;
     }
 
-    public sealed class RepairSiteBehaviorComponent : TileComponentBase, ITileBehaviorComponent, IEndOfRoundComponent
-    {
-        public int RepairAmount { get; }
+    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+    public void ApplyOnEnter(Player player, GameState state) { }
 
-        public RepairSiteBehaviorComponent(int repairAmount = 1)
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map)
+    {
+        return TileActionResult.ReadyToFall;
+    }
+}
+
+public sealed class RepairSiteBehaviorComponent : TileComponentBase, ITileBehaviorComponent, IEndOfRoundComponent
+{
+    public int RepairAmount { get; }
+    public bool GrantsUpgrade { get; }
+
+    public RepairSiteBehaviorComponent(int repairAmount = 1, bool grantsUpgrade = false)
+    {
+        RepairAmount = repairAmount;
+        GrantsUpgrade = grantsUpgrade;
+    }
+
+    public TileActionResult ApplyPostMovement(Player player, GameMap map) => TileActionResult.None;
+
+    public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
+    public void ApplyOnEnter(Player player, GameState state) { }
+    public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
+
+    public TileActionResult ApplyEndOfRound(Player player)
+    {
+        var result = TileActionResult.None;
+
+        if (player.Robot.Damage > 0)
         {
-            RepairAmount = repairAmount;
+            player.Robot.Repair(RepairAmount);
+            result = TileActionResult.Repaired;
         }
 
-        public TileActionResult ApplyPostMovement(Player player, GameMap map) => TileActionResult.None;
-
-        public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
-        public void ApplyOnEnter(Player player, GameState state) { }
-        public TileActionResult ApplyOnTouch(Robot robot, GameMap map) => TileActionResult.None;
-
-        public TileActionResult ApplyEndOfRound(Player player)
+        if (GrantsUpgrade)
         {
-            if (player.Robot.Damage > 0)
-            {
-                player.Robot.Repair(RepairAmount);
-                return TileActionResult.Repaired;
-            }
-            return TileActionResult.None;
+            TryGrantUpgrade(player);
+        }
+
+        return result;
+    }
+
+    private void TryGrantUpgrade(Player player)
+    {
+        var upgradeEffect = UpgradeCatalog.AllUpgrades
+            .OrderBy(_ => Random.Shared.Next())
+            .FirstOrDefault();
+
+        if (upgradeEffect != null)
+        {
+            var effect = UpgradeCatalog.CreateEffect(upgradeEffect);
+            player.AddUpgrade(effect);
         }
     }
+}

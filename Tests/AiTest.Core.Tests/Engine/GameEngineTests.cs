@@ -568,6 +568,42 @@ public class GameEngineTests
     }
 
     [Fact]
+    public void NextRound_RobotOnRepairSitePlus_ShouldGrantUpgrade()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetPosition(new Position(2, 2));
+        
+        var player = new Player { Robot = robot };
+        var map = new GameMap(10, 10);
+        map.SetTile(2, 2, TileFactory.RepairSitePlus());
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.NotEmpty(player.AllUpgrades);
+    }
+
+    [Fact]
+    public void NextRound_RobotOnRepairSite_ShouldOnlyRepairNotGrantUpgrade()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetPosition(new Position(2, 2));
+        robot.AddDamage(1);
+        
+        var player = new Player { Robot = robot };
+        var map = new GameMap(10, 10);
+        map.SetTile(2, 2, TileFactory.RepairSite());
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = CreateEngine(state);
+        
+        engine.NextRound();
+        
+        Assert.Empty(player.AllUpgrades);
+        Assert.Equal(0, robot.Damage);
+    }
+
+    [Fact]
     public void ExpressConveyor_ShouldMoveRobot2Tiles()
     {
         var player = new Player { Robot = new Robot { Id = 1 } };

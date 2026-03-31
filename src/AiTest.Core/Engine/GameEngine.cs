@@ -184,6 +184,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
     public event Action? OnAllRegistersComplete;
     public event Action<GameOverEvent>? OnGameOver;
+    public event Action<UpgradeAcquiredEvent>? OnUpgradeAcquired;
 
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
     
@@ -226,6 +227,33 @@ public sealed class GameEngine : IGameEngine
         State.Phase = GamePhase.Programming;
         State.Round = 1;
         DealCardsToAllPlayers();
+    }
+
+    public void GrantUpgrade(int playerId, string upgradeId)
+    {
+        var player = State.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return;
+
+        var definition = UpgradeCatalog.Get(upgradeId);
+        if (definition == null)
+            return;
+
+        var effect = UpgradeCatalog.CreateEffect(definition);
+        player.AddUpgrade(effect);
+        OnUpgradeAcquired?.Invoke(new UpgradeAcquiredEvent(playerId, upgradeId));
+    }
+
+    public void GrantRandomUpgrade(int playerId)
+    {
+        var upgrade = UpgradeCatalog.AllUpgrades
+            .OrderBy(_ => Random.Shared.Next())
+            .FirstOrDefault();
+
+        if (upgrade != null)
+        {
+            GrantUpgrade(playerId, upgrade.Id);
+        }
     }
 
     public void BeginRegisterExecution(int registerIndex)
@@ -708,12 +736,21 @@ public sealed class GameEngine : IGameEngine
 
     public bool IsGameOver()
     {
+        var isOnlyOneRemainsOrAllDead = State.Players.Count(p=>p.Robot.IsAlive) <= 1;
+        if (isOnlyOneRemainsOrAllDead) return true;
+
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
         return State.Players.Any(p => p.Robot.CheckpointsReached >= totalCheckpoints);
     }
 
     public IReadOnlyList<Player> GetWinners()
     {
+        var livePlayers = State.Players.Where(p=>p.Robot.IsAlive).ToArray();
+        if (livePlayers.Length == 1)
+        {
+            return [livePlayers[0]];
+        }
+
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
         return State.Players
             .Where(p => p.Robot.CheckpointsReached >= totalCheckpoints)

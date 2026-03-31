@@ -7,6 +7,7 @@ using Godot;
 using AiTest.Core.Engine;
 using AiTest.Core.Messages;
 using AiTest.Core.Models;
+using AiTest.Core.Upgrades;
 using AiTest.Godot;
 using AiTest.Godot.Animations;
 
@@ -17,7 +18,7 @@ public class ExecutionPhase : IGamePhase
 	private Action<GamePhaseType>? _onPhaseComplete;
 	private IAnimationService? _animationService;
 	private RobotRenderer? _robotLayer;
-	private RichTextLabel? _actionLog;
+	private Action<string>? _logAction;
 	private IInputService _inputService;
 	private bool _inputHandled;
 
@@ -46,9 +47,9 @@ public class ExecutionPhase : IGamePhase
 		_robotLayer = robotLayer;
 	}
 
-	public void SetActionLog(RichTextLabel logLabel)
+	public void SetLogAction(Action<string> logAction)
 	{
-		_actionLog = logLabel;
+		_logAction = logAction;
 	}
 
 	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
@@ -71,6 +72,7 @@ public class ExecutionPhase : IGamePhase
 		engine.OnRobotRepaired += OnRobotRepaired;
 		engine.OnLifeTokenLost += OnLifeTokenLost;
 		engine.OnAllRegistersComplete += OnAllRegistersComplete;
+		engine.OnUpgradeAcquired += OnUpgradeAcquired;
 	}
 
 	private void OnAllRegistersComplete()
@@ -94,6 +96,14 @@ public class ExecutionPhase : IGamePhase
 		Log($"[color=green]{name} repaired {e.RepairAmount} damage (now {e.NewDamage})[/color]");
 	}
 
+	private void OnUpgradeAcquired(UpgradeAcquiredEvent e)
+	{
+		var name = GetPlayerName(e.PlayerId);
+		var upgrade = UpgradeCatalog.Get(e.UpgradeId);
+		var upgradeName = upgrade?.Name ?? e.UpgradeId;
+		Log($"[color=yellow]{name} acquired upgrade: {upgradeName}[/color]");
+	}
+
 	private string GetPlayerName(int playerId)
 	{
 		return _runner?.Engine.State.Players.FirstOrDefault(p => p.Id == playerId)?.Name ?? $"Player {playerId}";
@@ -106,7 +116,7 @@ public class ExecutionPhase : IGamePhase
 
 	private void Log(string message)
 	{
-		_actionLog?.AppendText(message + "\n");
+		_logAction?.Invoke(message);
 	}
 
 	private void OnMove(MoveEvent e)
