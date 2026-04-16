@@ -165,7 +165,7 @@ public class PlayerTests
     public void AssignCardToRegister_AnyRegister_CanAssign()
     {
         var robot = new Robot();
-        robot.AddDamage(6);
+        robot.TakeDamage(6);
         
         var hand = new ProgramCard?[9];
         hand[0] = new MoveCard { Priority = 100, Spaces = 1 };

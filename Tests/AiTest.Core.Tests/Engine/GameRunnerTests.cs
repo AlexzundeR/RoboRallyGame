@@ -122,7 +122,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.AddDamage(5);
+        player.Robot.TakeDamage(5);
 
         runner.Engine.NextRound();
 
@@ -137,7 +137,7 @@ public class GameRunnerTests
         runner.Initialize();
 
         var player = runner.Engine.State.Players[0];
-        player.Robot.AddDamage(9);
+        player.Robot.TakeDamage(9);
 
         runner.Engine.NextRound();
 

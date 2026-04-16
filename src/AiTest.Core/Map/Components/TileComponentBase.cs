@@ -12,7 +12,7 @@ public enum TileActionResult
     ReadyToFall
 }
 
-public readonly record struct TileEffect(MoveIntent? Intent, TileActionResult Result);
+public readonly record struct TileEffect(MoveIntent? Intent, TileActionResult ResultKind);
 
 public abstract class TileComponentBase : ITileComponent
 {

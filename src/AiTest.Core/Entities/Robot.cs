@@ -4,6 +4,7 @@ using AiTest.Core.Models;
 
 public sealed class Robot
 {
+    //TODO: Сделать сбор доменных событий при доменных действиях, которые 1к1 мапить на внешние события у GameEngine
     public int Id { get; init; }
     public string Name { get; init; } = "Robot";
     public Position Position { get; private set; }
@@ -55,8 +56,6 @@ public sealed class Robot
     public void RotateLeft() => Direction = Direction.TurnLeft();
     public void RotateRight() => Direction = Direction.TurnRight();
     public void Rotate180() => Direction = Direction.TurnAround();
-
-    public void AddDamage(int amount) => TakeDamage(amount);
 
     public void TakeDamage(int amount)
     {

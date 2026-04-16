@@ -438,7 +438,7 @@ public class GameEngineTests
         var deck = CreateDefaultDeck();
         
         var robot = new Robot { Id = 1 };
-        robot.AddDamage(5);
+        robot.TakeDamage(5);
         var player = new Player { Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
@@ -453,7 +453,7 @@ public class GameEngineTests
         var deck = CreateDefaultDeck();
         
         var robot = new Robot { Id = 1 };
-        robot.AddDamage(9);
+        robot.TakeDamage(9);
         var player = new Player { Robot = robot };
         
         dealer.Deal(new[] { player }, deck);
@@ -517,7 +517,7 @@ public class GameEngineTests
     public void NextRound_PoweredDownRobot_ShouldRemoveAllDamage()
     {
         var robot = new Robot { Id = 1 };
-        robot.AddDamage(5);
+        robot.TakeDamage(5);
         robot.SetStatus(RobotStatus.PowerDown);
         
         var player = new Player { Robot = robot };
@@ -592,7 +592,7 @@ public class GameEngineTests
     {
         var robot = new Robot { Id = 1 };
         robot.SetPosition(new Position(2, 2));
-        robot.AddDamage(1);
+        robot.TakeDamage(1);
         
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);

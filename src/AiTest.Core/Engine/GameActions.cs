@@ -32,8 +32,8 @@ public sealed class CardAction : GameAction
     
     public override void Execute(IGameEngine engine)
     {
-        var player = engine.State.Players.FirstOrDefault(p => p.Id == PlayerId);
-        if (player?.Robot.IsAlive == true && player.Robot.Status != RobotStatus.Rebooting)
+        var player = engine.State.Players.First(p => p.Id == PlayerId);
+        if (player.Robot.IsAlive == true && player.Robot.Status != RobotStatus.Rebooting)
         {
             ExecuteCard(player.Robot, engine.State.Map);
         }

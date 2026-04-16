@@ -271,6 +271,7 @@ public sealed class GameEngine : IGameEngine
         var totalSteps = GetTotalSteps();
         if (_currentStep >= totalSteps)
         {
+            CheckGameOver();
             OnPhaseExecutionComplete?.Invoke(new PhaseExecutionCompleteEvent(_currentRegister));
             return StepResult.Completed;
         }
@@ -288,7 +289,6 @@ public sealed class GameEngine : IGameEngine
         {
             OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(_currentRegister));
             ApplyAllTileEffects();
-            CheckGameOver();
             _conveyorExecuted = true;
             _currentStep++;
         }
@@ -314,6 +314,7 @@ public sealed class GameEngine : IGameEngine
 
     private void FireLasers()
     {
+        var damageBefore = CaptureDamageStates();
         var shots = _laserResolver.PrepareShots(State.Map, State.Players);
         
         foreach (var shot in shots)
@@ -329,6 +330,7 @@ public sealed class GameEngine : IGameEngine
         }
         
         _laserResolver.Fire(shots, State.Players);
+        CheckDamageOrDestroy(damageBefore);
     }
 
     private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureStates()
@@ -361,37 +363,31 @@ public sealed class GameEngine : IGameEngine
                         OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
                 }
             }
+            //TODO:Переделать на проверку потери токена
+            player.Robot.LoseLifeToken();
+            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
         }
     }
     
-    private void FireEvents(
+    private void FireMoveAndRotateEvents(
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after,
-        bool fireMove,
-        bool fireRotate)
+        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
     {
         foreach (var player in State.Players)
         {
             var id = player.Robot.Id;
             if (before.TryGetValue(id, out var b) && after.TryGetValue(id, out var a))
             {
-                if (fireMove && b.Pos != a.Pos)
+                if (b.Pos != a.Pos)
                 {
                     OnMove?.Invoke(new MoveEvent(id, b.Pos, a.Pos));
                 }
-                if (fireRotate && b.Dir != a.Dir)
+                if (b.Dir != a.Dir)
                 {
                     OnRotate?.Invoke(new RotateEvent(id, b.Dir, a.Dir));
                 }
             }
         }
-    }
-
-    private void FireMoveAndRotateEvents(
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
-        Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
-    {
-        FireEvents(before, after, fireMove: true, fireRotate: true);
     }
     
     private void ExecuteCards(int registerIndex)
@@ -437,7 +433,7 @@ public sealed class GameEngine : IGameEngine
         var damageBefore = CaptureDamageStates();
         var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
-        var conveyorIntents = new List<MoveIntent>();
+        var mapMovementIntents = new List<MoveIntent>();
 
         foreach (var player in State.Players)
         {
@@ -450,29 +446,25 @@ public sealed class GameEngine : IGameEngine
             if (!effect.HasValue)
                 continue;
 
-            if (effect.Value.Intent != null)
+            if (effect?.Intent != null)
             {
-                conveyorIntents.Add(effect.Value.Intent);
+                mapMovementIntents.Add(effect.Value.Intent);
             }
 
-            switch (effect.Value.Result)
+            switch (effect?.ResultKind)
             {
                 case TileActionResult.CheckpointReached:
                     OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
                     break;
                 case TileActionResult.FellIntoPit:
-                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
-                    player.Robot.Reboot(spawnPos);
-                    OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
-                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
                     break;
             }
         }
 
-        if (conveyorIntents.Count > 0)
+        if (mapMovementIntents.Count > 0)
         {
             var resolver = new CollisionResolver();
-            foreach (var intent in conveyorIntents)
+            foreach (var intent in mapMovementIntents)
                 resolver.AddIntent(intent);
 
             var result = resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
@@ -530,6 +522,7 @@ public sealed class GameEngine : IGameEngine
         
         foreach (var player in State.Players)
         {
+            //TODO: вынести в компоненты поведения робота, сделать реакцию на начало раунда
             if (player.Robot.Status == RobotStatus.PowerDown)
             {
                 player.Robot.WakeUp();
@@ -543,7 +536,7 @@ public sealed class GameEngine : IGameEngine
             
             if (player.Robot.Status == RobotStatus.Rebooting)
             {
-                var spawnPos = player.Robot.LastCheckpointPosition ?? new Position(0, 0);
+                var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
                 player.Robot.Reboot(spawnPos);
                 OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
             }
@@ -606,7 +599,7 @@ public sealed class GameEngine : IGameEngine
         _dealer.Deal(State.Players, deck);
     }
 
-    private List<ProgramCard> CreateDeck()
+    private static List<ProgramCard> CreateDeck()
     {
         var deck = new List<ProgramCard>();
 

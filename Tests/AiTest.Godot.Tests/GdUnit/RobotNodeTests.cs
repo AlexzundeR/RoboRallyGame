@@ -74,7 +74,7 @@ public class RobotNodeTests
     {
         var robot = new Robot();
         
-        robot.AddDamage(3);
+        robot.TakeDamage(3);
         
         AssertThat(robot.Damage).IsEqual(3);
     }
@@ -85,7 +85,7 @@ public class RobotNodeTests
     {
         var robot = new Robot();
         
-        robot.AddDamage(10);
+        robot.TakeDamage(10);
         
         AssertThat(robot.IsAlive).IsFalse();
     }
@@ -95,7 +95,7 @@ public class RobotNodeTests
     public void Robot_LockedRegisters_CalculatesCorrectly()
     {
         var robot = new Robot();
-        robot.AddDamage(6);
+        robot.TakeDamage(6);
         
         AssertThat(robot.LockedRegisters).IsEqual(2);
     }
@@ -105,7 +105,7 @@ public class RobotNodeTests
     public void Robot_Reboot_ResetsDamage()
     {
         var robot = new Robot();
-        robot.AddDamage(5);
+        robot.TakeDamage(5);
         
         robot.Reboot(new Position(0, 0));
         

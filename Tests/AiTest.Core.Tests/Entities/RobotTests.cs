@@ -68,9 +68,9 @@ public class RobotTests
     public void TakeDamage_LessThan10_ShouldIncreaseDamage()
     {
         var robot = new Robot();
-        robot.AddDamage(5);
+        robot.TakeDamage(5);
         
-        robot.AddDamage(3);
+        robot.TakeDamage(3);
         
         Assert.Equal(8, robot.Damage);
         Assert.Equal(RobotStatus.Active, robot.Status);
@@ -80,9 +80,9 @@ public class RobotTests
     public void TakeDamage_10OrMore_ShouldTriggerReboot()
     {
         var robot = new Robot();
-        robot.AddDamage(8);
+        robot.TakeDamage(8);
         
-        robot.AddDamage(2);
+        robot.TakeDamage(2);
         
         Assert.Equal(0, robot.Damage);
         Assert.Equal(RobotStatus.Rebooting, robot.Status);
@@ -92,7 +92,7 @@ public class RobotTests
     public void Reboot_ShouldResetState()
     {
         var robot = new Robot();
-        robot.AddDamage(5);
+        robot.TakeDamage(5);
         robot.SetStatus(RobotStatus.Rebooting);
         robot.AddCheckpoint(1, new Position(1, 1));
         robot.AddCheckpoint(2, new Position(1, 1));
@@ -141,7 +141,7 @@ public class RobotTests
     public void LockedRegisters_ShouldReturnCorrectCount(int damage, int expected)
     {
         var robot = new Robot();
-        robot.AddDamage(damage);
+        robot.TakeDamage(damage);
         
         Assert.Equal(expected, robot.LockedRegisters);
     }
@@ -199,9 +199,9 @@ public class RobotTests
     public void TakeDamage_WhenDestroyed_ShouldLoseLifeToken()
     {
         var robot = new Robot();
-        robot.AddDamage(9);
+        robot.TakeDamage(9);
         
-        robot.AddDamage(1);
+        robot.TakeDamage(1);
         
         Assert.Equal(2, robot.LifeTokens);
         Assert.Equal(RobotStatus.Rebooting, robot.Status);
@@ -214,12 +214,12 @@ public class RobotTests
         
         for (int i = 0; i < 3; i++)
         {
-            robot.AddDamage(9);
-            robot.AddDamage(1);
+            robot.TakeDamage(9);
+            robot.TakeDamage(1);
             robot.Reboot(new Position(0, 0));
         }
         
-        robot.AddDamage(9);
+        robot.TakeDamage(9);
         
         Assert.Equal(RobotStatus.Destroyed, robot.Status);
     }
