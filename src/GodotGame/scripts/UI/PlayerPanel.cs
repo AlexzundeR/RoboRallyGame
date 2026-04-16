@@ -190,15 +190,5 @@ public partial class PlayerPanel : PanelContainer
 		_status.Text = _status.Text.Replace($"⭐ {checkpointsReached - 1}", $"⭐ {checkpointsReached}");
 	}
 
-	private string GetCardSymbol(ProgramCard card)
-	{
-		return card switch
-		{
-			MoveCard m => $"M{m.Spaces}",
-			TurnCard t => t.IsLeft ? "↺" : "↻",
-					UTurnCard => "⤵",
-			BackUpCard => "⬇",
-			_ => "?"
-		};
-	}
+	private string GetCardSymbol(ProgramCard card) => card.Symbol;
 }

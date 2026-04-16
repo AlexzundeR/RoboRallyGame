@@ -3,11 +3,10 @@ namespace AiTest.Godot;
 using Godot;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Godot.Services;
 
 public partial class Robot : Node2D
 {
-	private const int TileSize = 48;
-	private const int MapOffsetY = 120;
 	private const float RotationDuration = 0.35f;
 
 	private ColorRect _body = null!;
@@ -150,9 +149,11 @@ public partial class Robot : Node2D
 
 	public Vector2 GetWorldPosition()
 	{
+		var tileSize = GameScale.BaseTileSize;
+		var halfTile = tileSize / 2f;
 		return new Vector2(
-			_gridPosition.X * TileSize + 24,
-			_gridPosition.Y * TileSize + MapOffsetY + 24
+			_gridPosition.X * tileSize + halfTile,
+			_gridPosition.Y * tileSize + halfTile
 		);
 	}
 

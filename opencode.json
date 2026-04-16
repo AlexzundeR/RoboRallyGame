@@ -18,5 +18,12 @@
       }
     }
   },
-  "model": "yandex/yandexgpt"
+  "model": "yandex/yandexgpt",
+  "mcp": {
+    "godot-docs": {
+      "type": "remote",
+      "url": "http://localhost:5001/mcp",
+      "enabled": true
+    }
+  }
 }

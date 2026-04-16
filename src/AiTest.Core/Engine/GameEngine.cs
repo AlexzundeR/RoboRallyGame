@@ -287,8 +287,7 @@ public sealed class GameEngine : IGameEngine
         else if (_currentStep == movementSteps && !_conveyorExecuted)
         {
             OnConveyorPhaseStarted?.Invoke(new ConveyorPhaseStartedEvent(_currentRegister));
-            ApplyNonConveyorEffects();
-            ProcessConveyorPhase();
+            ApplyAllTileEffects();
             CheckGameOver();
             _conveyorExecuted = true;
             _currentStep++;
@@ -408,72 +407,14 @@ public sealed class GameEngine : IGameEngine
             if (registerIndex < player.Robot.LockedRegisters)
                 continue;
 
-            var cardExecutionStrategy = GetCardExecutionStrategy(player);
-            var movementStrategy = GetMovementStrategy(player);
-            
             var card = player.GetRegister(registerIndex);
             if (card == null)
                 continue;
 
-            if (card.Card is TurnCard turnCard)
+            var intent = card.Card.CreateMoveIntent(player.Robot, State.Map, registerIndex);
+            if (intent != null)
             {
-                if (turnCard.IsLeft)
-                    player.Robot.RotateLeft();
-                else
-                    player.Robot.RotateRight();
-                
-                cardExecutionStrategy.ExecuteRotation(player.Robot);
-                continue;
-            }
-            
-            if (card.Card is UTurnCard)
-            {
-                player.Robot.Rotate180();
-                cardExecutionStrategy.ExecuteRotation(player.Robot);
-                continue;
-            }
-
-            if (card.Card is BackUpCard)
-            {
-                var oppositeDir = player.Robot.Direction.TurnAround();
-                var currentTile = State.Map.GetTile(player.Robot.Position);
-                var targetPos = player.Robot.Position.Move(oppositeDir);
-                var targetTile = State.Map.GetTile(targetPos);
-                
-                if (State.Map.IsInBounds(targetPos) && 
-                    targetTile.CanEnterFrom(oppositeDir) && 
-                    currentTile.CanExitTo(oppositeDir))
-                {
-                    moveIntents.Add(new MoveIntent
-                    {
-                        Robot = player.Robot,
-                        From = player.Robot.Position,
-                        To = targetPos,
-                        Direction = oppositeDir,
-                        Priority = card.Card.Priority,
-                        RegisterIndex = registerIndex,
-                        Type = MoveType.Normal
-                    });
-                }
-                continue;
-            }
-
-            if (card.Card is MoveCard moveCard)
-            {
-                var extraSpaces = movementStrategy.GetExtraMoveSpaces(player.Robot) 
-                    + cardExecutionStrategy.GetExtraMoveSpaces(player.Robot, moveCard.Spaces);
-                var targetPos = CalculateMoveTarget(player.Robot, moveCard.Spaces + extraSpaces, movementStrategy);
-                
-                moveIntents.Add(new MoveIntent
-                {
-                    Robot = player.Robot,
-                    From = player.Robot.Position,
-                    To = targetPos,
-                    Direction = player.Robot.Direction,
-                    Priority = moveCard.Priority,
-                    RegisterIndex = registerIndex,
-                    Type = MoveType.Normal
-                });
+                moveIntents.Add(intent);
             }
         }
         
@@ -491,157 +432,30 @@ public sealed class GameEngine : IGameEngine
         CheckDamageOrDestroy(before.ToDictionary(x => x.Key, x => x.Value.Damage));
     }
 
-    private Position CalculateMoveTarget(Robot robot, int spaces)
-    {
-        return CalculateMoveTarget(robot, spaces, DefaultMovementStrategy.Instance);
-    }
-
-    private Position CalculateMoveTarget(Robot robot, int spaces, IMovementStrategy movementStrategy)
-    {
-        var pos = robot.Position;
-        for (int i = 0; i < spaces; i++)
-        {
-            var currentTile = State.Map.GetTile(pos);
-            var next = pos.Move(robot.Direction);
-            if (State.Map.IsInBounds(next))
-            {
-                var nextTile = State.Map.GetTile(next);
-                if (!nextTile.CanEnterFrom(robot.Direction))
-                    break;
-                if (!currentTile.CanExitTo(robot.Direction))
-                    break;
-                if (!movementStrategy.CanEnterTile(robot, State.Map, next))
-                    break;
-                pos = next;
-            }
-        }
-        return movementStrategy.CalculateMove(robot, State.Map, pos);
-    }
-
-    private ICardExecutionStrategy GetCardExecutionStrategy(Player player)
-    {
-        var strategies = new List<ICardExecutionStrategy> { DefaultCardExecutionStrategy.Instance };
-        
-        foreach (var upgrade in player.AllUpgrades)
-        {
-            var strategy = upgrade.GetCardExecutionStrategy();
-            if (strategy != null)
-                strategies.Add(strategy);
-        }
-        
-        return new CompositeCardExecutionStrategy(strategies);
-    }
-
-    private IMovementStrategy GetMovementStrategy(Player player)
-    {
-        var strategies = new List<IMovementStrategy> { DefaultMovementStrategy.Instance };
-        
-        foreach (var upgrade in player.AllUpgrades)
-        {
-            var strategy = upgrade.GetMovementStrategy();
-            if (strategy != null)
-                strategies.Add(strategy);
-        }
-        
-        return new CompositeMovementStrategy(strategies);
-    }
-
-    private void ApplyNonConveyorEffects()
+    private void ApplyAllTileEffects()
     {
         var damageBefore = CaptureDamageStates();
-        var totalCheckpoints = State.Map.GetTotalCheckpoints();
         var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
-        
-        foreach (var player in State.Players)
-        {
-            if (!player.Robot.IsAlive)
-                continue;
-
-            var tile = State.Map.GetTile(player.Robot.Position);
-            
-            if (tile.GetComponent<ConveyorBehaviorComponent>() != null)
-                continue;
-            
-            var result = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
-            
-            switch (result)
-            {
-                case TileActionResult.CheckpointReached:
-                    OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
-                    break;
-                case TileActionResult.FellIntoPit:
-                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
-                    player.Robot.Reboot(spawnPos);
-                    OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
-                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
-                    break;
-            }
-        }
-        
-        foreach (var player in State.Players)
-        {
-            if (!player.Robot.IsAlive)
-                continue;
-            
-            if (directionsBefore.TryGetValue(player.Robot.Id, out var beforeDir) && beforeDir != player.Robot.Direction)
-            {
-                OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
-            }
-        }
-        
-        CheckDamageOrDestroy(damageBefore);
-    }
-
-    private void ProcessConveyorPhase()
-    {
+        var totalCheckpoints = State.Map.GetTotalCheckpoints();
         var conveyorIntents = new List<MoveIntent>();
-        
-        foreach (var player in State.Players)
-        {
-            if (!player.Robot.IsAlive)
-                continue;
-            
-            var tile = State.Map.GetTile(player.Robot.Position);
-            var component = tile.GetComponent<ConveyorBehaviorComponent>();
-            
-            if (component == null)
-                continue;
-                
-            if (player.GetConveyorStrategy().ShouldIgnoreConveyors(player.Robot))
-                continue;
-            
-            var intent = component.TryCreateIntent(player.Robot, State.Map);
-            if (intent != null)
-                conveyorIntents.Add(intent);
-        }
-        
-        if (conveyorIntents.Count == 0)
-            return;
-        
-        var damageBefore = CaptureDamageStates();
-        var totalCheckpoints = State.Map.GetTotalCheckpoints();
-        var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
-        
-        var resolver = new CollisionResolver();
-        foreach (var intent in conveyorIntents)
-            resolver.AddIntent(intent);
-        
-        var result = resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
-        
-        foreach (var movement in result.Movements)
-        {
-            OnConveyorMove?.Invoke(new ConveyorMoveEvent(movement.RobotId, movement.From, movement.To));
-        }
-        
+
         foreach (var player in State.Players)
         {
             if (!player.Robot.IsAlive)
                 continue;
 
             var tile = State.Map.GetTile(player.Robot.Position);
-            var postResult = tile.GetComponent<ITileBehaviorComponent>()?.ApplyPostMovement(player, State.Map);
-            
-            switch (postResult)
+            var effect = tile.GetComponent<ITileBehaviorComponent>()?.ApplyEffect(player, State.Map);
+
+            if (!effect.HasValue)
+                continue;
+
+            if (effect.Value.Intent != null)
+            {
+                conveyorIntents.Add(effect.Value.Intent);
+            }
+
+            switch (effect.Value.Result)
             {
                 case TileActionResult.CheckpointReached:
                     OnCheckpoint?.Invoke(new CheckpointEvent(player.Robot.Id, player.Robot.CheckpointsReached, totalCheckpoints));
@@ -654,18 +468,33 @@ public sealed class GameEngine : IGameEngine
                     break;
             }
         }
-        
+
+        if (conveyorIntents.Count > 0)
+        {
+            var resolver = new CollisionResolver();
+            foreach (var intent in conveyorIntents)
+                resolver.AddIntent(intent);
+
+            var result = resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
+
+            foreach (var movement in result.Movements)
+            {
+                if (movement.Result != CollisionResult.Blocked)
+                    OnConveyorMove?.Invoke(new ConveyorMoveEvent(movement.RobotId, movement.From, movement.To));
+            }
+        }
+
         foreach (var player in State.Players)
         {
             if (!player.Robot.IsAlive)
                 continue;
-            
+
             if (directionsBefore.TryGetValue(player.Robot.Id, out var beforeDir) && beforeDir != player.Robot.Direction)
             {
                 OnRotate?.Invoke(new RotateEvent(player.Robot.Id, beforeDir, player.Robot.Direction));
             }
         }
-        
+
         CheckDamageOrDestroy(damageBefore);
     }
 

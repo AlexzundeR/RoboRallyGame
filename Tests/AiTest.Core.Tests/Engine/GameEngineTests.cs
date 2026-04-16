@@ -6,6 +6,7 @@ using AiTest.Core.Entities;
 using AiTest.Core.Messages;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
+using Xunit;
 
 public class GameEngineTests
 {
@@ -273,6 +274,7 @@ public class GameEngineTests
     {
         var engine = CreateEngine();
         engine.AddPlayer("Player1");
+        engine.AddPlayer("Player2");
         
         Assert.False(engine.IsGameOver());
     }
@@ -420,6 +422,7 @@ public class GameEngineTests
         var state = new GameState(new List<Player>(), map);
         var engine = new GameEngine(new RandomDealer(), state);
         engine.AddPlayer("Player1");
+        engine.AddPlayer("Player2");
         
         var player = engine.State.Players[0];
         Assert.False(engine.IsGameOver());
@@ -624,7 +627,7 @@ public class GameEngineTests
     }
 
     [Fact]
-    public void ExpressConveyor_TargetOnAnotherConveyor_ShouldContinueMoving()
+    public void ExpressConveyor_TargetOnAnotherConveyor_ShouldStopOnConveyor()
     {
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
@@ -640,7 +643,7 @@ public class GameEngineTests
         engine.BeginRegisterExecution(0);
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
         
-        Assert.Equal(new Position(5, 2), player.Robot.Position);
+        Assert.Equal(new Position(5, 3), player.Robot.Position);
     }
 
     [Fact]
@@ -766,5 +769,33 @@ public class GameEngineTests
         for (int i = 0; i < 6; i++)
             deck.Add(new BackUpCard { Priority = 500 + i });
         return deck;
+    }
+
+    [Fact]
+    public void ProcessBoardElements_TileWithBorders_PlayerCanPassFromOpenWall()
+    {
+        var robot = new Robot { Id = 1 };
+        robot.SetPosition(new Position(3, 3));
+        robot.SetDirection(Direction.North);
+
+        var cards = new List<ProgramCard>
+        {
+            new MoveCard { Spaces = 1, Priority = 100 },
+        };
+
+        var player = new Player(new RegisterCard?[5], null) { Robot = robot };
+        player.DealCards(cards);
+
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 2, TileFactory.Floor([Direction.West, Direction.East]));
+
+        var state = new GameState(new List<Player> { player }, map);
+        var engine = new GameEngine(new RandomDealer(), state);
+        engine.Initialize(map);
+
+        engine.State.Players[0].AssignCardToRegister(0, 0);
+        ExecuteRegister(engine, 0);
+        
+        Assert.Equal(2, engine.State.Players[0].Robot.Position.Y);
     }
 }

@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Godot.Services;
 
 namespace AiTest.Godot;
 
@@ -9,8 +10,6 @@ public partial class RobotRenderer : Node2D
 {
     private readonly Dictionary<int, Robot> _robots = new();
     private PackedScene _robotScene = null!;
-    private const int TileSize = 48;
-    private const int MapOffsetY = 120;
 
     public override void _Ready()
     {
@@ -28,9 +27,9 @@ public partial class RobotRenderer : Node2D
     private void CreateRobot(Player player)
     {
         var robot = _robotScene.Instantiate<Robot>();
-        robot.Initialize(player);
         robot.Name = $"Robot_{player.Id}";
         AddChild(robot);
+        robot.Initialize(player);
         _robots[player.Id] = robot;
     }
 

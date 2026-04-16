@@ -1,12 +1,10 @@
 namespace AiTest.Godot;
 
 using Godot;
+using AiTest.Godot.Services;
 
 public abstract partial class Tile : Node2D
-{
-	private const int TileSize = 48;
-	private const int MapOffsetY = 120;
-	
+{	
 	protected Core.Models.Position GridPosition { get; private set; }
 	protected Core.Models.TileType TileType { get; private set; }
 	protected abstract Color BaseColor { get; }
@@ -21,6 +19,10 @@ public abstract partial class Tile : Node2D
 		
 		baseTile.Color = BaseColor;
 		borderTile.Color = BorderColor;
+		
+		var tileSize = GameScale.Instance?.TileSize ?? GameScale.BaseTileSize;
+		baseTile.Size = new Vector2(tileSize, tileSize);
+		borderTile.Size = new Vector2(tileSize, tileSize);
 	}
 
 	protected virtual void OnReady()
@@ -31,11 +33,7 @@ public abstract partial class Tile : Node2D
 	{
 		GridPosition = position;
 		TileType = type;
-		
-		Position = new Vector2(
-			position.X * TileSize,
-			position.Y * TileSize + MapOffsetY
-		);
+		Position = new Vector2(position.X * GameScale.BaseTileSize, position.Y * GameScale.BaseTileSize);
 	}
 
 	public virtual void StartAnimations()

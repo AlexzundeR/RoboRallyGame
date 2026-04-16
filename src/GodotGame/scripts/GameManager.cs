@@ -8,6 +8,7 @@ using AiTest.Core.Upgrades;
 using AiTest.Godot;
 using AiTest.Godot.Animations;
 using AiTest.Godot.Phases;
+using AiTest.Godot.Services;
 using AiTest.Core.Messages;
 
 public partial class GameManager : Node2D
@@ -17,6 +18,7 @@ public partial class GameManager : Node2D
 	private MapRenderer? _mapRenderer;
 	private RobotRenderer? _robotRenderer;
 	private AnimationService? _animationService;
+	private GameScale? _gameScale;
 	private CameraController? _camera;
 	private MessageDispatcher _dispatcher = new();
 
@@ -238,14 +240,20 @@ public partial class GameManager : Node2D
 
 	private void SetupLayers()
 	{
-		_mapRenderer = new MapRenderer { Name = "MapLayer" };
-		AddChild(_mapRenderer);
+		_gameScale = new GameScale { Name = "GameScale" };
+		AddChild(_gameScale);
 
-		_camera = new CameraController { Name = "Camera" };
-		_mapRenderer.AddChild(_camera);
+		var mapContainer = new Node2D { Name = "MapContainer" };
+		AddChild(mapContainer);
+
+		_mapRenderer = new MapRenderer { Name = "MapLayer" };
+		mapContainer.AddChild(_mapRenderer);
 
 		_robotRenderer = new RobotRenderer { Name = "RobotLayer" };
-		AddChild(_robotRenderer);
+		mapContainer.AddChild(_robotRenderer);
+
+		_camera = new CameraController { Name = "Camera" };
+		mapContainer.AddChild(_camera);
 
 		var effectsLayer = new Node2D { Name = "EffectsLayer" };
 		AddChild(effectsLayer);
@@ -296,10 +304,10 @@ public partial class GameManager : Node2D
 	private void CreateTestLevel()
 	{
 		var map = _runner!.Engine.State.Map;
+		CenterCamera(map.Width, map.Height);
 		_mapRenderer!.RenderMap(map);
 		_robotRenderer!.CreateRobots(_runner.Engine.State.Players);
 		UpdateUI();
-		CenterCamera(map.Width, map.Height);
 	}
 
 	private void CenterCamera(int mapWidth, int mapHeight)
@@ -307,14 +315,8 @@ public partial class GameManager : Node2D
 		if (_camera == null)
 			return;
 
-		const int tileSize = 48;
-		const int mapOffsetY = 120;
-		const int actionLogWidth = 280;
-		var screenWidth = GetViewport().GetVisibleRect().Size.X;
-		var availableWidth = screenWidth - actionLogWidth;
-		var centerX = availableWidth / 2f;
-		var centerY = mapHeight * tileSize / 2f + mapOffsetY;
-		_camera.Position = new Vector2(centerX, centerY);
+		var tileSize = GameScale.BaseTileSize;
+		_camera.Position = new Vector2(mapWidth * tileSize / 2f, mapHeight * tileSize / 2f);
 	}
 
 	public override void _Process(double delta)

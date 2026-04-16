@@ -2,21 +2,40 @@ namespace AiTest.Core.Cards;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Engine;
 
 public sealed class BackUpCard : ProgramCard
 {
-    public override void Execute(Robot robot, GameMap map)
+    public override CardType Type => CardType.BackUp;
+    public override string Symbol => "⬇";
+    public override string Description => "Move backward 1 space";
+
+    public override MoveIntent? CreateMoveIntent(Robot robot, GameMap map, int registerIndex)
     {
-        var oppositeDir = robot.Direction.TurnAround();
-        var currentTile = map.GetTile(robot.Position);
-        var newPos = robot.Position.Move(oppositeDir);
-        var targetTile = map.GetTile(newPos);
+        var moveDir = robot.Direction.TurnAround();
+        var entrySide = robot.Direction;
+        var targetPos = robot.Position.Move(moveDir);
         
-        if (map.IsInBounds(newPos) && 
-            targetTile.CanEnterFrom(oppositeDir) && 
-            currentTile.CanExitTo(oppositeDir))
+        if (!map.IsInBounds(targetPos))
+            return null;
+            
+        var currentTile = map.GetTile(robot.Position);
+        var targetTile = map.GetTile(targetPos);
+        
+        if (!targetTile.CanEnterFrom(entrySide))
+            return null;
+        if (!currentTile.CanExitTo(moveDir))
+            return null;
+            
+        return new MoveIntent
         {
-            robot.Move(newPos);
-        }
+            Robot = robot,
+            From = robot.Position,
+            To = targetPos,
+            Direction = moveDir,
+            Priority = Priority,
+            RegisterIndex = registerIndex,
+            Type = MoveType.Normal
+        };
     }
 }

@@ -6,12 +6,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using AiTest.Core.Models;
+using AiTest.Godot.Services;
 
 public partial class AnimationService : Node, IAnimationService
 {
-    private const int TileSize = 48;
-    private const int MapOffsetY = 120;
-
     public async Task PlayAndWait(IEnumerable<Animation> animations)
     {
         var list = animations.ToList();
@@ -23,12 +21,17 @@ public partial class AnimationService : Node, IAnimationService
 
     public static Vector2 PositionToVector(Position pos)
     {
-        return new Vector2(pos.X * TileSize + 24, pos.Y * TileSize + MapOffsetY + 24);
+        var tileSize = GameScale.BaseTileSize;
+        var halfTile = tileSize / 2f;
+        return new Vector2(
+            pos.X * tileSize + halfTile,
+            pos.Y * tileSize + halfTile
+        );
     }
 
     public static Vector2 PositionToVectorCentered(Position pos)
     {
-        return new Vector2(pos.X * TileSize + TileSize / 2, pos.Y * TileSize + MapOffsetY + TileSize / 2);
+        return PositionToVector(pos);
     }
 
     public static float DirectionToAngle(Direction dir) => dir switch

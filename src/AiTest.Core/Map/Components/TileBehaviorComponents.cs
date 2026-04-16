@@ -44,42 +44,7 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
         Steps = isExpress ? 2 : 1;
     }
 
-    public TileActionResult ApplyPostMovement(Player player, GameMap map)
-    {
-        var robot = player.Robot;
-        var strategy = player.GetConveyorStrategy();
-        
-        if (strategy.ShouldIgnoreConveyors(robot))
-            return TileActionResult.None;
-            
-        var oldPos = robot.Position;
-        var newPos = oldPos;
-        var dir = (Direction)Direction;
-
-        for (int i = 0; i < Steps; i++)
-        {
-            var next = newPos.Move(dir);
-            
-            if (!map.IsInBounds(next))
-                break;
-                
-            var currentTile = map.GetTile(newPos);
-            var targetTile = map.GetTile(next);
-            
-            if (!targetTile.CanEnterFrom(dir) || !currentTile.CanExitTo(dir))
-                break;
-                
-            newPos = next;
-        }
-
-        if (newPos != oldPos)
-        {
-            robot.SetPosition(newPos);
-            return TileActionResult.Moved;
-        }
-        
-        return TileActionResult.None;
-    }
+    public TileActionResult ApplyPostMovement(Player player, GameMap map) => TileActionResult.None;
 
     public void ApplyOnLaserPhase(LaserShot shot, GameState state) { }
     public void ApplyOnEnter(Player player, GameState state) { }
@@ -88,6 +53,7 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
     public MoveIntent? TryCreateIntent(Robot robot, GameMap map)
     {
         var dir = (Direction)Direction;
+        var entrySide = dir.TurnAround();
         var newPos = robot.Position;
 
         for (int i = 0; i < Steps; i++)
@@ -100,7 +66,7 @@ public sealed class ConveyorBehaviorComponent : TileComponentBase, ITileBehavior
             var currentTile = map.GetTile(newPos);
             var targetTile = map.GetTile(next);
             
-            if (!targetTile.CanEnterFrom(dir) || !currentTile.CanExitTo(dir))
+            if (!targetTile.CanEnterFrom(entrySide) || !currentTile.CanExitTo(dir))
                 break;
                 
             newPos = next;

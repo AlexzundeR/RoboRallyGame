@@ -1,11 +1,11 @@
 namespace AiTest.Godot;
 
 using Godot;
+using AiTest.Godot.Services;
 
 public partial class CameraController : Camera2D
 {
     [Export] private float _zoomSpeed = 0.1f;
-    [Export] private float _panSpeed = 400f;
     [Export] private float _minZoom = 0.5f;
     [Export] private float _maxZoom = 2f;
 
@@ -100,7 +100,8 @@ public partial class CameraController : Camera2D
 
         if (moveDir != Vector2.Zero)
         {
-            Position -= moveDir.Normalized() * _panSpeed * (float)delta;
+            var panSpeed = GameScale.Instance?.PanSpeed ?? 400f;
+            Position -= moveDir.Normalized() * panSpeed * (float)delta;
         }
     }
 

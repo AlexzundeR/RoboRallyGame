@@ -28,7 +28,8 @@ public enum MoveType
     Normal,
     Push,
     Board,
-    Conveyor
+    Conveyor,
+    Rotation
 }
 
 public sealed record RobotMovement(int RobotId, Position From, Position To, CollisionResult Result);
@@ -70,12 +71,19 @@ public sealed class CollisionResolver
         
         var fromTile = map.GetTile(from);
         var toTile = map.GetTile(to);
+        var entrySide = dir.TurnAround();
         
-        return toTile.CanEnterFrom(dir) && fromTile.CanExitTo(dir);
+        return toTile.CanEnterFrom(entrySide) && fromTile.CanExitTo(dir);
     }
     
     private RobotMovement TryMove(MoveIntent intent, GameMap map, Dictionary<int, Robot> robotsById, Dictionary<int, Position> resolvedPositions)
     {
+        if (intent.Type == MoveType.Rotation)
+        {
+            intent.Robot.SetDirection(intent.Direction);
+            return new RobotMovement(intent.Robot.Id, intent.From, intent.To, CollisionResult.Success);
+        }
+        
         var from = intent.From;
         var to = intent.To;
         var dir = intent.Direction;

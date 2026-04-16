@@ -2,16 +2,29 @@ namespace AiTest.Core.Cards;
 
 using AiTest.Core.Entities;
 using AiTest.Core.Models;
+using AiTest.Core.Engine;
 
 public sealed class TurnCard : ProgramCard
 {
     public bool IsLeft { get; init; }
+    public override CardType Type => IsLeft ? CardType.TurnLeft : CardType.TurnRight;
+    public override string Symbol => IsLeft ? "↺" : "↻";
+    public override string Description => IsLeft ? "Turn left 90°" : "Turn right 90°";
 
-    public override void Execute(Robot robot, GameMap map)
+    public override MoveIntent? CreateMoveIntent(Robot robot, GameMap map, int registerIndex)
     {
-        if (IsLeft)
-            robot.RotateLeft();
-        else
-            robot.RotateRight();
+        var fromDir = robot.Direction;
+        var toDir = IsLeft ? fromDir.TurnLeft() : fromDir.TurnRight();
+        
+        return new MoveIntent
+        {
+            Robot = robot,
+            From = robot.Position,
+            To = robot.Position,
+            Direction = toDir,
+            Priority = Priority,
+            RegisterIndex = registerIndex,
+            Type = MoveType.Rotation
+        };
     }
 }

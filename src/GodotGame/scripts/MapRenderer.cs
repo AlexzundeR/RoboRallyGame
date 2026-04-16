@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using AiTest.Godot.Tiles;
 using AiTest.Godot.Components;
+using AiTest.Godot.Services;
 using AiTest.Core.Models;
 using AiTest.Core.Models.Components;
 
@@ -20,9 +21,6 @@ public partial class MapRenderer : Node2D
     private PackedScene _startTileScene = null!;
     private PackedScene _checkpointTileScene = null!;
     private PackedScene _barricadeRendererScene = null!;
-    
-    private const int TileSize = 48;
-    private const int MapOffsetY = 120;
 
     public override void _Ready()
     {

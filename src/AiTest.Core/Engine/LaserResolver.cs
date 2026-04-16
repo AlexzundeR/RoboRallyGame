@@ -159,6 +159,11 @@ public sealed class LaserResolver
     private List<Position> CalculatePath(Position start, Direction dir, GameMap map)
     {
         var path = new List<Position>();
+        var startTile = map.GetTile(start);
+        
+        if (!startTile.CanExitTo(dir))
+            return path;
+        
         var pos = start.Move(dir);
         var entryDir = dir.TurnAround();
         

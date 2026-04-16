@@ -647,4 +647,37 @@ public class LaserResolverTests
         
         Assert.Equal(0, robot2.Damage);
     }
+
+    [Fact]
+    public void CalculatePath_LaserBlockedBySourceTileExit_ShouldReturnEmptyPath()
+    {
+        var map = new GameMap(10, 10);
+        map.SetTile(5, 5, TileFactory.Barricade(Direction.South));
+        
+        var robot = new Robot(1, new Position(5, 5), Direction.North);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> { new Player { Id = 1, Robot = robot } });
+        
+        Assert.Empty(shots[0].Path);
+    }
+
+    [Fact]
+    public void CalculatePath_UShapedBarrier_ShouldStopInsideBarrier()
+    {
+        var map = new GameMap(10, 10);
+        
+        map.SetTile(7, 4, TileFactory.Floor(Direction.West));
+        map.SetTile(8, 4, TileFactory.Wall());
+        
+        var robot = new Robot(1, new Position(5, 4), Direction.East);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> { new Player { Id = 1, Robot = robot } });
+        
+        var shot = shots[0];
+        
+        Assert.Contains(new Position(6, 4), shot.Path);
+        Assert.DoesNotContain(new Position(7, 4), shot.Path);
+    }
 }

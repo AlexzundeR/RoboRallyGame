@@ -133,3 +133,15 @@
 #### Идеи
 - добавить поведение зеркал: заркальные стены, рассеиватели, улучшение робота с зеркалом (поставить защиту на раунд)
 - сделать карточки улучшений в руке на один шаг регистра
+
+#### Интеграция стратегий в карточную систему
+- `ICardExecutionStrategy` - должен использоваться в `ExecuteCards` для:
+  - `ExecuteRotation()` - поворот после выполнения карты
+  - `GetExtraMoveSpaces()` - дополнительные клетки движения
+  - `ShouldRepeatLastRegister()` - повторить последний регистр (Dual Processor)
+- `IMovementStrategy` - должен использоваться в `CollisionResolver` для:
+  - `ShouldStopAtObstacle()` - остановиться у препятствия (Brakes)
+  - `GetExtraMoveSpaces()` - дополнительные клетки движения (Fourth Gear)
+- Примеры использования в тестах:
+  - `Brakes_PlayerWithUpgrade_StopsAtWall` - Brakes останавливает у стены
+  - `GyroscopicStabilizer_PlayerWithUpgrade_IgnoresConveyor` - GyroscopicStabilizer игнорирует конвейеры
