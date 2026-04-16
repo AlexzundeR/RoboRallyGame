@@ -58,7 +58,7 @@ public sealed class LaserResolver
                     Direction = GetBoardLaserDirection(tile),
                     Priority = GetPriority(robot, _mode),
                     IsRobotLaser = false,
-                    Path = CalculatePath(robot.Position, GetBoardLaserDirection(tile), map)
+                    Path = CalculatePath(robot.Position, GetBoardLaserDirection(tile), map, players, robot)
                 });
             }
             
@@ -71,7 +71,7 @@ public sealed class LaserResolver
                     Direction = dir,
                     Priority = GetPriority(robot, _mode),
                     IsRobotLaser = true,
-                    Path = CalculatePath(robot.Position, dir, map)
+                    Path = CalculatePath(robot.Position, dir, map, players, robot)
                 });
             }
             
@@ -88,7 +88,7 @@ public sealed class LaserResolver
                         Priority = GetPriority(robot, _mode),
                         IsRobotLaser = true,
                         IsRearLaser = true,
-                        Path = CalculatePath(robot.Position, rearDir, map)
+                        Path = CalculatePath(robot.Position, rearDir, map, players, robot)
                     });
                 }
             }
@@ -156,7 +156,7 @@ public sealed class LaserResolver
         };
     }
     
-    private List<Position> CalculatePath(Position start, Direction dir, GameMap map)
+    private List<Position> CalculatePath(Position start, Direction dir, GameMap map, IReadOnlyList<Player> players, Robot sourceRobot)
     {
         var path = new List<Position>();
         var startTile = map.GetTile(start);
@@ -173,6 +173,17 @@ public sealed class LaserResolver
             
             if (!tile.CanEnterFrom(entryDir))
                 break;
+            
+            var robotOnTile = players.FirstOrDefault(p => 
+                p.Robot.Id != sourceRobot.Id &&
+                p.Robot.IsAlive &&
+                p.Robot.Position == pos);
+            
+            if (robotOnTile != null)
+            {
+                path.Add(pos);
+                break;
+            }
             
             path.Add(pos);
             

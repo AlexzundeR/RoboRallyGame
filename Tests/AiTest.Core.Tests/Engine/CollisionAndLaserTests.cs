@@ -318,6 +318,51 @@ public class LaserResolverTests
     }
 
     [Fact]
+    public void PrepareShots_TwoRobotsOnPath_PathShouldContainOnlyCloserRobot()
+    {
+        var map = new GameMap(10, 10);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
+        var robot3 = new Robot(3, new Position(7, 5), Direction.North);
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 },
+            new Player { Id = 3, Robot = robot3 }
+        });
+        
+        var robot1Shot = shots.First(s => s.Source.Id == 1);
+        Assert.Single(robot1Shot.Path);
+        Assert.Equal(new Position(6, 5), robot1Shot.Path[0]);
+    }
+
+    [Fact]
+    public void PrepareShots_Integration_FireStopsAtFirstRobot()
+    {
+        var map = new GameMap(10, 10);
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
+        var robot3 = new Robot(3, new Position(7, 5), Direction.North);
+        
+        var players = new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 },
+            new Player { Id = 3, Robot = robot3 }
+        };
+        
+        var resolver = new LaserResolver();
+        var shots = resolver.PrepareShots(map, players);
+        resolver.Fire(shots, players);
+        
+        Assert.Equal(0, robot1.Damage);
+        Assert.Equal(1, robot2.Damage);
+        Assert.Equal(0, robot3.Damage);
+    }
+
+    [Fact]
     public void PrepareShots_OnBoardLaser_ShouldAddBoardLaser()
     {
         var map = new GameMap(10, 10);
@@ -360,6 +405,39 @@ public class LaserResolverTests
         });
         
         Assert.Equal(1, robot2.Damage);
+    }
+
+    [Fact]
+    public void Fire_TwoRobotsOnPath_OnlyCloserRobotTakesDamage()
+    {
+        var robot1 = new Robot(1, new Position(5, 5), Direction.East);
+        var robot2 = new Robot(2, new Position(6, 5), Direction.North);
+        var robot3 = new Robot(3, new Position(7, 5), Direction.North);
+        
+        var shots = new List<LaserShot>
+        {
+            new LaserShot
+            {
+                Source = robot1,
+                From = new Position(5, 5),
+                Direction = Direction.East,
+                Priority = 100,
+                IsRobotLaser = true,
+                Path = new List<Position> { new Position(6, 5) }
+            }
+        };
+        
+        var resolver = new LaserResolver();
+        resolver.Fire(shots, new List<Player> 
+        { 
+            new Player { Id = 1, Robot = robot1 },
+            new Player { Id = 2, Robot = robot2 },
+            new Player { Id = 3, Robot = robot3 }
+        });
+        
+        Assert.Equal(0, robot1.Damage);
+        Assert.Equal(1, robot2.Damage);
+        Assert.Equal(0, robot3.Damage);
     }
 
     [Fact]
