@@ -274,3 +274,6 @@ export_presets.cfg
 .godot/mono/
 *.dll.mdb
 *.pdb.mdb
+
+# GdUnit4Net - generated test runner scene
+gdunit4_testadapter_v5/

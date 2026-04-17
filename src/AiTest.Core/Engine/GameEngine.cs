@@ -83,13 +83,13 @@ public sealed class GameState
 {
     private readonly List<Player> _players;
 
-    public GameMap Map { get; set; } = null!;
+    public GameMap Map { get; private set; } = null!;
     public IReadOnlyList<Player> Players => _players;
-    public int CurrentPlayerIndex { get; set; }
-    public int CurrentRegister { get; set; }
-    public GamePhase Phase { get; set; } = GamePhase.Setup;
-    public int Round { get; set; }
-    public Player? Winner { get; set; }
+    public int CurrentPlayerIndex { get; private set; }
+    public int CurrentRegister { get; private set; }
+    public GamePhase Phase { get; private set; } = GamePhase.Setup;
+    public int Round { get; private set; }
+    public Player? Winner { get; private set; }
 
     public GameState() : this(new List<Player>()) { }
 
@@ -102,6 +102,12 @@ public sealed class GameState
     public GameState(List<Player> players, GameMap map)
     {
         _players = players;
+        Map = map;
+        Phase = GamePhase.Programming;
+    }
+
+    public void InitializeMap(GameMap map)
+    {
         Map = map;
         Phase = GamePhase.Programming;
     }
@@ -129,6 +135,58 @@ public sealed class GameState
             : null;
     }
 
+    public Player? GetPlayer(int playerId)
+    {
+        return _players.FirstOrDefault(p => p.Id == playerId);
+    }
+
+    public void SetCurrentRegister(int register)
+    {
+        CurrentRegister = register;
+    }
+
+    public void NextRegister()
+    {
+        CurrentRegister++;
+        if (CurrentRegister >= 5)
+        {
+            CurrentRegister = 0;
+        }
+    }
+
+    public void SetCurrentPlayerIndex(int index)
+    {
+        CurrentPlayerIndex = index;
+    }
+
+    public void IncrementCurrentPlayerIndex()
+    {
+        CurrentPlayerIndex++;
+        if (CurrentPlayerIndex >= _players.Count)
+            CurrentPlayerIndex = 0;
+    }
+
+    public void SetPhase(GamePhase phase)
+    {
+        Phase = phase;
+    }
+
+    public void IncrementRound()
+    {
+        Round++;
+    }
+
+    public void StartGame()
+    {
+        Phase = GamePhase.Programming;
+        Round = 1;
+    }
+
+    public void SetWinner(Player? winner)
+    {
+        Winner = winner;
+    }
+
     public void Clear()
     {
         _players.Clear();
@@ -143,15 +201,20 @@ public sealed class GameState
 public interface IGameEngine
 {
     GameState State { get; }
+    bool IsGameOver();
+    IReadOnlyList<Player> GetWinners();
+
     void Initialize(GameMap map);
     void AddPlayer(string name);
     void StartGame();
-    void BeginRegisterExecution(int registerIndex);
+    void GrantDamage(int playerId, int amount);
+    void GrantRandomUpgrade(int playerId);
+    void SetCurrentRegister(int register);
+    void SetCurrentPlayerIndex(int index);
+    void SetPhase(GamePhase phase);
     StepResult TryExecuteNextStep();
     void NextRegister();
     void NextRound();
-    bool IsGameOver();
-    IReadOnlyList<Player> GetWinners();
 }
 
 public sealed class GameEngine : IGameEngine
@@ -181,6 +244,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
     public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
     public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
+    public event Action<RegisterExecutedEvent>? OnRegisterExecuted;
     public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
     public event Action? OnAllRegistersComplete;
     public event Action<GameOverEvent>? OnGameOver;
@@ -204,10 +268,33 @@ public sealed class GameEngine : IGameEngine
 
     public GameState State { get; }
 
+    public int CurrentPlayerIndex => State.CurrentPlayerIndex;
+    public int CurrentRegister => State.CurrentRegister;
+    public int Round => State.Round;
+    public GamePhase Phase => State.Phase;
+    public IReadOnlyList<Player> Players => State.Players;
+    public GameMap Map => State.Map;
+
+    public Player? GetCurrentPlayer()
+    {
+        return State.GetCurrentPlayer();
+    }
+
+    public Player? GetPlayer(int playerId)
+    {
+        return State.Players.FirstOrDefault(p => p.Id == playerId);
+    }
+
+    public void GrantDamage(int playerId, int amount)
+    {
+        var player = GetPlayer(playerId);
+        if (player == null) return;
+        player.Robot.TakeDamage(amount);
+    }
+
     public void Initialize(GameMap map)
     {
-        State.Map = map;
-        State.Phase = GamePhase.Programming;
+        State.InitializeMap(map);
     }
 
     public void AddPlayer(string name)
@@ -224,14 +311,13 @@ public sealed class GameEngine : IGameEngine
 
     public void StartGame()
     {
-        State.Phase = GamePhase.Programming;
-        State.Round = 1;
+        State.StartGame();
         DealCardsToAllPlayers();
     }
 
     public void GrantUpgrade(int playerId, string upgradeId)
     {
-        var player = State.Players.FirstOrDefault(p => p.Id == playerId);
+        var player = State.GetPlayer(playerId);
         if (player == null)
             return;
 
@@ -256,23 +342,46 @@ public sealed class GameEngine : IGameEngine
         }
     }
 
-    public void BeginRegisterExecution(int registerIndex)
+    public void SetCurrentRegister(int register)
     {
+        State.SetCurrentRegister(register);
+        _currentStep = -1;
+    }
+
+    public void SetCurrentPlayerIndex(int index)
+    {
+        State.SetCurrentPlayerIndex(index);
+    }
+
+    public void SetPhase(GamePhase phase)
+    {
+        State.SetPhase(phase);
+    }
+
+    private void BeginRegisterExecution()
+    {
+        var registerIndex = State.CurrentRegister;
+        
         _currentRegister = registerIndex;
-        _currentStep = 0;
         _alivePlayers = State.Players.Where(p => p.Robot.IsAlive).ToList();
         _movementStepIndex = 0;
         _conveyorExecuted = false;
         _laserExecuted = false;
+        _currentStep = 0;
     }
 
     public StepResult TryExecuteNextStep()
     {
+        if (_currentStep < 0)
+        {
+            BeginRegisterExecution();
+        }
+        
         var totalSteps = GetTotalSteps();
         if (_currentStep >= totalSteps)
         {
-            CheckGameOver();
             OnPhaseExecutionComplete?.Invoke(new PhaseExecutionCompleteEvent(_currentRegister));
+            CheckGameOver();
             return StepResult.Completed;
         }
 
@@ -314,7 +423,7 @@ public sealed class GameEngine : IGameEngine
 
     private void FireLasers()
     {
-        var damageBefore = CaptureDamageStates();
+        var before = CaptureRobotStates();
         var shots = _laserResolver.PrepareShots(State.Map, State.Players);
         
         foreach (var shot in shots)
@@ -330,7 +439,7 @@ public sealed class GameEngine : IGameEngine
         }
         
         _laserResolver.Fire(shots, State.Players);
-        CheckDamageOrDestroy(damageBefore);
+        CheckDamageOrDestroy(before);
     }
 
     private Dictionary<int, (Position Pos, Direction Dir, int Damage)> CaptureStates()
@@ -343,29 +452,48 @@ public sealed class GameEngine : IGameEngine
         return states;
     }
 
+    private Dictionary<int, (RobotStatus Status, int Damage, int LifeTokens)> CaptureRobotStates()
+    {
+        var states = new Dictionary<int, (RobotStatus, int, int)>();
+        foreach (var player in State.Players)
+        {
+            states[player.Robot.Id] = (player.Robot.Status, player.Robot.Damage, player.Robot.LifeTokens);
+        }
+        return states;
+    }
+
     private Dictionary<int, int> CaptureDamageStates()
     {
         return State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
     }
 
-    private void CheckDamageOrDestroy(Dictionary<int, int> damageBefore)
+    private void CheckDamageOrDestroy(Dictionary<int, (RobotStatus Status, int Damage, int LifeTokens)> before)
     {
         foreach (var player in State.Players)
         {
             var id = player.Robot.Id;
-            if (damageBefore.TryGetValue(id, out var before))
+            if (before.TryGetValue(id, out var prev))
             {
-                var current = player.Robot.Damage;
-                if (current != before)
+                var currentDamage = player.Robot.Damage;
+                
+                if (currentDamage != prev.Damage)
                 {
-                    OnDamage?.Invoke(new DamageEvent(id, current - before, current));
-                    if (current >= 10)
+                    OnDamage?.Invoke(new DamageEvent(id, currentDamage - prev.Damage, currentDamage));
+                }
+                
+                if (prev.LifeTokens > player.Robot.LifeTokens)
+                {
+                    if (player.Robot.LifeTokens == 0)
+                    {
                         OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(id, player.Robot.Position));
+                    }
+                    else
+                    {
+                        OnRobotReboot?.Invoke(new RobotRebootEvent(id, player.Robot.Position));
+                    }
+                    OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
                 }
             }
-            //TODO:Переделать на проверку потери токена
-            player.Robot.LoseLifeToken();
-            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
         }
     }
     
@@ -393,6 +521,7 @@ public sealed class GameEngine : IGameEngine
     private void ExecuteCards(int registerIndex)
     {
         var before = CaptureStates();
+        var statusBefore = CaptureRobotStates();
         var moveIntents = new List<MoveIntent>();
         
         foreach (var player in State.Players)
@@ -423,14 +552,24 @@ public sealed class GameEngine : IGameEngine
             resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
         }
         
+        for (int i = 0; i < State.Players.Count; i++)
+        {
+            var player = State.Players[i];
+            var card = player.GetRegister(registerIndex);
+            if (card != null && player.Robot.IsAlive)
+            {
+                OnRegisterExecuted?.Invoke(new RegisterExecutedEvent(registerIndex, i));
+            }
+        }
+        
         var after = CaptureStates();
         FireMoveAndRotateEvents(before, after);
-        CheckDamageOrDestroy(before.ToDictionary(x => x.Key, x => x.Value.Damage));
+        CheckDamageOrDestroy(statusBefore);
     }
 
     private void ApplyAllTileEffects()
     {
-        var damageBefore = CaptureDamageStates();
+        var statusBefore = CaptureRobotStates();
         var directionsBefore = State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Direction);
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
         var mapMovementIntents = new List<MoveIntent>();
@@ -487,14 +626,14 @@ public sealed class GameEngine : IGameEngine
             }
         }
 
-        CheckDamageOrDestroy(damageBefore);
+        CheckDamageOrDestroy(statusBefore);
     }
 
     private void CheckGameOver()
     {
         if (IsGameOver() && State.Phase != GamePhase.GameOver)
         {
-            State.Phase = GamePhase.GameOver;
+            State.SetPhase(GamePhase.GameOver);
             var winners = GetWinners();
             OnGameOver?.Invoke(new GameOverEvent(
                 winners.Select(w => w.Id).ToList(),
@@ -504,10 +643,10 @@ public sealed class GameEngine : IGameEngine
 
     public void NextRegister()
     {
-        State.CurrentRegister++;
-        if (State.CurrentRegister >= 5)
+        State.NextRegister();
+        _currentStep = -1;
+        if (State.CurrentRegister == 0)
         {
-            State.CurrentRegister = 0;
             OnAllRegistersComplete?.Invoke();
             NextRound();
         }
@@ -515,10 +654,10 @@ public sealed class GameEngine : IGameEngine
 
     public void NextRound()
     {
-        State.Round++;
-        State.CurrentRegister = 0;
-        State.CurrentPlayerIndex = 0;
-        State.Phase = GamePhase.Programming;
+        State.IncrementRound();
+        State.SetCurrentRegister(0);
+        State.SetCurrentPlayerIndex(0);
+        State.SetPhase(GamePhase.Programming);
         
         foreach (var player in State.Players)
         {

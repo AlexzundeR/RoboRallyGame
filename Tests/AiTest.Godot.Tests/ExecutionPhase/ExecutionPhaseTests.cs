@@ -31,6 +31,31 @@ public class MockAnimationService : IAnimationService
 
 public class ExecutionPhaseTests
 {
+    private static void BindEngineToDispatcher(GameRunner runner, MessageDispatcher dispatcher)
+    {
+        var engine = runner.Engine as AiTest.Core.Engine.GameEngine;
+        if (engine == null) return;
+        
+        engine.OnMove += e => dispatcher.Publish(e);
+        engine.OnRotate += e => dispatcher.Publish(e);
+        engine.OnLaserFire += e => dispatcher.Publish(e);
+        engine.OnDamage += e => dispatcher.Publish(e);
+        engine.OnConveyorMove += e => dispatcher.Publish(e);
+        engine.OnCheckpoint += e => dispatcher.Publish(e);
+        engine.OnRobotDestroyed += e => dispatcher.Publish(e);
+        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRepaired += e => dispatcher.Publish(e);
+        engine.OnLifeTokenLost += e => dispatcher.Publish(e);
+        engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnConveyorPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnRegisterExecuted += e => dispatcher.Publish(e);
+        engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
+        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AiTest.Core.Messages.AllRegistersCompleteEvent());
+        engine.OnGameOver += e => dispatcher.Publish(e);
+        engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
+    }
+
     private static Player CreatePlayerWithMoveCards(params int[] spaces)
     {
         var registers = new RegisterCard?[5];
@@ -50,9 +75,10 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
-        var executedRegisters = new List<int>();
-        dispatcher.Subscribe<RegisterExecutedEvent>(e => executedRegisters.Add(e.Register));
+        var phaseCompleteRegisters = new List<int>();
+        dispatcher.Subscribe<PhaseExecutionCompleteEvent>(e => phaseCompleteRegisters.Add(e.Register));
 
         var phase = new ExecutionPhase();
         phase.Initialize(runner, dispatcher, _ => { });
@@ -71,8 +97,8 @@ public class ExecutionPhaseTests
             phase.ExecuteRegister();
         }
 
-        Assert.Equal(5, executedRegisters.Count);
-        Assert.Equal(new List<int> { 0, 1, 2, 3, 4 }, executedRegisters);
+        Assert.Equal(5, phaseCompleteRegisters.Count);
+        Assert.Equal(new List<int> { 0, 1, 2, 3, 4 }, phaseCompleteRegisters);
     }
 
     [Fact]
@@ -81,6 +107,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var mock = new MockAnimationService();
         var phase = new ExecutionPhase();
@@ -102,6 +129,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var phaseChangedEvents = new List<PhaseChangedEvent>();
         dispatcher.Subscribe<PhaseChangedEvent>(e => phaseChangedEvents.Add(e));
@@ -160,6 +188,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var executedEvents = new List<RegisterExecutedEvent>();
         dispatcher.Subscribe<RegisterExecutedEvent>(e => executedEvents.Add(e));
@@ -183,6 +212,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var executedRegisters = new List<int>();
         dispatcher.Subscribe<RegisterExecutedEvent>(e => executedRegisters.Add(e.Register));
@@ -215,6 +245,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var mock = new MockAnimationService();
 
@@ -236,6 +267,7 @@ public class ExecutionPhaseTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var registerExecutedEvents = new List<RegisterExecutedEvent>();
         dispatcher.Subscribe<RegisterExecutedEvent>(e => registerExecutedEvents.Add(e));

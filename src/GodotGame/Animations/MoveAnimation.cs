@@ -6,7 +6,7 @@ using AiTest.Core.Models;
 
 public class MoveAnimation : Animation
 {
-    public Robot Robot { get; init; } = null!;
+    public RobotNode Robot { get; init; } = null!;
     public Position From { get; init; }
     public Position To { get; init; }
     public float Duration { get; init; } = 0.6f;

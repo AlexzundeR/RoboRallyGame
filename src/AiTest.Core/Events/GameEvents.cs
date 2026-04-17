@@ -56,3 +56,5 @@ public sealed record PowerDownToggledEvent(int PlayerIndex, bool IsPowerDown) : 
 public sealed record GameOverEvent(IReadOnlyList<int> WinnerIds, bool IsTie) : IEvent;
 
 public sealed record UpgradeAcquiredEvent(int PlayerId, string UpgradeId) : IEvent;
+
+public sealed record AllRegistersCompleteEvent() : IEvent;

@@ -6,7 +6,7 @@ using AiTest.Core.Models;
 
 public class RotateAnimation : Animation
 {
-	public Robot Robot { get; init; } = null!;
+	public RobotNode Robot { get; init; } = null!;
 	public Direction From { get; init; }
 	public Direction To { get; init; }
 	public float Duration { get; init; } = 0.4f;

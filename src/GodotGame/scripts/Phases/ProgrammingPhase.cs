@@ -19,14 +19,15 @@ public class GodotInputService : IInputService
 public class ProgrammingPhase : IGamePhase
 {
 	private GameRunner? _runner;
+	private GameStateProvider? _stateProvider;
 	private IMessageDispatcher? _dispatcher;
 	private Action<GamePhaseType>? _onPhaseComplete;
 	private IInputService _inputService;
 	private int _selectedRegister = 0;
 
-	public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
+	public int CurrentPlayerIndex => _stateProvider?.GetState().CurrentPlayerIndex ?? 0;
 	public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
-	public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
+	public int CurrentRegister => _stateProvider?.GetState().CurrentRegister ?? 0;
 	public int SelectedRegister => _selectedRegister;
 
 	public ProgrammingPhase() : this(new GodotInputService()) { }
@@ -39,6 +40,7 @@ public class ProgrammingPhase : IGamePhase
 	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
 	{
 		_runner = runner;
+		_stateProvider = new GameStateProvider(runner.Engine);
 		_dispatcher = dispatcher;
 		_onPhaseComplete = onPhaseComplete;
 
@@ -68,7 +70,7 @@ public class ProgrammingPhase : IGamePhase
 			return;
 		}
 
-		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		var player = _runner.Engine.Players[CurrentPlayerIndex];
 		if (player.Robot.IsPowerDown)
 		{
 			ConfirmPlayer();
@@ -115,7 +117,7 @@ public class ProgrammingPhase : IGamePhase
 	{
 		if (_runner == null || _dispatcher == null) return;
 
-		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		var player = _runner.Engine.Players[CurrentPlayerIndex];
 		
 		if (cardIndex < 9 && registerIndex < 5)
 		{
@@ -143,16 +145,18 @@ public class ProgrammingPhase : IGamePhase
 
 		_dispatcher.Publish(new PlayerConfirmedEvent(CurrentPlayerIndex));
 		
-		if (_runner.Engine.State.CurrentPlayerIndex < _runner.Engine.State.Players.Count - 1)
+		var state = _stateProvider!.GetState();
+		var playerCount = state.Players.Count;
+		if (state.CurrentPlayerIndex < playerCount - 1)
 		{
-			_runner.Engine.State.CurrentPlayerIndex++;
-			_runner.Engine.State.CurrentRegister = 0;
+			_runner.Engine.SetCurrentPlayerIndex(state.CurrentPlayerIndex + 1);
+			_runner.Engine.SetCurrentRegister(0);
 			_selectedRegister = 0;
 		}
 		else
 		{
-			_runner.Engine.State.CurrentPlayerIndex = 0;
-			_runner.Engine.State.CurrentRegister = 0;
+			_runner.Engine.SetCurrentPlayerIndex(0);
+			_runner.Engine.SetCurrentRegister(0);
 			_selectedRegister = 0;
 			_onPhaseComplete?.Invoke(GamePhaseType.Execution);
 		}
@@ -166,7 +170,7 @@ public class ProgrammingPhase : IGamePhase
 	{
 		if (_runner == null || _dispatcher == null) return;
 
-		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
+		var player = _runner.Engine.Players[CurrentPlayerIndex];
 		player.TogglePowerDown();
 		_dispatcher.Publish(new PowerDownToggledEvent(CurrentPlayerIndex, player.Robot.IsPowerDown));
 	}

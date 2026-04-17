@@ -10,6 +10,7 @@ using AiTest.Godot.Animations;
 using AiTest.Godot.Phases;
 using AiTest.Godot.Services;
 using AiTest.Core.Messages;
+using CoreMessages = AiTest.Core.Messages;
 
 public partial class GameManager : Node2D
 {
@@ -20,7 +21,7 @@ public partial class GameManager : Node2D
 	private AnimationService? _animationService;
 	private GameScale? _gameScale;
 	private CameraController? _camera;
-	private MessageDispatcher _dispatcher = new();
+	private IMessageDispatcher _dispatcher = new MessageDispatcher();
 
 	private IGamePhase? _currentPhase;
 	private ProgrammingPhase? _programmingPhase;
@@ -72,7 +73,7 @@ public partial class GameManager : Node2D
 		if (_runner == null)
 			return;
 
-		var player = _runner.Engine.State.Players.FirstOrDefault();
+		var player = _runner.Engine.GetCurrentPlayer();
 		if (player == null)
 			return;
 
@@ -84,12 +85,12 @@ public partial class GameManager : Node2D
 		if (_runner == null)
 			return;
 
-		var player = _runner.Engine.State.Players.FirstOrDefault();
+		var player = _runner.Engine.GetCurrentPlayer();
 		if (player == null)
 			return;
 
-		player.Robot.TakeDamage(1);
-		GD.Print($"[SECRET] Player {player.Id} took 1 damage (total: {player.Robot.Damage})");
+		_runner.Engine.GrantDamage(player.Id, 1);
+		GD.Print($"[SECRET] Player {player.Id} took 1 damage");
 	}
 
 	private void HandleCameraInput(InputEvent @event)
@@ -126,6 +127,14 @@ public partial class GameManager : Node2D
 	{
 		_runner = new GameRunner(GameMapConfigs.CreateDefault2Player());
 		_runner.Initialize();
+		SubscribeToEngineEvents();
+	}
+
+	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher)
+	{
+		_runner = runner;
+		_dispatcher = dispatcher;
+		SubscribeToEngineEvents();
 	}
 
 	private void InitializePhases()
@@ -151,18 +160,36 @@ public partial class GameManager : Node2D
 		_dispatcher.Subscribe<ExecutionStartedEvent>(OnExecutionStarted);
 		_dispatcher.Subscribe<RegistersClearedEvent>(OnRegistersCleared);
 		_dispatcher.Subscribe<CheckpointEvent>(OnCheckpoint);
-		
-		_runner!.Engine.OnCheckpoint += OnCheckpointEngine;
-		_runner!.Engine.OnGameOver += OnGameOver;
+		_dispatcher.Subscribe<GameOverEvent>(OnGameOver);
 	}
 
-	private void OnCheckpointEngine(CheckpointEvent e)
+	private void SubscribeToEngineEvents()
 	{
-		_gameUI?.UpdateCheckpointProgress(e.PlayerId, e.CheckpointNumber, e.TotalCheckpoints);
+		var engine = _runner!.Engine;
+		
+		engine.OnMove += e => _dispatcher.Publish(e);
+		engine.OnRotate += e => _dispatcher.Publish(e);
+		engine.OnLaserFire += e => _dispatcher.Publish(e);
+		engine.OnDamage += e => _dispatcher.Publish(e);
+		engine.OnConveyorMove += e => _dispatcher.Publish(e);
+		engine.OnCheckpoint += e => _dispatcher.Publish(e);
+		engine.OnRobotDestroyed += e => _dispatcher.Publish(e);
+		engine.OnRobotReboot += e => _dispatcher.Publish(e);
+		engine.OnRobotRepaired += e => _dispatcher.Publish(e);
+		engine.OnLifeTokenLost += e => _dispatcher.Publish(e);
+		engine.OnMovementPhaseStarted += e => _dispatcher.Publish(e);
+		engine.OnConveyorPhaseStarted += e => _dispatcher.Publish(e);
+		engine.OnLaserPhaseStarted += e => _dispatcher.Publish(e);
+		engine.OnRegisterExecuted += e => _dispatcher.Publish(e);
+		engine.OnPhaseExecutionComplete += e => _dispatcher.Publish(e);
+		engine.OnAllRegistersComplete += () => _dispatcher.Publish(new CoreMessages.AllRegistersCompleteEvent());
+		engine.OnGameOver += e => _dispatcher.Publish(e);
+		engine.OnUpgradeAcquired += e => _dispatcher.Publish(e);
 	}
 
 	private void OnCheckpoint(CheckpointEvent e)
 	{
+		_gameUI?.UpdateCheckpointProgress(e.PlayerId, e.CheckpointNumber, e.TotalCheckpoints);
 	}
 
 	private void OnGameOver(GameOverEvent e)
@@ -303,10 +330,10 @@ public partial class GameManager : Node2D
 
 	private void CreateTestLevel()
 	{
-		var map = _runner!.Engine.State.Map;
+		var map = _runner!.Engine.Map;
 		CenterCamera(map.Width, map.Height);
 		_mapRenderer!.RenderMap(map);
-		_robotRenderer!.CreateRobots(_runner.Engine.State.Players);
+		_robotRenderer!.CreateRobots(_runner.Engine.Players);
 		UpdateUI();
 	}
 
@@ -324,7 +351,7 @@ public partial class GameManager : Node2D
 		HandleCameraKeyboardPan(delta);
 		HandleInput();
 		_currentPhase?.Update(delta);
-		_robotRenderer!.UpdatePositions(_runner!.Engine.State.Players);
+		_robotRenderer!.UpdatePositions(_runner!.Engine.Players);
 		UpdateUI();
 	}
 
@@ -375,8 +402,9 @@ public partial class GameManager : Node2D
 			return;
 		}
 
-		var p1 = _runner.Engine.State.Players[0];
-		var p2 = _runner.Engine.State.Players[1];
+		var players = _runner.Engine.Players;
+		var p1 = players[0];
+		var p2 = players[1];
 
 		_gameUI.UpdateRound(_roundNumber);
 		_gameUI.UpdatePhase(_phaseType == GamePhaseType.Programming);

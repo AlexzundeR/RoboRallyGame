@@ -11,11 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiTest.Core.Tests", "Tests\AiTest.Core.Tests\AiTest.Core.Tests.csproj", "{B102A7DA-956C-4208-8087-54A4D7B67CB5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiTest.Godot.Tests", "Tests\AiTest.Godot.Tests\AiTest.Godot.Tests.csproj", "{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GodotGame", "GodotGame", "{E11AEC79-FB7D-637A-149A-CE75812EAA80}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,6 +78,5 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B102A7DA-956C-4208-8087-54A4D7B67CB5} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{1F5B8036-EC79-4D44-AAAE-2C9120CCBC5B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
-		{E11AEC79-FB7D-637A-149A-CE75812EAA80} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

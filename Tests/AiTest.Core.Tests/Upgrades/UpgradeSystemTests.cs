@@ -13,7 +13,7 @@ public class UpgradeSystemTests
 {
     private static void ExecuteRegister(GameEngine engine, int registerIndex)
     {
-        engine.BeginRegisterExecution(registerIndex);
+        engine.SetCurrentRegister(registerIndex);
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
     }
 

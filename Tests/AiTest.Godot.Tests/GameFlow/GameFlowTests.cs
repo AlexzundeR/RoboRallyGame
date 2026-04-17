@@ -13,8 +13,33 @@ public class GameFlowTests
 {
     private static void ExecuteRegister(GameEngine engine, int registerIndex)
     {
-        engine.BeginRegisterExecution(registerIndex);
+        engine.SetCurrentRegister(registerIndex);
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+    }
+
+    private static void BindEngineToDispatcher(GameRunner runner, MessageDispatcher dispatcher)
+    {
+        var engine = runner.Engine as AiTest.Core.Engine.GameEngine;
+        if (engine == null) return;
+        
+        engine.OnMove += e => dispatcher.Publish(e);
+        engine.OnRotate += e => dispatcher.Publish(e);
+        engine.OnLaserFire += e => dispatcher.Publish(e);
+        engine.OnDamage += e => dispatcher.Publish(e);
+        engine.OnConveyorMove += e => dispatcher.Publish(e);
+        engine.OnCheckpoint += e => dispatcher.Publish(e);
+        engine.OnRobotDestroyed += e => dispatcher.Publish(e);
+        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRepaired += e => dispatcher.Publish(e);
+        engine.OnLifeTokenLost += e => dispatcher.Publish(e);
+        engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnConveyorPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnRegisterExecuted += e => dispatcher.Publish(e);
+        engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
+        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AiTest.Core.Messages.AllRegistersCompleteEvent());
+        engine.OnGameOver += e => dispatcher.Publish(e);
+        engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
     }
 
     private static Player CreateWithRegisters(params (ProgramCard? Card, int HandIndex)[] registers)
@@ -108,7 +133,7 @@ public class GameFlowTests
         phase.Initialize(runner, dispatcher, _ => { });
 
         var firstPlayer = phase.CurrentPlayerName;
-        runner.Engine.State.CurrentPlayerIndex = 1;
+        runner.Engine.SetCurrentPlayerIndex(1);
         var secondPlayer = phase.CurrentPlayerName;
 
         Assert.NotEqual(firstPlayer, secondPlayer);
@@ -324,6 +349,7 @@ public class GameFlowTests
         }
 
         programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        BindEngineToDispatcher(runner, dispatcher);
         executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
 
         programmingPhase.OnEnter();
@@ -480,6 +506,7 @@ public class GameFlowTests
         var runner = new GameRunner(TestConfigs.CreateDefault2Player());
         runner.Initialize();
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var phaseChangedEvents = new List<PhaseChangedEvent>();
         dispatcher.Subscribe<PhaseChangedEvent>(e => phaseChangedEvents.Add(e));
@@ -553,6 +580,7 @@ public class GameFlowTests
         }
 
         programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        BindEngineToDispatcher(runner, dispatcher);
         executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
 
         programmingPhase.OnEnter();

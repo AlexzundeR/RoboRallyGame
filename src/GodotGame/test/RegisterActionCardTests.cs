@@ -1,9 +1,10 @@
-namespace AiTest.Godot.Tests.UI;
+namespace AiTest.Tests.GdUnit.UI;
 
-using Godot;
+using AiTest.Godot.UI;
 using GdUnit4;
 using static GdUnit4.Assertions;
 using System.Reflection;
+using Godot;
 
 [TestSuite]
 public class RegisterActionCardTests
@@ -12,7 +13,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void LoadScene_ShouldWork()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         AssertThat(scene).IsNotNull();
         
         var card = scene.Instantiate<RegisterActionCard>();
@@ -25,7 +26,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void CardSymbol_Default_ShouldBeNull()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         AssertThat(card.CardSymbol).IsNull();
@@ -37,7 +38,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void IsEmpty_WhenNoSymbol_ShouldBeTrue()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         AssertThat(card.IsEmpty).IsTrue();
@@ -49,7 +50,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void CardPriority_Default_ShouldBe100()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         AssertThat(card.CardPriority).IsEqual(100);
@@ -61,7 +62,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void IsSelected_Default_ShouldBeFalse()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         AssertThat(card.IsSelected).IsFalse();
@@ -73,7 +74,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void IsFixed_Default_ShouldBeFalse()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         AssertThat(card.IsFixed).IsFalse();
@@ -85,7 +86,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void SetCardData_ViaReflection_ShouldUpdateProperties()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         var method = typeof(RegisterActionCard).GetMethod("SetCardData", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -103,7 +104,7 @@ public class RegisterActionCardTests
     [RequireGodotRuntime]
     public void SetEmpty_ViaReflection_ShouldClearProperties()
     {
-        var scene = GD.Load<PackedScene>("res://RegisterActionCard.tscn");
+        var scene = ResourceLoader.Load<PackedScene>("res://RegisterActionCard.tscn");
         var card = scene.Instantiate<RegisterActionCard>();
         
         var setCardMethod = typeof(RegisterActionCard).GetMethod("SetCardData", BindingFlags.NonPublic | BindingFlags.Instance);

@@ -1,5 +1,9 @@
 # AGENTS.md - AI Test Project
 
+## CRITICAL RULES
+
+1. **НИКОГДА НЕ ОТКАТЫВАЙ ИЗМЕНЕНИЯ ЧЕРЕЗ git checkout БЕЗ ЯВНОГО РАЗРЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ!** Если что-то сломалось - чини, но не откатывай.
+
 ## Project Overview
 
 - **Project Type**: Godot Game (C#) + Core Library
@@ -198,33 +202,50 @@ src/GodotGame/
 ```
 Tests/
 ├── AiTest.Core.Tests/        # Pure logic tests (xUnit)
-└── AiTest.Godot.Tests/       # Godot-specific tests
+└── AiTest.Godot.Tests/      # Godot-specific tests (xUnit)
     ├── ExecutionPhase/       # Execution phase tests
     ├── GameFlow/             # Game flow integration tests
     ├── Messages/             # Message dispatcher tests
     ├── Phases/               # Phase tests
-    ├── GdUnit/               # GdUnit4Net tests (RequireGodotRuntime)
-    └── GlobalUsings.cs       # Common usings (FluentAssertions, Godot, etc.)
+    └── GlobalUsings.cs       # Common usings
+
+src/GodotGame/
+└── test/                    # GdUnit4Net tests (Godot runtime)
+    ├── MoveAnimationTests.cs
+    ├── RegisterActionCardTests.cs
+    └── RobotVisualTests.cs
 ```
 
 ### Testing Frameworks
-- **xUnit** - for unit tests
+- **xUnit** - for unit tests (no Godot runtime)
 - **FluentAssertions** - for readable assertions (`.Should().Be()`)
-- **GdUnit4Net** - for Godot runtime integration tests
+- **GdUnit4Net** - for Godot runtime integration tests (requires `GODOT_BIN`)
 
 ### Running Tests
 ```bash
-# Run all tests
+# Run all xUnit tests (no Godot needed)
 dotnet test
 
-# Run Godot tests only
-dotnet test Tests/AiTest.Godot.Tests/
+# Run GdUnit4Net tests (requires Godot)
+cmd.exe /c "set GODOT_BIN=C:\Program Files (x86)\godot\Godot_v4.6.1-stable_mono_win64.exe && dotnet test src/GodotGame/ --settings .runsettings"
 
-# Run tests with GODOT_BIN (for GdUnit4Net runtime tests)
-export GODOT_BIN="/path/to/Godot_v4.x-stable_mono_win64.exe"  # Linux/macOS
-set GODOT_BIN=C:\path\to\Godot_v4.x-stable_mono_win64.exe    # Windows
-dotnet test
+# Linux/macOS:
+export GODOT_BIN="/path/to/Godot_v4.x-stable_mono_linux.x86_64"
+dotnet test src/GodotGame/ --settings .runsettings
 ```
+
+### GdUnit4Net Setup
+1. NuGet packages in `AiTest.Godot.csproj`:
+   - `gdUnit4.api` (testing framework)
+   - `gdUnit4.test.adapter` (VSTest integration)
+   - `gdUnit4.analyzers` (compile-time validation)
+   - `FluentAssertions`
+2. Settings in csproj:
+   ```xml
+   <VSTestTestAdapterPath>none</VSTestTestAdapterPath>
+   <TestFramework>GdUnit4</TestFramework>
+   ```
+3. `.runsettings` file with `GODOT_BIN` environment variable
 
 ### Writing Tests
 ```csharp
@@ -241,24 +262,27 @@ public void ExecutionPhase_ExecuteRegister_PublishesEvent()
 }
 
 // GdUnit4Net with Godot runtime
+using RobotNode = AiTest.Godot.RobotNode;
+
 [TestSuite]
-public class RobotNodeTests
+public class RobotVisualTests
 {
     [TestCase]
     [RequireGodotRuntime]
-    public void Robot_Move_UpdatesPosition()
+    public void GodotRobot_SetDirection_ShouldUpdateInternalDirection()
     {
-        var robot = new Robot();
-        robot.Move(new Position(1, 0));
-        AssertThat(robot.Position.X).IsEqual(1);
+        var robot = new RobotNode();
+        robot.SetDirection(Direction.North);
+        AssertThat(robot.GetDirection()).IsEqual(Direction.North);
+        robot.QueueFree();
     }
 }
 ```
 
 ### Test Guidelines
 - **Unit tests** (`AiTest.Core.Tests`): Test pure game logic without Godot dependencies
-- **Integration tests** (`AiTest.Godot.Tests`): Test classes that use Godot APIs
-- **Godot Runtime tests** (`GdUnit/`): Use `[RequireGodotRuntime]` attribute, requires `GODOT_BIN` environment variable
+- **Integration tests** (`AiTest.Godot.Tests`): Test classes that use Godot APIs (xUnit)
+- **Godot Runtime tests** (`src/GodotGame/test/`): Use `[RequireGodotRuntime]` attribute, requires `GODOT_BIN`
 - Test file naming: `{ClassName}Tests.cs`
 - Test method naming: `{MethodName}_{Scenario}_{ExpectedResult}`
 

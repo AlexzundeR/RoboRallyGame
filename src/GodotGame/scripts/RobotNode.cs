@@ -5,7 +5,7 @@ using AiTest.Core.Entities;
 using AiTest.Core.Models;
 using AiTest.Godot.Services;
 
-public partial class Robot : Node2D
+public partial class RobotNode : Node2D
 {
 	private const float RotationDuration = 0.35f;
 

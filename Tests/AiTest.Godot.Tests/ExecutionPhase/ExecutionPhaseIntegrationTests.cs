@@ -12,6 +12,31 @@ using Xunit;
 
 public class ExecutionPhaseIntegrationTests
 {
+    private static void BindEngineToDispatcher(GameRunner runner, MessageDispatcher dispatcher)
+    {
+        var engine = runner.Engine as AiTest.Core.Engine.GameEngine;
+        if (engine == null) return;
+        
+        engine.OnMove += e => dispatcher.Publish(e);
+        engine.OnRotate += e => dispatcher.Publish(e);
+        engine.OnLaserFire += e => dispatcher.Publish(e);
+        engine.OnDamage += e => dispatcher.Publish(e);
+        engine.OnConveyorMove += e => dispatcher.Publish(e);
+        engine.OnCheckpoint += e => dispatcher.Publish(e);
+        engine.OnRobotDestroyed += e => dispatcher.Publish(e);
+        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRepaired += e => dispatcher.Publish(e);
+        engine.OnLifeTokenLost += e => dispatcher.Publish(e);
+        engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnConveyorPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnRegisterExecuted += e => dispatcher.Publish(e);
+        engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
+        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AiTest.Core.Messages.AllRegistersCompleteEvent());
+        engine.OnGameOver += e => dispatcher.Publish(e);
+        engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
+    }
+
     private static Player CreatePlayerWithCards(params ProgramCard[] cards)
     {
         var registers = new RegisterCard?[5];
@@ -38,6 +63,7 @@ public class ExecutionPhaseIntegrationTests
     {
         var runner = CreateRunnerWithCards(new MoveCard { Priority = 100, Spaces = 1 });
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
         var animationService = new MockAnimationService();
 
         var events = new List<RegisterExecutedEvent>();
@@ -65,6 +91,7 @@ public class ExecutionPhaseIntegrationTests
             new MoveCard { Priority = 104, Spaces = 1 }
         );
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
 
         var phaseEvents = new List<PhaseChangedEvent>();
         dispatcher.Subscribe<PhaseChangedEvent>(e => phaseEvents.Add(e));
@@ -96,8 +123,8 @@ public class ExecutionPhaseIntegrationTests
         phase.SetAnimationService(new MockAnimationService());
         phase.Initialize(runner, dispatcher, _ => { });
 
-        runner.Engine.State.CurrentRegister = 3;
-        runner.Engine.State.CurrentPlayerIndex = 1;
+        runner.Engine.SetCurrentRegister(3);
+        runner.Engine.SetCurrentPlayerIndex(1);
 
         phase.OnEnter();
 
@@ -124,6 +151,7 @@ public class ExecutionPhaseIntegrationTests
     {
         var runner = CreateRunnerWithCards(new MoveCard { Priority = 100, Spaces = 1 });
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
         var animationService = new MockAnimationService();
 
         var phase = new ExecutionPhase();
@@ -148,6 +176,7 @@ public class ExecutionPhaseIntegrationTests
             new MoveCard { Priority = 102, Spaces = 1 }
         );
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
         phase.Initialize(runner, dispatcher, _ => { });
@@ -176,6 +205,7 @@ public class ExecutionPhaseIntegrationTests
             new MoveCard { Priority = 104, Spaces = 1 }
         );
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
         phase.Initialize(runner, dispatcher, _ => { });
@@ -207,6 +237,7 @@ public class ExecutionPhaseIntegrationTests
             new MoveCard { Priority = 104, Spaces = 1 }
         );
         var dispatcher = new MessageDispatcher();
+        BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
         phase.Initialize(runner, dispatcher, _ => { });

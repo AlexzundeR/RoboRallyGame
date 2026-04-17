@@ -8,12 +8,12 @@ namespace AiTest.Godot;
 
 public partial class RobotRenderer : Node2D
 {
-    private readonly Dictionary<int, Robot> _robots = new();
+    private readonly Dictionary<int, RobotNode> _robots = new();
     private PackedScene _robotScene = null!;
 
     public override void _Ready()
     {
-        _robotScene = GD.Load<PackedScene>("res://Robot.tscn");
+        _robotScene = GD.Load<PackedScene>("res://RobotNode.tscn");
     }
 
     public void CreateRobots(IEnumerable<Player> players)
@@ -26,7 +26,7 @@ public partial class RobotRenderer : Node2D
 
     private void CreateRobot(Player player)
     {
-        var robot = _robotScene.Instantiate<Robot>();
+        var robot = _robotScene.Instantiate<RobotNode>();
         robot.Name = $"Robot_{player.Id}";
         AddChild(robot);
         robot.Initialize(player);
@@ -44,7 +44,7 @@ public partial class RobotRenderer : Node2D
         }
     }
 
-    public Robot? GetRobot(int playerId)
+    public RobotNode? GetRobot(int playerId)
     {
         return _robots.TryGetValue(playerId, out var robot) ? robot : null;
     }

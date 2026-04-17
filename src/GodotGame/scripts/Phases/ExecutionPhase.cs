@@ -8,7 +8,6 @@ using AiTest.Core.Engine;
 using AiTest.Core.Messages;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
-using AiTest.Godot;
 using AiTest.Godot.Animations;
 
 public class ExecutionPhase : IGamePhase
@@ -25,10 +24,18 @@ public class ExecutionPhase : IGamePhase
 	private readonly List<Animation> _animations = new();
 	private int _currentRegisterLog = -1;
 
-	public int CurrentPlayerIndex => _runner?.Engine.State.CurrentPlayerIndex ?? 0;
-	public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
-	public int CurrentRegister => _runner?.Engine.State.CurrentRegister ?? 0;
-	public int CurrentPriority => _runner?.Engine.State.Players[CurrentPlayerIndex].Registers[CurrentRegister]?.Card.Priority ?? 0;
+	public int CurrentPlayerIndex => _runner?.Engine.CurrentPlayerIndex ?? 0;
+	public string CurrentPlayerName => _runner?.Engine.Players[CurrentPlayerIndex].Name ?? "";
+	public int CurrentRegister => _runner?.Engine.CurrentRegister ?? 0;
+	public int CurrentPriority
+	{
+		get
+		{
+			if (_runner == null) return 0;
+			var player = _runner.Engine.Players[CurrentPlayerIndex];
+			return player.Registers[CurrentRegister]?.Card.Priority ?? 0;
+		}
+	}
 
 	public ExecutionPhase() : this(new GodotInputService()) { }
 
@@ -59,25 +66,28 @@ public class ExecutionPhase : IGamePhase
 		_onPhaseComplete = onPhaseComplete;
 
 		dispatcher.Register<ExecuteRegisterCommand>(_ => StartRegisterExecution());
-
-		var engine = runner.Engine;
-		engine.OnMove += OnMove;
-		engine.OnRotate += OnRotate;
-		engine.OnConveyorMove += OnConveyorMove;
-		engine.OnLaserFire += OnLaserFire;
-		engine.OnDamage += OnDamage;
-		engine.OnCheckpoint += OnCheckpoint;
-		engine.OnRobotDestroyed += OnRobotDestroyed;
-		engine.OnRobotReboot += OnRobotReboot;
-		engine.OnRobotRepaired += OnRobotRepaired;
-		engine.OnLifeTokenLost += OnLifeTokenLost;
-		engine.OnAllRegistersComplete += OnAllRegistersComplete;
-		engine.OnUpgradeAcquired += OnUpgradeAcquired;
+		dispatcher.Subscribe<PhaseExecutionCompleteEvent>(OnPhaseExecutionComplete);
+		dispatcher.Subscribe<AllRegistersCompleteEvent>(_ => CompleteExecutionPhase());
+		dispatcher.Subscribe<LifeTokenLostEvent>(OnLifeTokenLost);
+		dispatcher.Subscribe<RobotRebootEvent>(OnRobotReboot);
+		dispatcher.Subscribe<RobotRepairedEvent>(OnRobotRepaired);
+		dispatcher.Subscribe<UpgradeAcquiredEvent>(OnUpgradeAcquired);
+		dispatcher.Subscribe<MoveEvent>(OnMove);
+		dispatcher.Subscribe<RotateEvent>(OnRotate);
+		dispatcher.Subscribe<ConveyorMoveEvent>(OnConveyorMove);
+		dispatcher.Subscribe<LaserFireEvent>(OnLaserFire);
+		dispatcher.Subscribe<DamageEvent>(OnDamage);
+		dispatcher.Subscribe<CheckpointEvent>(OnCheckpoint);
+		dispatcher.Subscribe<RobotDestroyedEvent>(OnRobotDestroyed);
 	}
 
-	private void OnAllRegistersComplete()
+	private void OnPhaseExecutionComplete(PhaseExecutionCompleteEvent e)
 	{
-		CompleteExecutionPhase();
+		if (_runner == null) return;
+		_animations.Clear();
+		Log($"[color=green]Register {e.Register + 1} complete[/color]");
+		_runner.Engine.NextRegister();
+		_inputHandled = false;
 	}
 
 	private void OnLifeTokenLost(LifeTokenLostEvent e)
@@ -106,7 +116,7 @@ public class ExecutionPhase : IGamePhase
 
 	private string GetPlayerName(int playerId)
 	{
-		return _runner?.Engine.State.Players.FirstOrDefault(p => p.Id == playerId)?.Name ?? $"Player {playerId}";
+		return _runner?.Engine.Players.FirstOrDefault(p => p.Id == playerId)?.Name ?? $"Player {playerId}";
 	}
 
 	private string GetPlayerColor(int playerId)
@@ -219,8 +229,8 @@ public class ExecutionPhase : IGamePhase
 		_currentRegisterLog = -1;
 		if (_runner != null)
 		{
-			_runner.Engine.State.CurrentRegister = 0;
-			_runner.Engine.State.CurrentPlayerIndex = 0;
+			_runner.Engine.SetCurrentRegister(0);
+			_runner.Engine.SetCurrentPlayerIndex(0);
 		}
 	}
 
@@ -248,41 +258,6 @@ public class ExecutionPhase : IGamePhase
 	{
 		if (_runner == null || _dispatcher == null) return;
 
-		var state = _runner.Engine.State;
-
-		if (state.CurrentRegister >= 5)
-		{
-			CompleteExecutionPhase();
-			return;
-		}
-
-		var player = state.Players[state.CurrentPlayerIndex];
-		if (player.Robot.IsPowerDown)
-		{
-			Log($"[color=gray]{player.Name} is powered down, skipping all registers[/color]");
-			CompleteCurrentRegister();
-			return;
-		}
-
-		if (player.GetRegister(state.CurrentRegister) == null)
-		{
-			var anyPlayerHasCard = state.Players.Any(p => p.GetRegister(state.CurrentRegister) != null);
-			if (!anyPlayerHasCard)
-			{
-				Log($"[color=gray]Register {state.CurrentRegister + 1} empty for all players, skipping[/color]");
-				CompleteCurrentRegister();
-				return;
-			}
-		}
-
-		if (_currentRegisterLog != state.CurrentRegister)
-		{
-			_currentRegisterLog = state.CurrentRegister;
-			Log("");
-			Log($"[b]--- Register {state.CurrentRegister + 1} ---[/b]");
-		}
-
-		_runner.Engine.BeginRegisterExecution(state.CurrentRegister);
 		ExecuteNextStepAsync();
 	}
 
@@ -296,7 +271,6 @@ public class ExecutionPhase : IGamePhase
 		
 		if (result == StepResult.Completed)
 		{
-			CompleteCurrentRegister();
 			return;
 		}
 
@@ -311,18 +285,6 @@ public class ExecutionPhase : IGamePhase
 	private void OnAnimationsComplete()
 	{
 		ExecuteNextStepAsync();
-	}
-
-	private void CompleteCurrentRegister()
-	{
-		if (_runner == null) return;
-
-		var state = _runner.Engine.State;
-		_dispatcher?.Publish(new RegisterExecutedEvent(state.CurrentRegister, state.CurrentPlayerIndex));
-		Log($"[color=green]Register {state.CurrentRegister + 1} complete[/color]");
-
-		_runner.Engine.NextRegister();
-		_inputHandled = false;
 	}
 
 	private void CompleteExecutionPhase()
@@ -342,7 +304,7 @@ public class ExecutionPhase : IGamePhase
 
 	public void OnExit() { }
 
-	private Robot? GetRobot(int playerId)
+	private RobotNode? GetRobot(int playerId)
 	{
 		if (_robotLayer == null) return null;
 		return _robotLayer.GetRobot(playerId);

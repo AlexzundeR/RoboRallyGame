@@ -44,6 +44,7 @@ public class GameManagerTests
         var runner = new GameRunner(engine);
         runner.Initialize();
         
+        BindEngineToDispatcher(runner, dispatcher);
         phase.Initialize(runner, dispatcher, _ => { });
         
         var gamePlayer = runner.Engine.State.Players[0];
@@ -59,6 +60,31 @@ public class GameManagerTests
         phase.ExecuteRegister();
         
         events.Should().HaveCount(1);
+    }
+
+    private static void BindEngineToDispatcher(GameRunner runner, MessageDispatcher dispatcher)
+    {
+        var engine = runner.Engine as AiTest.Core.Engine.GameEngine;
+        if (engine == null) return;
+        
+        engine.OnMove += e => dispatcher.Publish(e);
+        engine.OnRotate += e => dispatcher.Publish(e);
+        engine.OnLaserFire += e => dispatcher.Publish(e);
+        engine.OnDamage += e => dispatcher.Publish(e);
+        engine.OnConveyorMove += e => dispatcher.Publish(e);
+        engine.OnCheckpoint += e => dispatcher.Publish(e);
+        engine.OnRobotDestroyed += e => dispatcher.Publish(e);
+        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRepaired += e => dispatcher.Publish(e);
+        engine.OnLifeTokenLost += e => dispatcher.Publish(e);
+        engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnConveyorPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
+        engine.OnRegisterExecuted += e => dispatcher.Publish(e);
+        engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
+        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AiTest.Core.Messages.AllRegistersCompleteEvent());
+        engine.OnGameOver += e => dispatcher.Publish(e);
+        engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
     }
 
     [Fact]
