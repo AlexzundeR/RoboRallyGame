@@ -210,9 +210,8 @@ public class GameEngineTests
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
 
-    //TODO:Delete skip, fix logic
-    [Fact(Skip = "Needs review - pit behavior changed")]
-    public void ProcessBoardElements_Pit_ShouldTriggerReboot()
+[Fact]
+    public void ProcessBoardElements_Pit_ShouldSetRobotToRebooting()
     {
         var engine = CreateEngine();
         engine.State.Map.SetTile(3, 3, TileFactory.Pit());
@@ -222,8 +221,63 @@ public class GameEngineTests
         
         ExecuteRegister(engine, 0);
         
+        // Robot falls into pit: loses life token, status becomes Rebooting, damage cleared
+        Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
+        Assert.Equal(2, player.Robot.LifeTokens);
+        Assert.Equal(0, player.Robot.Damage);
+    }
+
+    [Fact]
+    public void ProcessBoardElements_Pit_NextRound_ShouldRespawnAtCheckpoint()
+    {
+        var engine = CreateEngine();
+        engine.State.Map.SetTile(5, 5, TileFactory.Checkpoint(1));
+        engine.State.Map.SetTile(7, 7, TileFactory.Checkpoint(2));
+        engine.State.Map.SetTile(3, 3, TileFactory.Pit());
+        
+        engine.AddPlayer("Player1");
+        var player = engine.State.Players[0];
+        
+        // Register 0: move to checkpoint 1 and confirm
+        player.Robot.SetPosition(new Position(5, 5));
+        ExecuteRegister(engine, 0);
+        
+        // Next register: fall into pit
+        player.Robot.SetPosition(new Position(3, 3));
+        ExecuteRegister(engine, 0);
+        
+        // Robot should be in Rebooting state after falling into pit
+        Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
+        
+        // Next round: robot should respawn at last checkpoint 1
+        engine.NextRound();
+        
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
+        Assert.Equal(new Position(5, 5), player.Robot.Position);
         Assert.Equal(2, player.Robot.Damage);
+    }
+
+    [Fact]
+    public void ProcessBoardElements_Pit_NoLivesLeft_ShouldStayDestroyed()
+    {
+        var engine = CreateEngine();
+        engine.State.Map.SetTile(3, 3, TileFactory.Pit());
+        engine.AddPlayer("Player1");
+        var player = engine.State.Players[0];
+        player.Robot.SetLifeTokens(1); // Only 1 life token left
+        
+        // Fall into pit
+        player.Robot.SetPosition(new Position(3, 3));
+        ExecuteRegister(engine, 0);
+        
+        // Robot in Rebooting state with 0 life tokens
+        Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
+        Assert.Equal(0, player.Robot.LifeTokens);
+        
+        // Next round: robot should stay destroyed (no respawn)
+        engine.NextRound();
+        
+        Assert.Equal(RobotStatus.Destroyed, player.Robot.Status);
     }
 
     //TODO:Delete skip, fix logic. Проблема в том, что теперь ребут происходит не сразу после падения в яму, раньше вроде было не так. 

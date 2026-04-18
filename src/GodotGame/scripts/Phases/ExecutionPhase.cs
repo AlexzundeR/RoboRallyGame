@@ -33,9 +33,10 @@ public class ExecutionPhase : IGamePhase
 		{
 			if (_gameProvider == null) return 0;
 			var state = _gameProvider.GetState();
-			return state.Players[CurrentPlayerIndex].LockedRegisters <= CurrentRegister 
-				? 0 
-				: 0; // TODO: get from register
+			var player = state.Players[CurrentPlayerIndex];
+			if (player.LockedRegisters > CurrentRegister) return 0;
+			var register = player.Registers[CurrentRegister];
+			return register?.Card.Priority ?? 0;
 		}
 	}
 

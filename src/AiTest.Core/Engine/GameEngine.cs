@@ -671,9 +671,17 @@ public sealed class GameEngine : IGameEngine
             
             if (player.Robot.Status == RobotStatus.Rebooting)
             {
-                var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
-                player.Robot.Reboot(spawnPos);
-                OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
+                if (player.Robot.LifeTokens > 0)
+                {
+                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
+                    player.Robot.Reboot(spawnPos);
+                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
+                }
+                else
+                {
+                    player.Robot.SetStatus(RobotStatus.Destroyed);
+                    OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
+                }
             }
 
             var tile = State.Map.GetTile(player.Robot.Position);

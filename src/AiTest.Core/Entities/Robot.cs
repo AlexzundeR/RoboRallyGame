@@ -23,6 +23,7 @@ public sealed class Robot
 
     public bool IsAlive => Status != RobotStatus.Destroyed;
     public int LockedRegisters => Damage >= 5 ? Math.Min(Damage - 4, 5) : 0;
+    public void SetLifeTokens(int tokens) => LifeTokens = tokens;
     public bool IsPowerDown => Status == RobotStatus.PowerDown;
     public bool NeedsReboot => Status == RobotStatus.Rebooting;
 
