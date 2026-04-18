@@ -67,13 +67,6 @@ public sealed class Robot
         }
 
         Damage += amount;
-        if (Damage >= 10)
-        {
-            if (LifeTokens > 0)
-                LoseLifeToken();
-            else
-                Status = RobotStatus.Destroyed;
-        }
     }
 
     public void Repair(int amount)

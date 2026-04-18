@@ -77,18 +77,6 @@ public class RobotTests
     }
 
     [Fact]
-    public void TakeDamage_10OrMore_ShouldTriggerReboot()
-    {
-        var robot = new Robot();
-        robot.TakeDamage(8);
-        
-        robot.TakeDamage(2);
-        
-        Assert.Equal(0, robot.Damage);
-        Assert.Equal(RobotStatus.Rebooting, robot.Status);
-    }
-
-    [Fact]
     public void Reboot_ShouldResetState()
     {
         var robot = new Robot();
@@ -193,35 +181,6 @@ public class RobotTests
         var robot = new Robot();
         
         Assert.Equal(3, robot.LifeTokens);
-    }
-
-    [Fact]
-    public void TakeDamage_WhenDestroyed_ShouldLoseLifeToken()
-    {
-        var robot = new Robot();
-        robot.TakeDamage(9);
-        
-        robot.TakeDamage(1);
-        
-        Assert.Equal(2, robot.LifeTokens);
-        Assert.Equal(RobotStatus.Rebooting, robot.Status);
-    }
-
-    [Fact]
-    public void TakeDamage_WhenNoLifeTokens_ShouldBeDestroyed()
-    {
-        var robot = new Robot();
-        
-        for (int i = 0; i < 3; i++)
-        {
-            robot.TakeDamage(9);
-            robot.TakeDamage(1);
-            robot.Reboot(new Position(0, 0));
-        }
-        
-        robot.TakeDamage(9);
-        
-        Assert.Equal(RobotStatus.Destroyed, robot.Status);
     }
 
     [Fact]

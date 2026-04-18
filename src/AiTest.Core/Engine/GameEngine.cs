@@ -261,6 +261,14 @@ public sealed class GameEngine : IGameEngine
         var player = GetPlayer(playerId);
         if (player == null) return;
         player.Robot.TakeDamage(amount);
+        
+        if (player.Robot.Damage >= 10)
+        {
+            if (player.Robot.LifeTokens > 0)
+                player.Robot.LoseLifeToken();
+            else
+                player.Robot.SetStatus(RobotStatus.Destroyed);
+        }
     }
 
     public void Initialize(GameMap map)
