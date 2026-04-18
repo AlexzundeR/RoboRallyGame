@@ -19,7 +19,7 @@ public class ExecutionPhaseTests
         _runner.Initialize();
         _dispatcher = new MessageDispatcher();
         _phase = new ExecutionPhase();
-        _phase.Initialize(_runner, _dispatcher, _ => { });
+        _phase.Initialize(TestHelpers.CreateProvider(_runner), _dispatcher, _ => { });
     }
 
     [Fact]

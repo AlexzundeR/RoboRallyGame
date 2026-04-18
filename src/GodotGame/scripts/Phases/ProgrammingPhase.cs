@@ -17,36 +17,34 @@ public class GodotInputService : IInputService
 }
 
 public class ProgrammingPhase : IGamePhase
-{
-	private GameRunner? _runner;
-	private GameStateProvider? _stateProvider;
-	private IMessageDispatcher? _dispatcher;
-	private Action<GamePhaseType>? _onPhaseComplete;
-	private IInputService _inputService;
-	private int _selectedRegister = 0;
-
-	public int CurrentPlayerIndex => _stateProvider?.GetState().CurrentPlayerIndex ?? 0;
-	public string CurrentPlayerName => _runner?.Engine.State.Players[CurrentPlayerIndex].Name ?? "";
-	public int CurrentRegister => _stateProvider?.GetState().CurrentRegister ?? 0;
-	public int SelectedRegister => _selectedRegister;
-
-	public ProgrammingPhase() : this(new GodotInputService()) { }
-
-	public ProgrammingPhase(IInputService inputService)
 	{
-		_inputService = inputService;
-	}
+		private IGameProvider? _gameProvider;
+		private IMessageDispatcher? _dispatcher;
+		private Action<GamePhaseType>? _onPhaseComplete;
+		private IInputService _inputService;
+		private int _selectedRegister = 0;
 
-	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
-	{
-		_runner = runner;
-		_stateProvider = new GameStateProvider(runner.Engine);
-		_dispatcher = dispatcher;
-		_onPhaseComplete = onPhaseComplete;
+		public int CurrentPlayerIndex => _gameProvider?.GetState().CurrentPlayerIndex ?? 0;
+		public string CurrentPlayerName => _gameProvider?.GetState().Players[CurrentPlayerIndex].Name ?? "";
+		public int CurrentRegister => _gameProvider?.GetState().CurrentRegister ?? 0;
+		public int SelectedRegister => _selectedRegister;
 
-		dispatcher.Register<SelectCardCommand>(cmd => SelectCard(cmd.CardIndex, _selectedRegister));
-		dispatcher.Register<ConfirmPlayerCommand>(_ => ConfirmPlayer());
-	}
+		public ProgrammingPhase() : this(new GodotInputService()) { }
+
+		public ProgrammingPhase(IInputService inputService)
+		{
+			_inputService = inputService;
+		}
+
+		public void Initialize(IGameProvider gameProvider, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
+		{
+			_gameProvider = gameProvider;
+			_dispatcher = dispatcher;
+			_onPhaseComplete = onPhaseComplete;
+
+			dispatcher.Register<SelectCardCommand>(cmd => SelectCard(cmd.CardIndex, _selectedRegister));
+			dispatcher.Register<ConfirmPlayerCommand>(_ => ConfirmPlayer());
+		}
 
 	public void OnEnter()
 	{
@@ -58,7 +56,7 @@ public class ProgrammingPhase : IGamePhase
 
 	public void HandleInput()
 	{
-		if (_runner == null || _dispatcher == null) 
+		if (_gameProvider == null || _dispatcher == null) 
 		{
 			GD.Print("[ProgrammingPhase] HandleInput: runner or dispatcher is null, returning");
 			return;
@@ -70,8 +68,8 @@ public class ProgrammingPhase : IGamePhase
 			return;
 		}
 
-		var player = _runner.Engine.Players[CurrentPlayerIndex];
-		if (player.Robot.IsPowerDown)
+		var player = _gameProvider.GetState().Players[CurrentPlayerIndex];
+		if (player.IsPowerDown)
 		{
 			ConfirmPlayer();
 			return;
@@ -115,16 +113,14 @@ public class ProgrammingPhase : IGamePhase
 
 	public void SelectCard(int cardIndex, int registerIndex)
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
-		var player = _runner.Engine.Players[CurrentPlayerIndex];
-		
 		if (cardIndex < 9 && registerIndex < 5)
 		{
-			var card = player.GetHandCard(cardIndex);
+			var card = _gameProvider.GetHandCard(cardIndex);
 			if (card == null) return;
 			
-			player.AssignCardToRegister(cardIndex, registerIndex);
+			_gameProvider.AssignCardToRegister(cardIndex, registerIndex);
 			
 			_dispatcher.Publish(new CardSelectedEvent(CurrentPlayerIndex, cardIndex, registerIndex));
 			
@@ -134,10 +130,9 @@ public class ProgrammingPhase : IGamePhase
 
 	public void ConfirmPlayer()
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
-		var player = _runner.Engine.State.Players[CurrentPlayerIndex];
-		if (!player.CanConfirmRegistration())
+		if (!_gameProvider.CanConfirmRegistration())
 		{
 			GD.Print("[ProgrammingPhase] ConfirmPlayer: cannot confirm - not all possible registers filled");
 			return;
@@ -145,18 +140,18 @@ public class ProgrammingPhase : IGamePhase
 
 		_dispatcher.Publish(new PlayerConfirmedEvent(CurrentPlayerIndex));
 		
-		var state = _stateProvider!.GetState();
+		var state = _gameProvider.GetState();
 		var playerCount = state.Players.Count;
 		if (state.CurrentPlayerIndex < playerCount - 1)
 		{
-			_runner.Engine.SetCurrentPlayerIndex(state.CurrentPlayerIndex + 1);
-			_runner.Engine.SetCurrentRegister(0);
+			_gameProvider.SetCurrentPlayerIndex(state.CurrentPlayerIndex + 1);
+			_gameProvider.SetCurrentRegister(0);
 			_selectedRegister = 0;
 		}
 		else
 		{
-			_runner.Engine.SetCurrentPlayerIndex(0);
-			_runner.Engine.SetCurrentRegister(0);
+			_gameProvider.SetCurrentPlayerIndex(0);
+			_gameProvider.SetCurrentRegister(0);
 			_selectedRegister = 0;
 			_onPhaseComplete?.Invoke(GamePhaseType.Execution);
 		}
@@ -168,10 +163,10 @@ public class ProgrammingPhase : IGamePhase
 
 	public void TogglePowerDown()
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
-		var player = _runner.Engine.Players[CurrentPlayerIndex];
-		player.TogglePowerDown();
-		_dispatcher.Publish(new PowerDownToggledEvent(CurrentPlayerIndex, player.Robot.IsPowerDown));
+		_gameProvider.TogglePowerDown();
+		var player = _gameProvider.GetCurrentPlayer();
+		_dispatcher.Publish(new PowerDownToggledEvent(CurrentPlayerIndex, player?.IsPowerDown ?? false));
 	}
 }

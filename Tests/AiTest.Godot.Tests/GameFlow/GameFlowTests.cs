@@ -78,8 +78,8 @@ public class GameFlowTests
             dispatcher.Publish(new PhaseChangedEvent(newPhase, 1));
         }
 
-        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
-        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
 
         programmingPhase.OnEnter();
         OnPhaseComplete(GamePhaseType.Execution);
@@ -112,8 +112,8 @@ public class GameFlowTests
             dispatcher.Publish(new PhaseChangedEvent(newPhase, round));
         }
 
-        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
-        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
 
         executionPhase.OnEnter();
         OnPhaseComplete(GamePhaseType.Programming);
@@ -130,7 +130,7 @@ public class GameFlowTests
         var dispatcher = new MessageDispatcher();
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var firstPlayer = phase.CurrentPlayerName;
         runner.Engine.SetCurrentPlayerIndex(1);
@@ -149,7 +149,7 @@ public class GameFlowTests
         var dispatcher = new MessageDispatcher();
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         Assert.Equal(0, phase.CurrentRegister);
     }
@@ -165,7 +165,7 @@ public class GameFlowTests
         dispatcher.Subscribe<CardSelectedEvent>(e => cardSelectedEvents.Add(e));
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         dispatcher.Publish(new CardSelectedEvent(0, 3, 0));
 
@@ -186,7 +186,7 @@ public class GameFlowTests
         dispatcher.Subscribe<RegisterExecutedEvent>(e => registerExecutedEvents.Add(e));
 
         var phase = new ExecutionPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         dispatcher.Publish(new RegisterExecutedEvent(0, 1));
 
@@ -206,7 +206,7 @@ public class GameFlowTests
         dispatcher.Subscribe<PlayerConfirmedEvent>(e => confirmedEvents.Add(e));
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         dispatcher.Publish(new PlayerConfirmedEvent(0));
 
@@ -225,7 +225,7 @@ public class GameFlowTests
         dispatcher.Subscribe<CardSelectedEvent>(e => cardEvents.Add(e));
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         dispatcher.Publish(new CardSelectedEvent(0, 0, 0));
 
@@ -248,12 +248,12 @@ public class GameFlowTests
         var programmingPhase = new ProgrammingPhase();
         var executionPhase = new ExecutionPhase();
 
-        programmingPhase.Initialize(runner, dispatcher, phase =>
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, phase =>
         {
             dispatcher.Publish(new PhaseChangedEvent(phase, 1));
         });
 
-        executionPhase.Initialize(runner, dispatcher, phase =>
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, phase =>
         {
             dispatcher.Publish(new PhaseChangedEvent(phase, 1));
         });
@@ -280,7 +280,7 @@ public class GameFlowTests
             executedRegisters.Add((e.Register, e.PlayerIndex)));
 
         var phase = new ExecutionPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         dispatcher.Publish(new RegisterExecutedEvent(0, 0));
         dispatcher.Publish(new RegisterExecutedEvent(1, 0));
@@ -303,7 +303,7 @@ public class GameFlowTests
         dispatcher.Subscribe<CardSelectedEvent>(e => cardEvents.Add(e));
 
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
         var cardToSelect = player.Hand[2];
@@ -348,9 +348,9 @@ public class GameFlowTests
             dispatcher.Publish(new PhaseChangedEvent(newPhase, currentRound));
         }
 
-        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
         BindEngineToDispatcher(runner, dispatcher);
-        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
 
         programmingPhase.OnEnter();
         Assert.Equal(GamePhaseType.Programming, currentPhase);
@@ -410,8 +410,8 @@ public class GameFlowTests
             dispatcher.Publish(new PhaseChangedEvent(newPhase, currentRound));
         }
 
-        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
-        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
 
         for (int round = 1; round <= 3; round++)
         {
@@ -513,7 +513,7 @@ public class GameFlowTests
 
         GamePhaseType? finalPhase = null;
         var executionPhase = new ExecutionPhase();
-        executionPhase.Initialize(runner, dispatcher, phase => finalPhase = phase);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, phase => finalPhase = phase);
 
         var p1 = runner.Engine.State.Players[0];
         var p2 = runner.Engine.State.Players[1];
@@ -579,9 +579,9 @@ public class GameFlowTests
             dispatcher.Publish(new PhaseChangedEvent(newPhase, runner.Engine.State.Round));
         }
 
-        programmingPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        programmingPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
         BindEngineToDispatcher(runner, dispatcher);
-        executionPhase.Initialize(runner, dispatcher, OnPhaseComplete);
+        executionPhase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, OnPhaseComplete);
 
         programmingPhase.OnEnter();
 

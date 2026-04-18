@@ -40,7 +40,7 @@ public class ProgrammingPhaseTests
         _runner.Initialize();
         _dispatcher = new MessageDispatcher();
         _phase = new ProgrammingPhase();
-        _phase.Initialize(_runner, _dispatcher, _ => { });
+        _phase.Initialize(TestHelpers.CreateProvider(_runner), _dispatcher, _ => { });
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class ProgrammingPhaseTests
         var state = new GameState(new List<Player> { player });
         var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, _dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), _dispatcher, _ => { });
         
         var initialCount = player.AvailableCardCount;
         
@@ -122,7 +122,7 @@ public class ProgrammingPhaseTests
         var state = new GameState(new List<Player> { player });
         var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, _dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), _dispatcher, _ => { });
         
         Assert.Equal(0, phase.SelectedRegister);
         phase.SelectCard(0, 0);
@@ -137,7 +137,7 @@ public class ProgrammingPhaseTests
         var state = new GameState(new List<Player> { player });
         var runner = new GameRunner(new GameEngine(new RandomDealer(), state));
         var phase = new ProgrammingPhase();
-        phase.Initialize(runner, _dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), _dispatcher, _ => { });
         
         phase.SelectCard(0, 3);
         Assert.Equal(1, phase.SelectedRegister);

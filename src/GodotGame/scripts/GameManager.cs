@@ -15,6 +15,7 @@ using CoreMessages = AiTest.Core.Messages;
 public partial class GameManager : Node2D
 {
 	private GameRunner? _runner;
+	private IGameProvider? _gameProvider;
 	private GameUI? _gameUI;
 	private MapRenderer? _mapRenderer;
 	private RobotRenderer? _robotRenderer;
@@ -127,12 +128,14 @@ public partial class GameManager : Node2D
 	{
 		_runner = new GameRunner(GameMapConfigs.CreateDefault2Player());
 		_runner.Initialize();
+		_gameProvider = new LocalGameProvider(_runner.Engine);
 		SubscribeToEngineEvents();
 	}
 
 	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher)
 	{
 		_runner = runner;
+		_gameProvider = new LocalGameProvider(_runner.Engine);
 		_dispatcher = dispatcher;
 		SubscribeToEngineEvents();
 	}
@@ -142,10 +145,10 @@ public partial class GameManager : Node2D
 		_programmingPhase = new ProgrammingPhase();
 		_executionPhase = new ExecutionPhase();
 
-		_programmingPhase.Initialize(_runner!, _dispatcher, OnPhaseComplete);
+		_programmingPhase.Initialize(_gameProvider!, _dispatcher, OnPhaseComplete);
 		_executionPhase.SetAnimationService(_animationService!);
 		_executionPhase.SetRobotLayer(_robotRenderer!);
-		_executionPhase.Initialize(_runner!, _dispatcher, OnPhaseComplete);
+		_executionPhase.Initialize(_gameProvider!, _dispatcher, OnPhaseComplete);
 
 		SetPhase(GamePhaseType.Programming);
 	}

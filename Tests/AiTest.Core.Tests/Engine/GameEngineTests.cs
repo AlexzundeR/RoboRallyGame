@@ -210,6 +210,7 @@ public class GameEngineTests
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
 
+    //TODO:Delete skip, fix logic
     [Fact(Skip = "Needs review - pit behavior changed")]
     public void ProcessBoardElements_Pit_ShouldTriggerReboot()
     {
@@ -225,6 +226,7 @@ public class GameEngineTests
         Assert.Equal(2, player.Robot.Damage);
     }
 
+    //TODO:Delete skip, fix logic. Проблема в том, что теперь ребут происходит не сразу после падения в яму, раньше вроде было не так. 
     [Fact(Skip = "Needs review - pit behavior changed")]
     public void ProcessBoardElements_Pit_ShouldRespawnAtLastCheckpoint()
     {

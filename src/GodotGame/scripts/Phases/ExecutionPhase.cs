@@ -4,15 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using AiTest.Core.Engine;
 using AiTest.Core.Messages;
 using AiTest.Core.Models;
 using AiTest.Core.Upgrades;
+using AiTest.Godot;
 using AiTest.Godot.Animations;
 
 public class ExecutionPhase : IGamePhase
 {
-	private GameRunner? _runner;
+	private IGameProvider? _gameProvider;
 	private IMessageDispatcher? _dispatcher;
 	private Action<GamePhaseType>? _onPhaseComplete;
 	private IAnimationService? _animationService;
@@ -24,16 +24,18 @@ public class ExecutionPhase : IGamePhase
 	private readonly List<Animation> _animations = new();
 	private int _currentRegisterLog = -1;
 
-	public int CurrentPlayerIndex => _runner?.Engine.CurrentPlayerIndex ?? 0;
-	public string CurrentPlayerName => _runner?.Engine.Players[CurrentPlayerIndex].Name ?? "";
-	public int CurrentRegister => _runner?.Engine.CurrentRegister ?? 0;
+	public int CurrentPlayerIndex => _gameProvider?.GetState().CurrentPlayerIndex ?? 0;
+	public string CurrentPlayerName => _gameProvider?.GetState().Players[CurrentPlayerIndex].Name ?? "";
+	public int CurrentRegister => _gameProvider?.GetState().CurrentRegister ?? 0;
 	public int CurrentPriority
 	{
 		get
 		{
-			if (_runner == null) return 0;
-			var player = _runner.Engine.Players[CurrentPlayerIndex];
-			return player.Registers[CurrentRegister]?.Card.Priority ?? 0;
+			if (_gameProvider == null) return 0;
+			var state = _gameProvider.GetState();
+			return state.Players[CurrentPlayerIndex].LockedRegisters <= CurrentRegister 
+				? 0 
+				: 0; // TODO: get from register
 		}
 	}
 
@@ -59,9 +61,9 @@ public class ExecutionPhase : IGamePhase
 		_logAction = logAction;
 	}
 
-	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
+	public void Initialize(IGameProvider gameProvider, IMessageDispatcher dispatcher, Action<GamePhaseType> onPhaseComplete)
 	{
-		_runner = runner;
+		_gameProvider = gameProvider;
 		_dispatcher = dispatcher;
 		_onPhaseComplete = onPhaseComplete;
 
@@ -83,10 +85,10 @@ public class ExecutionPhase : IGamePhase
 
 	private void OnPhaseExecutionComplete(PhaseExecutionCompleteEvent e)
 	{
-		if (_runner == null) return;
+		if (_gameProvider == null) return;
 		_animations.Clear();
 		Log($"[color=green]Register {e.Register + 1} complete[/color]");
-		_runner.Engine.NextRegister();
+		_gameProvider.NextRegister();
 		_inputHandled = false;
 	}
 
@@ -116,7 +118,8 @@ public class ExecutionPhase : IGamePhase
 
 	private string GetPlayerName(int playerId)
 	{
-		return _runner?.Engine.Players.FirstOrDefault(p => p.Id == playerId)?.Name ?? $"Player {playerId}";
+		var player = _gameProvider?.GetPlayer(playerId);
+		return player?.Name ?? $"Player {playerId}";
 	}
 
 	private string GetPlayerColor(int playerId)
@@ -227,10 +230,10 @@ public class ExecutionPhase : IGamePhase
 	{
 		_inputHandled = false;
 		_currentRegisterLog = -1;
-		if (_runner != null)
+		if (_gameProvider != null)
 		{
-			_runner.Engine.SetCurrentRegister(0);
-			_runner.Engine.SetCurrentPlayerIndex(0);
+			_gameProvider.SetCurrentRegister(0);
+			_gameProvider.SetCurrentPlayerIndex(0);
 		}
 	}
 
@@ -240,7 +243,7 @@ public class ExecutionPhase : IGamePhase
 	{
 		if (_inputHandled) return;
 		
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
 		if (_inputService.IsActionJustPressed("ui_accept") || _inputService.IsActionJustPressed("ui_execute"))
 		{
@@ -256,20 +259,20 @@ public class ExecutionPhase : IGamePhase
 
 	private void StartRegisterExecution()
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
 		ExecuteNextStepAsync();
 	}
 
 	private async void ExecuteNextStepAsync()
 	{
-		if (_runner == null) return;
+		if (_gameProvider == null) return;
 
 		_animations.Clear();
 
-		var result = _runner.Engine.TryExecuteNextStep();
+		var result = _gameProvider.TryExecuteNextStep();
 		
-		if (result == StepResult.Completed)
+		if (result == Core.Engine.StepResult.Completed)
 		{
 			return;
 		}
@@ -289,11 +292,11 @@ public class ExecutionPhase : IGamePhase
 
 	private void CompleteExecutionPhase()
 	{
-		if (_runner == null || _dispatcher == null) return;
+		if (_gameProvider == null || _dispatcher == null) return;
 
-		var state = _runner.Engine.State;
+		var state = _gameProvider.GetState();
 		
-		_runner.Engine.NextRound();
+		_gameProvider.NextRound();
 		Log("");
 		Log("[color=green][b]=== Round Complete ===[/b][/color]");
 		

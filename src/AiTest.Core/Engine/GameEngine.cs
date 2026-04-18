@@ -103,29 +103,16 @@ public sealed class GameState
     {
         _players = players;
         Map = map;
-        Phase = GamePhase.Programming;
+    }
+
+    public void AddPlayer(Player player)
+    {
+        _players.Add(player);
     }
 
     public void InitializeMap(GameMap map)
     {
         Map = map;
-        Phase = GamePhase.Programming;
-    }
-
-    public Player AddPlayer(string name)
-    {
-        var player = new Player
-        {
-            Id = _players.Count + 1,
-            Name = name,
-            Robot = new Robot
-            {
-                Id = _players.Count + 1,
-                Name = name
-            }
-        };
-        _players.Add(player);
-        return player;
     }
 
     public Player? GetCurrentPlayer()
@@ -145,25 +132,9 @@ public sealed class GameState
         CurrentRegister = register;
     }
 
-    public void NextRegister()
-    {
-        CurrentRegister++;
-        if (CurrentRegister >= 5)
-        {
-            CurrentRegister = 0;
-        }
-    }
-
     public void SetCurrentPlayerIndex(int index)
     {
         CurrentPlayerIndex = index;
-    }
-
-    public void IncrementCurrentPlayerIndex()
-    {
-        CurrentPlayerIndex++;
-        if (CurrentPlayerIndex >= _players.Count)
-            CurrentPlayerIndex = 0;
     }
 
     public void SetPhase(GamePhase phase)
@@ -295,11 +266,23 @@ public sealed class GameEngine : IGameEngine
     public void Initialize(GameMap map)
     {
         State.InitializeMap(map);
+        State.SetPhase(GamePhase.Programming);
     }
 
     public void AddPlayer(string name)
     {
-        var player = State.AddPlayer(name);
+        var player = new Player
+        {
+            Id = State.Players.Count + 1,
+            Name = name,
+            Robot = new Robot
+            {
+                Id = State.Players.Count + 1,
+                Name = name
+            }
+        };
+        State.AddPlayer(player);
+        
         var startTiles = FindStartTiles();
         if (startTiles.Count > player.Id - 1)
         {
@@ -351,6 +334,14 @@ public sealed class GameEngine : IGameEngine
     public void SetCurrentPlayerIndex(int index)
     {
         State.SetCurrentPlayerIndex(index);
+    }
+
+    public void IncrementCurrentPlayerIndex()
+    {
+        var nextIndex = State.CurrentPlayerIndex + 1;
+        if (nextIndex >= State.Players.Count)
+            nextIndex = 0;
+        State.SetCurrentPlayerIndex(nextIndex);
     }
 
     public void SetPhase(GamePhase phase)
@@ -643,9 +634,14 @@ public sealed class GameEngine : IGameEngine
 
     public void NextRegister()
     {
-        State.NextRegister();
+        var nextRegister = State.CurrentRegister + 1;
+        if (nextRegister >= 5)
+        {
+            nextRegister = 0;
+        }
+        State.SetCurrentRegister(nextRegister);
         _currentStep = -1;
-        if (State.CurrentRegister == 0)
+        if (nextRegister == 0)
         {
             OnAllRegistersComplete?.Invoke();
             NextRound();

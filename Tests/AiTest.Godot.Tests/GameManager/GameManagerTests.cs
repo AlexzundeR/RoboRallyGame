@@ -45,7 +45,7 @@ public class GameManagerTests
         runner.Initialize();
         
         BindEngineToDispatcher(runner, dispatcher);
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
         
         var gamePlayer = runner.Engine.State.Players[0];
         for (int i = 0; i < 5; i++)

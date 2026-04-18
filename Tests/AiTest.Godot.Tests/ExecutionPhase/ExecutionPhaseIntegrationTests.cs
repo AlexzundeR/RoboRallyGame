@@ -71,7 +71,7 @@ public class ExecutionPhaseIntegrationTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(animationService);
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         runner.Engine.State.Players[0].AssignCardToRegister(0, 0);
         phase.ExecuteRegister();
@@ -98,7 +98,7 @@ public class ExecutionPhaseIntegrationTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
         for (int i = 0; i < 5; i++)
@@ -121,7 +121,7 @@ public class ExecutionPhaseIntegrationTests
         var dispatcher = new MessageDispatcher();
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         runner.Engine.SetCurrentRegister(3);
         runner.Engine.SetCurrentPlayerIndex(1);
@@ -139,7 +139,7 @@ public class ExecutionPhaseIntegrationTests
         var dispatcher = new MessageDispatcher();
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var act = () => phase.ExecuteRegister();
 
@@ -156,7 +156,7 @@ public class ExecutionPhaseIntegrationTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(animationService);
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
         player.Robot.SetDirection(Direction.East);
@@ -179,7 +179,7 @@ public class ExecutionPhaseIntegrationTests
         BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
         for (int i = 0; i < 3; i++)
@@ -208,7 +208,7 @@ public class ExecutionPhaseIntegrationTests
         BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var player = runner.Engine.State.Players[0];
         for (int i = 0; i < 5; i++)
@@ -240,7 +240,7 @@ public class ExecutionPhaseIntegrationTests
         BindEngineToDispatcher(runner, dispatcher);
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var events = new List<RegistersClearedEvent>();
         dispatcher.Subscribe<RegistersClearedEvent>(e => events.Add(e));

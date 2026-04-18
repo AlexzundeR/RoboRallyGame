@@ -81,7 +81,7 @@ public class ExecutionPhaseTests
         dispatcher.Subscribe<PhaseExecutionCompleteEvent>(e => phaseCompleteRegisters.Add(e.Register));
 
         var phase = new ExecutionPhase();
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         var p2 = runner.Engine.State.Players[1];
@@ -112,7 +112,7 @@ public class ExecutionPhaseTests
         var mock = new MockAnimationService();
         var phase = new ExecutionPhase();
         phase.SetAnimationService(mock);
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         p1.AssignCardToRegister(0, 0);
@@ -137,7 +137,7 @@ public class ExecutionPhaseTests
         GamePhaseType? finalPhase = null;
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, p => finalPhase = p);
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, p => finalPhase = p);
 
         var p1 = runner.Engine.State.Players[0];
         var p2 = runner.Engine.State.Players[1];
@@ -177,7 +177,7 @@ public class ExecutionPhaseTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, new MessageDispatcher(), _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), new MessageDispatcher(), _ => { });
 
         phase.ExecuteRegister();
     }
@@ -195,7 +195,7 @@ public class ExecutionPhaseTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         p1.AssignCardToRegister(0, 0);
@@ -219,7 +219,7 @@ public class ExecutionPhaseTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         for (int i = 0; i < 5; i++)
@@ -251,7 +251,7 @@ public class ExecutionPhaseTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(mock);
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         p1.AssignCardToRegister(0, 0);
@@ -274,7 +274,7 @@ public class ExecutionPhaseTests
 
         var phase = new ExecutionPhase();
         phase.SetAnimationService(new MockAnimationService());
-        phase.Initialize(runner, dispatcher, _ => { });
+        phase.Initialize(TestHelpers.CreateProvider(runner), dispatcher, _ => { });
 
         var p1 = runner.Engine.State.Players[0];
         for (int i = 0; i < 5; i++)
