@@ -260,14 +260,21 @@ public sealed class GameEngine : IGameEngine
     {
         var player = GetPlayer(playerId);
         if (player == null) return;
+        
+        var beforeTokens = player.Robot.LifeTokens;
         player.Robot.TakeDamage(amount);
         
-        if (player.Robot.Damage >= 10)
+        if (player.Robot.LifeTokens != beforeTokens)
         {
-            if (player.Robot.LifeTokens > 0)
-                player.Robot.LoseLifeToken();
+            if (player.Robot.LifeTokens == 0)
+            {
+                OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
+            }
             else
-                player.Robot.SetStatus(RobotStatus.Destroyed);
+            {
+                OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
+            }
+            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
         }
     }
 
@@ -642,10 +649,15 @@ public sealed class GameEngine : IGameEngine
 
     public void NextRegister()
     {
-        var nextRegister = State.CurrentRegister + 1;
+        var currentRegister = State.CurrentRegister;
+        var nextRegister = currentRegister + 1;
         if (nextRegister >= 5)
         {
             nextRegister = 0;
+            foreach (var player in State.Players)
+            {
+                player.ClearRegisters();
+            }
         }
         State.SetCurrentRegister(nextRegister);
         _currentStep = -1;
@@ -665,39 +677,31 @@ public sealed class GameEngine : IGameEngine
         
         foreach (var player in State.Players)
         {
-            //TODO: вынести в компоненты поведения робота, сделать реакцию на начало раунда
             if (player.Robot.Status == RobotStatus.PowerDown)
-            {
-                player.Robot.WakeUp();
-                player.Robot.Repair(player.Robot.Damage);
-                OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, player.Robot.Damage, 0));
-            }
-            else
             {
                 player.ClearRegisters();
             }
             
-            if (player.Robot.Status == RobotStatus.Rebooting)
+            var result = player.Robot.PrepareForRound(player.Robot.StartPosition);
+            switch (result)
             {
-                if (player.Robot.LifeTokens > 0)
-                {
-                    var spawnPos = player.Robot.LastCheckpointPosition ?? player.Robot.StartPosition;
-                    player.Robot.Reboot(spawnPos);
-                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, spawnPos));
-                }
-                else
-                {
-                    player.Robot.SetStatus(RobotStatus.Destroyed);
+                case Entities.RoundPreparationResult.WokeUp:
+                    OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, player.Robot.Damage, 0));
+                    break;
+                case Entities.RoundPreparationResult.Rebooted:
+                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
+                    break;
+                case Entities.RoundPreparationResult.Destroyed:
                     OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
-                }
+                    break;
             }
 
             var tile = State.Map.GetTile(player.Robot.Position);
             var repairComponent = tile.GetComponent<IEndOfRoundComponent>();
             if (repairComponent != null)
             {
-                var result = repairComponent.ApplyEndOfRound(player);
-                if (result == TileActionResult.Repaired)
+                var repairResult = repairComponent.ApplyEndOfRound(player);
+                if (repairResult == TileActionResult.Repaired)
                 {
                     OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, 1, player.Robot.Damage));
                 }

@@ -66,6 +66,8 @@ public sealed class Robot
     public void Rotate180() => Direction = Direction.TurnAround();
 
     public void TakeDamage(int amount) => _lifecycle.OnTakeDamage(this, amount);
+    public void CheckDamage() => _lifecycle.OnAfterDamage(this, Damage);
+    public RoundPreparationResult PrepareForRound(Position defaultSpawn) => _lifecycle.PrepareForRound(this, defaultSpawn);
     public void Repair(int amount) => _lifecycle.OnRepair(this, amount);
     public void LoseLifeToken() => _lifecycle.OnLoseLifeToken(this);
     public void Reboot(Position spawnPos) => _lifecycle.OnReboot(this, spawnPos);
