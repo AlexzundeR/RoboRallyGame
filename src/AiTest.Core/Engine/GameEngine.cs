@@ -266,6 +266,7 @@ public sealed class GameEngine : IGameEngine
         
         if (player.Robot.LifeTokens != beforeTokens)
         {
+            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
             if (player.Robot.LifeTokens == 0)
             {
                 OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
@@ -274,7 +275,6 @@ public sealed class GameEngine : IGameEngine
             {
                 OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
             }
-            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
         }
     }
 

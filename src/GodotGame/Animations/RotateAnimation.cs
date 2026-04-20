@@ -25,7 +25,9 @@ public class RotateAnimation : Animation
 		tween.SetTrans(Tween.TransitionType.Sine);
 		tween.SetEase(Tween.EaseType.InOut);
 		
-		var targetAngle = CalculateShortestAngle(From, To);
+		var fromAngle = DirectionToAngle(From);
+		var toAngle = DirectionToAngle(To);
+		var targetAngle = CalculateShortestAngle(Robot.RotationDegrees, toAngle);
 		tween.TweenProperty(Robot, "rotation_degrees", targetAngle, Duration);
 		tween.Finished += () => tcs.SetResult(true);
 		tween.Play();
@@ -42,10 +44,8 @@ public class RotateAnimation : Animation
 		_ => 0f
 	};
 
-	private static float CalculateShortestAngle(Direction from, Direction to)
+	private static float CalculateShortestAngle(float fromAngle, float toAngle)
 	{
-		var fromAngle = DirectionToAngle(from);
-		var toAngle = DirectionToAngle(to);
 		var diff = toAngle - fromAngle;
 		
 		if (diff > 180) diff -= 360;
