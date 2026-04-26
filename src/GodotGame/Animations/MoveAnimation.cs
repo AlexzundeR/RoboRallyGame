@@ -1,8 +1,8 @@
-namespace AiTest.Godot.Animations;
+﻿namespace RoboRallyGame.Godot.Animations;
 
 using System.Threading.Tasks;
 using Godot;
-using AiTest.Core.Models;
+using RoboRallyGame.Core.Models;
 
 public class MoveAnimation : Animation
 {

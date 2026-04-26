@@ -1,4 +1,4 @@
-# План реализации системы опций (апгрейдов) RoboRally
+﻿# План реализации системы опций (апгрейдов) RoboRally
 
 ## Обзор
 
@@ -54,7 +54,7 @@
 ### 1. Модель данных (Core)
 
 ```
-AiTest.Core/Upgrades/
+RoboRallyGame.Core/Upgrades/
 ├── UpgradeCard.cs          # Модель upgrade
 ├── UpgradeCatalog.cs       # Каталог всех 26 upgrades
 ├── IOptionEffect.cs       # Интерфейс эффекта

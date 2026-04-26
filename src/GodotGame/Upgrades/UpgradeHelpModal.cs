@@ -1,7 +1,7 @@
-using Godot;
+﻿using Godot;
 using System.Linq;
 
-namespace AiTest.Godot.Upgrades;
+namespace RoboRallyGame.Godot.Upgrades;
 
 public enum UpgradeCategoryFilter
 {

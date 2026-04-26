@@ -1,9 +1,9 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Godot.UI;
+using RoboRallyGame.Godot.UI;
 
-namespace AiTest.Godot;
+namespace RoboRallyGame.Godot;
 
 public partial class GameUI : CanvasLayer
 {

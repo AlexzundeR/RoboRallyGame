@@ -1,6 +1,6 @@
-using Godot;
+﻿using Godot;
 
-namespace AiTest.Godot.UI;
+namespace RoboRallyGame.Godot.UI;
 
 public partial class TopPanel : PanelContainer
 {

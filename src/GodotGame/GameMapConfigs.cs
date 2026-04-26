@@ -1,9 +1,9 @@
-namespace AiTest.Godot;
+﻿namespace RoboRallyGame.Godot;
 
 using System.Collections.Generic;
-using AiTest.Core.Config;
-using AiTest.Core.Entities;
-using AiTest.Core.Models;
+using RoboRallyGame.Core.Config;
+using RoboRallyGame.Core.Entities;
+using RoboRallyGame.Core.Models;
 
 public static class GameMapConfigs
 {

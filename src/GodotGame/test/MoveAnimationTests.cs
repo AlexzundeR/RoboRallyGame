@@ -1,7 +1,7 @@
-namespace AiTest.Tests.GdUnit.Animations;
+﻿namespace RoboRallyGame.Tests.GdUnit.Animations;
 
-using AiTest.Godot.Animations;
-using AiTest.Core.Models;
+using RoboRallyGame.Godot.Animations;
+using RoboRallyGame.Core.Models;
 using GdUnit4;
 using static GdUnit4.Assertions;
 using Godot;

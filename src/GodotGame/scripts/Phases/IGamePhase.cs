@@ -1,8 +1,8 @@
-namespace AiTest.Godot.Phases;
+﻿namespace RoboRallyGame.Godot.Phases;
 
 using System;
-using AiTest.Core.Messages;
-using AiTest.Godot;
+using RoboRallyGame.Core.Messages;
+using RoboRallyGame.Godot;
 
 public interface IGamePhase
 {

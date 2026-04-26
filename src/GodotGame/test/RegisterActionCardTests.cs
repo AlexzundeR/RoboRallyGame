@@ -1,6 +1,6 @@
-namespace AiTest.Tests.GdUnit.UI;
+﻿namespace RoboRallyGame.Tests.GdUnit.UI;
 
-using AiTest.Godot.UI;
+using RoboRallyGame.Godot.UI;
 using GdUnit4;
 using static GdUnit4.Assertions;
 using System.Reflection;

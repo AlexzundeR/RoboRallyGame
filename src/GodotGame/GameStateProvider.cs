@@ -1,14 +1,14 @@
-namespace AiTest.Godot;
+﻿namespace RoboRallyGame.Godot;
 
 using System.Collections.Generic;
 using System.Linq;
 
-using AiTest.Core.Entities;
-using AiTest.Godot.Messages;
-using AiTest.Core.Engine;
-using AiTest.Core.Models;
-using AiTest.Core.Cards;
-using AiTest.Godot.Models;
+using RoboRallyGame.Core.Entities;
+using RoboRallyGame.Godot.Messages;
+using RoboRallyGame.Core.Engine;
+using RoboRallyGame.Core.Models;
+using RoboRallyGame.Core.Cards;
+using RoboRallyGame.Godot.Models;
 
 public sealed record CardViewModel(string Symbol, int Priority, int CardNumber);
 
@@ -17,7 +17,7 @@ public sealed record PlayerViewModel(
     string Name,
     int X,
     int Y,
-    AiTest.Godot.Models.Direction Direction,
+    RoboRallyGame.Godot.Models.Direction Direction,
     int Damage,
     int LifeTokens,
     bool IsPowerDown,

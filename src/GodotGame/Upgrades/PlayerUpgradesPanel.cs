@@ -1,10 +1,10 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Core.Entities;
-using AiTest.Core.Upgrades;
+using RoboRallyGame.Core.Entities;
+using RoboRallyGame.Core.Upgrades;
 
-namespace AiTest.Godot.Upgrades;
+namespace RoboRallyGame.Godot.Upgrades;
 
 public partial class PlayerUpgradesPanel : PanelContainer
 {

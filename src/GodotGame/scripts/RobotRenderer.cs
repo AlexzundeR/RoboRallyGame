@@ -1,8 +1,8 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
-using AiTest.Godot.Services;
+using RoboRallyGame.Godot.Services;
 
-namespace AiTest.Godot;
+namespace RoboRallyGame.Godot;
 
 public partial class RobotRenderer : Node2D
 {

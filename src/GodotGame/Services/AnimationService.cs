@@ -1,12 +1,12 @@
-namespace AiTest.Godot.Animations;
+﻿namespace RoboRallyGame.Godot.Animations;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using AiTest.Core.Models;
-using AiTest.Godot.Services;
+using RoboRallyGame.Core.Models;
+using RoboRallyGame.Godot.Services;
 
 public partial class AnimationService : Node, IAnimationService
 {

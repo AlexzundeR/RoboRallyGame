@@ -1,7 +1,7 @@
-using Godot;
-using AiTest.Core.Upgrades;
+﻿using Godot;
+using RoboRallyGame.Core.Upgrades;
 
-namespace AiTest.Godot.Upgrades;
+namespace RoboRallyGame.Godot.Upgrades;
 
 public partial class UpgradeCard : PanelContainer
 {

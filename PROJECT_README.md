@@ -1,4 +1,4 @@
-# RoboRally Project
+﻿# RoboRally Project
 
 ## Основные правила игры
 
@@ -383,7 +383,7 @@ public abstract class UpgradeEffect
 ## Структура проекта
 
 ```
-AiTest.Core/
+RoboRallyGame.Core/
 ├── Cards/                   # ProgramCard classes
 │   ├── ProgramCard.cs       # Abstract base class
 │   ├── MoveCard.cs
@@ -411,11 +411,11 @@ AiTest.Core/
 │   └── UpgradeStrategies.cs
 ├── Messages/               # Event messages
 ├── Config/                 # Configuration
-└── AiTest.Core.csproj
+└── RoboRallyGame.Core.csproj
 
 Tests/
-├── AiTest.Core.Tests/
-└── AiTest.Godot.Tests/
+├── RoboRallyGame.Core.Tests/
+└── RoboRallyGame.Godot.Tests/
 
 GodotGame/                  # Godot visualization
 ├── project.godot
@@ -458,7 +458,7 @@ dotnet test
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../AiTest.Core.csproj" />
+    <ProjectReference Include="../RoboRallyGame.Core.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -470,7 +470,7 @@ dotnet test
 
 ### Целевая версия .NET
 
-AiTest.Core и Godot проекты должны использовать **net8.0** (не net10.0) для совместимости с Godot Mono.
+RoboRallyGame.Core и Godot проекты должны использовать **net8.0** (не net10.0) для совместимости с Godot Mono.
 
 ### Ошибки LSP в IDE
 

@@ -1,4 +1,4 @@
-# AGENTS.md - AI Test Project
+﻿# AGENTS.md - AI Test Project
 
 ## CRITICAL RULES
 
@@ -10,7 +10,7 @@
 - **Project Type**: Godot Game (C#) + Core Library
 - **Language**: C# 12
 - **Target Framework**: net8.0
-- **Projects**: AiTest.Core (logic), AiTest.Godot (game UI)
+- **Projects**: RoboRallyGame.Core (logic), RoboRallyGame.Godot (game UI)
 
 ## Documentation First
 
@@ -37,7 +37,7 @@ Godot имеет обширную документацию в `C:\projects\godot
 dotnet build
 
 # Build Godot project specifically
-dotnet build src/GodotGame/AiTest.Godot.csproj
+dotnet build src/GodotGame/RoboRallyGame.Godot.csproj
 
 # Build in Release mode
 dotnet build -c Release
@@ -70,7 +70,7 @@ Code analysis is configured via:
 ### Format Checking
 ```bash
 # Check code formatting (requires dotnet format)
-dotnet format --verify-no-changes src/GodotGame/AiTest.Godot.csproj
+dotnet format --verify-no-changes src/GodotGame/RoboRallyGame.Godot.csproj
 ```
 
 ### LSP Configuration
@@ -178,14 +178,14 @@ dotnet test
 ### Formatting (enforced by dotnet format)
 - 4 spaces for indentation (no tabs)
 - Opening brace on new line for namespaces/classes, same line for methods
-- Use file-scoped namespaces: `namespace AiTest.Core.Game;`
+- Use file-scoped namespaces: `namespace RoboRallyGame.Core.Game;`
 - One blank line between top-level elements
 
 ## Project Structure
 
 ```
-AiTest.Core/
-├── AiTest.Core.csproj
+RoboRallyGame.Core/
+├── RoboRallyGame.Core.csproj
 ├── Game/              # Game logic components
 └── Models/            # Data models and DTOs
 
@@ -202,8 +202,8 @@ src/GodotGame/
 ### Test Projects Structure
 ```
 Tests/
-├── AiTest.Core.Tests/        # Pure logic tests (xUnit)
-└── AiTest.Godot.Tests/      # Godot-specific tests (xUnit)
+├── RoboRallyGame.Core.Tests/        # Pure logic tests (xUnit)
+└── RoboRallyGame.Godot.Tests/      # Godot-specific tests (xUnit)
     ├── ExecutionPhase/       # Execution phase tests
     ├── GameFlow/             # Game flow integration tests
     ├── Messages/             # Message dispatcher tests
@@ -236,7 +236,7 @@ dotnet test src/GodotGame/ --settings .runsettings
 ```
 
 ### GdUnit4Net Setup
-1. NuGet packages in `AiTest.Godot.csproj`:
+1. NuGet packages in `RoboRallyGame.Godot.csproj`:
    - `gdUnit4.api` (testing framework)
    - `gdUnit4.test.adapter` (VSTest integration)
    - `gdUnit4.analyzers` (compile-time validation)
@@ -263,7 +263,7 @@ public void ExecutionPhase_ExecuteRegister_PublishesEvent()
 }
 
 // GdUnit4Net with Godot runtime
-using RobotNode = AiTest.Godot.RobotNode;
+using RobotNode = RoboRallyGame.Godot.RobotNode;
 
 [TestSuite]
 public class RobotVisualTests
@@ -281,8 +281,8 @@ public class RobotVisualTests
 ```
 
 ### Test Guidelines
-- **Unit tests** (`AiTest.Core.Tests`): Test pure game logic without Godot dependencies
-- **Integration tests** (`AiTest.Godot.Tests`): Test classes that use Godot APIs (xUnit)
+- **Unit tests** (`RoboRallyGame.Core.Tests`): Test pure game logic without Godot dependencies
+- **Integration tests** (`RoboRallyGame.Godot.Tests`): Test classes that use Godot APIs (xUnit)
 - **Godot Runtime tests** (`src/GodotGame/test/`): Use `[RequireGodotRuntime]` attribute, requires `GODOT_BIN`
 - Test file naming: `{ClassName}Tests.cs`
 - Test method naming: `{MethodName}_{Scenario}_{ExpectedResult}`

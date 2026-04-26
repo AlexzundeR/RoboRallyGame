@@ -1,9 +1,9 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Godot;
+using RoboRallyGame.Godot;
 
-namespace AiTest.Godot.UI;
+namespace RoboRallyGame.Godot.UI;
 
 public partial class PlayerStatusModal : PanelContainer
 {

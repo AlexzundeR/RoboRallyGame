@@ -1,9 +1,9 @@
-namespace AiTest.Godot.Phases;
+﻿namespace RoboRallyGame.Godot.Phases;
 
 using Godot;
 using System;
-using AiTest.Core.Engine;
-using AiTest.Core.Messages;
+using RoboRallyGame.Core.Engine;
+using RoboRallyGame.Core.Messages;
 
 public interface IInputService
 {

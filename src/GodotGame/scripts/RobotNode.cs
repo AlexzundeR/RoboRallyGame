@@ -1,7 +1,7 @@
-namespace AiTest.Godot;
+﻿namespace RoboRallyGame.Godot;
 
 using Godot;
-using AiTest.Godot.Services;
+using RoboRallyGame.Godot.Services;
 
 public partial class RobotNode : Node2D
 {

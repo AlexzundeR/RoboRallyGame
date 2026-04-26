@@ -1,7 +1,7 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Godot;
+using RoboRallyGame.Godot;
 
 public partial class PlayerPanel : PanelContainer
 {

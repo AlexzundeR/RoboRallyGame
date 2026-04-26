@@ -1,8 +1,8 @@
-namespace AiTest.Godot;
+﻿namespace RoboRallyGame.Godot;
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AiTest.Godot.Animations;
+using RoboRallyGame.Godot.Animations;
 
 public interface IAnimationService
 {

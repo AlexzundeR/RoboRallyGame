@@ -1,9 +1,9 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
-using AiTest.Godot.Tiles;
-using AiTest.Godot.Components;
-using AiTest.Godot.Models;
-using AiTest.Godot;
+using RoboRallyGame.Godot.Tiles;
+using RoboRallyGame.Godot.Components;
+using RoboRallyGame.Godot.Models;
+using RoboRallyGame.Godot;
 
 public partial class MapRenderer : Node2D
 {
@@ -44,7 +44,7 @@ public partial class MapRenderer : Node2D
         }
     }
 
-    private void CreateTileVisual(int x, int y, AiTest.Godot.Models.TileData tileData)
+    private void CreateTileVisual(int x, int y, RoboRallyGame.Godot.Models.TileData tileData)
     {
         var scene = GetSceneForTileType(tileData.Type);
         var tileNode = scene.Instantiate<Tile>();
