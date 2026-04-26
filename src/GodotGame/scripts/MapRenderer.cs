@@ -2,15 +2,12 @@ using Godot;
 using System.Collections.Generic;
 using AiTest.Godot.Tiles;
 using AiTest.Godot.Components;
-using AiTest.Godot.Services;
-using AiTest.Core.Models;
-using AiTest.Core.Models.Components;
-
-namespace AiTest.Godot;
+using AiTest.Godot.Models;
+using AiTest.Godot;
 
 public partial class MapRenderer : Node2D
 {
-    private readonly Dictionary<Position, Tile> _tiles = new();
+    private readonly Dictionary<(int, int), Tile> _tiles = new();
     
     private PackedScene _floorTileScene = null!;
     private PackedScene _wallTileScene = null!;
@@ -35,33 +32,32 @@ public partial class MapRenderer : Node2D
         _barricadeRendererScene = GD.Load<PackedScene>("res://Components/BarricadeRenderer.tscn");
     }
 
-    public void RenderMap(GameMap map)
+    public void RenderMap(MapData map)
     {
         for (int x = 0; x < map.Width; x++)
         {
             for (int y = 0; y < map.Height; y++)
             {
-                var pos = new Position(x, y);
-                var tile = map.GetTile(pos);
-                CreateTileVisual(pos, tile);
+                var tileData = map.GetTile(x, y);
+                CreateTileVisual(x, y, tileData);
             }
         }
     }
 
-    private void CreateTileVisual(Position pos, Core.Models.Tile tileData)
+    private void CreateTileVisual(int x, int y, AiTest.Godot.Models.TileData tileData)
     {
         var scene = GetSceneForTileType(tileData.Type);
         var tileNode = scene.Instantiate<Tile>();
         
-        tileNode.Initialize(pos, tileData.Type);
-        _tiles[pos] = tileNode;
+        tileNode.Initialize(x, y, (int)tileData.Type);
+        _tiles[(x, y)] = tileNode;
         AddChild(tileNode);
 
         if (tileData.Type == TileType.Checkpoint)
         {
             if (tileNode is CheckpointTile checkpointTile)
             {
-                checkpointTile.Initialize(pos, tileData.Type, tileData.CheckpointNumber ?? 1);
+                checkpointTile.Initialize(x, y, (int)tileData.Type, tileData.CheckpointNumber ?? 1);
             }
         }
         
@@ -69,8 +65,7 @@ public partial class MapRenderer : Node2D
         {
             if (tileNode is ConveyorTile conveyorTile)
             {
-                var conveyor = tileData.GetComponent<ConveyorBehaviorComponent>();
-                conveyorTile.Initialize(pos, tileData.Type, conveyor?.Direction ?? ConveyorDirection.North, conveyor?.IsExpress ?? false);
+                conveyorTile.Initialize(x, y, (int)tileData.Type, tileData.ConveyorDir ?? ConveyorDirection.North, tileData.IsExpress ?? false);
             }
         }
         
@@ -78,17 +73,15 @@ public partial class MapRenderer : Node2D
         {
             if (tileNode is GearTile gearTile)
             {
-                var gear = tileData.GetComponent<GearBehaviorComponent>();
-                gearTile.Initialize(pos, tileData.Type, gear?.IsClockwise ?? true);
+                gearTile.Initialize(x, y, (int)tileData.Type, tileData.IsClockwise ?? true);
             }
         }
         
-        var blockedComponent = tileData.GetComponent<BlockedMovementComponent>();
-        if (blockedComponent != null && blockedComponent.BlockedDirections.Count > 0 && blockedComponent.BlockedDirections.Count < 4)
+        if (tileData.BlockedDirections != null && tileData.BlockedDirections.Count > 0 && tileData.BlockedDirections.Count < 4)
         {
             var barricadeRenderer = _barricadeRendererScene.Instantiate<BarricadeRenderer>();
             tileNode.AddChild(barricadeRenderer);
-            barricadeRenderer.RenderBlockages(blockedComponent.BlockedDirections);
+            barricadeRenderer.RenderBlockages(tileData.BlockedDirections);
         }
         
         tileNode.StartAnimations();

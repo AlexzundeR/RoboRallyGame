@@ -1,8 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Core.Entities;
-using AiTest.Core.Upgrades;
+using AiTest.Godot;
 
 namespace AiTest.Godot.UI;
 
@@ -17,7 +16,7 @@ public partial class PlayerStatusModal : PanelContainer
 	private Button _prevButton;
 	private Button _nextButton;
 
-	private List<Player> _players = new();
+	private List<PlayerViewModel> _players = new();
 	private int _currentIndex = 0;
 
 	public override void _Ready()
@@ -39,7 +38,7 @@ public partial class PlayerStatusModal : PanelContainer
 			_nextButton.Pressed += OnNextPressed;
 	}
 
-	public void SetPlayers(IEnumerable<Player> players)
+	public void SetPlayers(IEnumerable<PlayerViewModel> players)
 	{
 		_players = players.ToList();
 		_currentIndex = 0;
@@ -73,7 +72,7 @@ public partial class PlayerStatusModal : PanelContainer
 
 		if (_statsLabel != null)
 		{
-			_statsLabel.Text = $"HP: {player.Robot.LifeTokens}/3 | DMG: {player.Robot.Damage} | Stars: {player.Robot.CheckpointsReached}";
+			_statsLabel.Text = $"HP: {player.LifeTokens}/3 | DMG: {player.Damage} | Stars: {player.CheckpointsReached}";
 		}
 
 		if (_prevButton != null)
@@ -84,7 +83,7 @@ public partial class PlayerStatusModal : PanelContainer
 		RefreshUpgrades(player);
 	}
 
-	private void RefreshUpgrades(Player player)
+	private void RefreshUpgrades(PlayerViewModel player)
 	{
 		if (_upgradesList == null || _noUpgradesLabel == null) return;
 
@@ -99,12 +98,9 @@ public partial class PlayerStatusModal : PanelContainer
 
 		foreach (var upgrade in upgrades)
 		{
-			var definition = UpgradeCatalog.Get(upgrade.Name.ToLowerInvariant().Replace(" ", "_"));
-			var desc = definition?.Description ?? "No description";
-
 			var label = new Label
 			{
-				Text = $"[b]{upgrade.Name}[/b]\n{desc}",
+				Text = $"[b]{upgrade}[/b]",
 				HorizontalAlignment = HorizontalAlignment.Left,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart
 			};
@@ -112,7 +108,7 @@ public partial class PlayerStatusModal : PanelContainer
 		}
 	}
 
-	public Player? GetCurrentPlayer()
+	public PlayerViewModel? GetCurrentPlayer()
 	{
 		return _players.Count > 0 ? _players[_currentIndex] : null;
 	}

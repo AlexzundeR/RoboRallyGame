@@ -3,14 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AiTest.Core.Engine;
-using AiTest.Core.Entities;
-using AiTest.Core.Upgrades;
 using AiTest.Godot;
 using AiTest.Godot.Animations;
 using AiTest.Godot.Phases;
 using AiTest.Godot.Services;
 using AiTest.Core.Messages;
-using CoreMessages = AiTest.Core.Messages;
 
 public partial class GameManager : Node2D
 {
@@ -185,7 +182,7 @@ public partial class GameManager : Node2D
 		engine.OnLaserPhaseStarted += e => _dispatcher.Publish(e);
 		engine.OnRegisterExecuted += e => _dispatcher.Publish(e);
 		engine.OnPhaseExecutionComplete += e => _dispatcher.Publish(e);
-		engine.OnAllRegistersComplete += () => _dispatcher.Publish(new CoreMessages.AllRegistersCompleteEvent());
+		engine.OnAllRegistersComplete += () => _dispatcher.Publish(new AllRegistersCompleteEvent());
 		engine.OnGameOver += e => _dispatcher.Publish(e);
 		engine.OnUpgradeAcquired += e => _dispatcher.Publish(e);
 	}
@@ -197,7 +194,8 @@ public partial class GameManager : Node2D
 
 	private void OnGameOver(GameOverEvent e)
 	{
-		_gameUI?.ShowGameOver(e.WinnerIds, e.IsTie, _runner!.Engine.State.Players);
+		var winnerNames = e.WinnerIds.Select(id => $"Player {id}").ToList();
+		_gameUI?.ShowGameOver(winnerNames, e.IsTie);
 	}
 
 	private void OnExecutionStarted(ExecutionStartedEvent e)
@@ -226,7 +224,7 @@ public partial class GameManager : Node2D
 
 	private void OnRegisterExecuted(RegisterExecutedEvent e)
 	{
-		_robotRenderer!.UpdatePositions(_runner!.Engine.State.Players);
+		_robotRenderer!.UpdatePositions(_gameProvider!.GetPlayers());
 		UpdateUI();
 	}
 
@@ -333,10 +331,10 @@ public partial class GameManager : Node2D
 
 	private void CreateTestLevel()
 	{
-		var map = _runner!.Engine.Map;
+		var map = _gameProvider!.GetMapData();
 		CenterCamera(map.Width, map.Height);
 		_mapRenderer!.RenderMap(map);
-		_robotRenderer!.CreateRobots(_runner.Engine.Players);
+		_robotRenderer!.CreateRobots(_gameProvider!.GetPlayers());
 		UpdateUI();
 	}
 
@@ -354,7 +352,7 @@ public partial class GameManager : Node2D
 		HandleCameraKeyboardPan(delta);
 		HandleInput();
 		_currentPhase?.Update(delta);
-		_robotRenderer!.UpdatePositions(_runner!.Engine.Players);
+		_robotRenderer!.UpdatePositions(_gameProvider!.GetPlayers());
 		UpdateUI();
 	}
 
@@ -405,7 +403,7 @@ public partial class GameManager : Node2D
 			return;
 		}
 
-		var players = _runner.Engine.Players;
+		var players = _gameProvider!.GetPlayers();
 		var p1 = players[0];
 		var p2 = players[1];
 

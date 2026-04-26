@@ -3,30 +3,28 @@ namespace AiTest.Godot.Components;
 using System;
 using System.Collections.Generic;
 using Godot;
-using AiTest.Core.Models;
-using AiTest.Core.Models.Components;
 
 public partial class BarricadeRenderer : Node2D
 {
     private const float StripeWidth = 6f;
     private const int StripeCount = 8;
     
-    private readonly Dictionary<Direction, List<Polygon2D>> _stripesByDirection = new();
+    private readonly Dictionary<int, List<Polygon2D>> _stripesByDirection = new();
 
     private static readonly Color Yellow = new(0.9f, 0.7f, 0, 1);
     private static readonly Color Black = new(0.05f, 0.05f, 0.05f, 1);
 
     public override void _Ready()
     {
-        CreateEdgeStripes(Direction.North, 0);
-        CreateEdgeStripes(Direction.South, 48);
-        CreateEdgeStripes(Direction.East, 48);
-        CreateEdgeStripes(Direction.West, 0);
+        CreateEdgeStripes(0, 0);
+        CreateEdgeStripes(2, 48);
+        CreateEdgeStripes(1, 48);
+        CreateEdgeStripes(3, 0);
         
         HideAll();
     }
 
-    private void CreateEdgeStripes(Direction direction, float edgePos)
+    private void CreateEdgeStripes(int direction, float edgePos)
     {
         var stripes = new List<Polygon2D>();
         
@@ -36,10 +34,10 @@ public partial class BarricadeRenderer : Node2D
             
             Polygon2D stripe = direction switch
             {
-                Direction.North => CreateNorthStripe(edgePos, i, isYellow),
-                Direction.South => CreateSouthStripe(edgePos, i, isYellow),
-                Direction.East => CreateEastStripe(edgePos, i, isYellow),
-                Direction.West => CreateWestStripe(edgePos, i, isYellow),
+                0 => CreateNorthStripe(edgePos, i, isYellow),
+                2 => CreateSouthStripe(edgePos, i, isYellow),
+                1 => CreateEastStripe(edgePos, i, isYellow),
+                3 => CreateWestStripe(edgePos, i, isYellow),
                 _ => throw new ArgumentException($"Unknown direction: {direction}")
             };
             
@@ -119,13 +117,13 @@ public partial class BarricadeRenderer : Node2D
         }
     }
 
-    public void RenderBlockages(DirectionSet blockedDirections)
+    public void RenderBlockages(IReadOnlyList<int> blockedDirections)
     {
         HideAll();
         
-        foreach (var direction in blockedDirections.AllDirections())
+        foreach (var dir in blockedDirections)
         {
-            if (_stripesByDirection.TryGetValue(direction, out var stripes))
+            if (_stripesByDirection.TryGetValue(dir, out var stripes))
             {
                 foreach (var stripe in stripes)
                     stripe.Show();

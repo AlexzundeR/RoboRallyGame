@@ -19,9 +19,9 @@ public partial class GearTile : Tile
         _directionLabel = GetNode<Label>("DirectionLabel");
     }
 
-    public void Initialize(Core.Models.Position pos, Core.Models.TileType type, bool clockwise)
+    public void Initialize(int x, int y, int type, bool clockwise)
     {
-        base.Initialize(pos, type);
+        Initialize(x, y, type);
         _clockwise = clockwise;
         
         if (_directionLabel != null)

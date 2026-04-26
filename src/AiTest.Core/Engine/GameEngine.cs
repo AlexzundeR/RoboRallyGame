@@ -685,13 +685,13 @@ public sealed class GameEngine : IGameEngine
             var result = player.Robot.PrepareForRound(player.Robot.StartPosition);
             switch (result)
             {
-                case Entities.RoundPreparationResult.WokeUp:
+                case RoundPreparationResult.WokeUp:
                     OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, player.Robot.Damage, 0));
                     break;
-                case Entities.RoundPreparationResult.Rebooted:
+                case RoundPreparationResult.Rebooted:
                     OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
                     break;
-                case Entities.RoundPreparationResult.Destroyed:
+                case RoundPreparationResult.Destroyed:
                     OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
                     break;
             }

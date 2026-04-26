@@ -64,7 +64,7 @@ public class GameRunner
         _engine.StartGame();
     }
 
-    private static Core.Models.Tile CreateTile(TilePlacement placement)
+    private static Tile CreateTile(TilePlacement placement)
     {
         var type = placement.Type;
 
@@ -86,12 +86,12 @@ public class GameRunner
                 _ => ConveyorDirection.North
             };
             
-            var tile = Core.Models.TileFactory.Conveyor(conveyorDir, placement.IsExpress ?? false);
+            var tile = TileFactory.Conveyor(conveyorDir, placement.IsExpress ?? false);
             
             if (placement.BlockedDirections != null && placement.BlockedDirections.Count > 0)
             {
                 var behavior = tile.GetComponent<ConveyorBehaviorComponent>();
-                return new Core.Models.Tile(type, [behavior!, new BlockedMovementComponent(DirectionSet.FromDirections(placement.BlockedDirections.ToArray()))]);
+                return new Tile(type, [behavior!, new BlockedMovementComponent(DirectionSet.FromDirections(placement.BlockedDirections.ToArray()))]);
             }
             
             return tile;
@@ -99,32 +99,32 @@ public class GameRunner
 
         if (type == TileType.Gear)
         {
-            return Core.Models.TileFactory.Gear(placement.IsClockwise ?? true);
+            return TileFactory.Gear(placement.IsClockwise ?? true);
         }
 
         if (type == TileType.Laser && placement.LaserDirection.HasValue)
         {
-            return new Core.Models.Tile(type, placement.LaserDirection.Value);
+            return new Tile(type, placement.LaserDirection.Value);
         }
 
         if (type == TileType.Pit)
         {
-            return Core.Models.TileFactory.Pit();
+            return TileFactory.Pit();
         }
 
         if (type == TileType.RepairSite)
         {
-            return Core.Models.TileFactory.RepairSite();
+            return TileFactory.RepairSite();
         }
 
         if (type == TileType.RepairSitePlus)
         {
-            return Core.Models.TileFactory.RepairSitePlus();
+            return TileFactory.RepairSitePlus();
         }
 
         return components != null 
-            ? new Core.Models.Tile(type, components) 
-            : new Core.Models.Tile(type);
+            ? new Tile(type, components) 
+            : new Tile(type);
     }
 
     private IDealer CreateDealer()

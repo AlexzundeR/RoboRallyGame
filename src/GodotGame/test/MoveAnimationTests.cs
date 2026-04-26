@@ -6,7 +6,7 @@ using GdUnit4;
 using static GdUnit4.Assertions;
 using Godot;
 
-using RobotNode = AiTest.Godot.RobotNode;
+using RobotNode = Godot.RobotNode;
 
 [TestSuite]
 public class MoveAnimationTests

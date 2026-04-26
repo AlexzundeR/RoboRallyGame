@@ -165,8 +165,8 @@ public class ExecutionPhase : IGamePhase
 			_animations.Add(new RotateAnimation
 			{
 				Robot = robot,
-				From = e.From,
-				To = e.To
+				FromIndex = (int)e.From,
+				ToIndex = (int)e.To
 			});
 		}
 	}

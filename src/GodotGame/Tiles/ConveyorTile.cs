@@ -1,7 +1,7 @@
 namespace AiTest.Godot.Tiles;
 
 using Godot;
-using CoreModels = AiTest.Core.Models;
+using GodotModels = Models;
 
 public partial class ConveyorTile : Tile
 {
@@ -21,16 +21,16 @@ public partial class ConveyorTile : Tile
 		_doubleArrow = GetNode<Node2D>("ArrowContainer/DoubleArrow");
 	}
 
-	public void Initialize(CoreModels.Position pos, CoreModels.TileType type, CoreModels.ConveyorDirection direction, bool isExpress)
+	public void Initialize(int x, int y, int type, GodotModels.ConveyorDirection direction, bool isExpress)
 	{
-		base.Initialize(pos, type);
+        Initialize(x, y, type);
 		
 		float rotation = direction switch
 		{
-			CoreModels.ConveyorDirection.North => 0f,
-			CoreModels.ConveyorDirection.East => 90f,
-			CoreModels.ConveyorDirection.South => 180f,
-			CoreModels.ConveyorDirection.West => -90f,
+			GodotModels.ConveyorDirection.North => 0f,
+			GodotModels.ConveyorDirection.East => 90f,
+			GodotModels.ConveyorDirection.South => 180f,
+			GodotModels.ConveyorDirection.West => -90f,
 			_ => 0f
 		};
 		

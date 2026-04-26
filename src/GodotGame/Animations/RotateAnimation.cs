@@ -2,13 +2,12 @@ namespace AiTest.Godot.Animations;
 
 using System.Threading.Tasks;
 using Godot;
-using AiTest.Core.Models;
 
 public class RotateAnimation : Animation
 {
 	public RobotNode Robot { get; init; } = null!;
-	public Direction From { get; init; }
-	public Direction To { get; init; }
+	public int FromIndex { get; init; }
+	public int ToIndex { get; init; }
 	public float Duration { get; init; } = 0.4f;
 
 	public override Task PlayAsync(Node context)
@@ -25,8 +24,7 @@ public class RotateAnimation : Animation
 		tween.SetTrans(Tween.TransitionType.Sine);
 		tween.SetEase(Tween.EaseType.InOut);
 		
-		var fromAngle = DirectionToAngle(From);
-		var toAngle = DirectionToAngle(To);
+		var toAngle = DirectionIndexToAngle(ToIndex);
 		var targetAngle = CalculateShortestAngle(Robot.RotationDegrees, toAngle);
 		tween.TweenProperty(Robot, "rotation_degrees", targetAngle, Duration);
 		tween.Finished += () => tcs.SetResult(true);
@@ -35,12 +33,12 @@ public class RotateAnimation : Animation
 		return tcs.Task;
 	}
 
-	private static float DirectionToAngle(Direction dir) => dir switch
+	private static float DirectionIndexToAngle(int dirIndex) => dirIndex switch
 	{
-		Direction.North => 0f,
-		Direction.East => 90f,
-		Direction.South => 180f,
-		Direction.West => 270f,
+		0 => 0f,
+		1 => 90f,
+		2 => 180f,
+		3 => 270f,
 		_ => 0f
 	};
 

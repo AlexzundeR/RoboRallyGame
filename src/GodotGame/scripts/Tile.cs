@@ -5,8 +5,9 @@ using AiTest.Godot.Services;
 
 public abstract partial class Tile : Node2D
 {	
-	protected Core.Models.Position GridPosition { get; private set; }
-	protected Core.Models.TileType TileType { get; private set; }
+	protected int GridX { get; private set; }
+	protected int GridY { get; private set; }
+	protected int TileTypeIndex { get; private set; }
 	protected abstract Color BaseColor { get; }
 	protected abstract Color BorderColor { get; }
 
@@ -29,11 +30,12 @@ public abstract partial class Tile : Node2D
 	{
 	}
 
-	public void Initialize(Core.Models.Position position, Core.Models.TileType type)
+	public void Initialize(int x, int y, int type)
 	{
-		GridPosition = position;
-		TileType = type;
-		Position = new Vector2(position.X * GameScale.BaseTileSize, position.Y * GameScale.BaseTileSize);
+		GridX = x;
+		GridY = y;
+		TileTypeIndex = type;
+		Position = new Vector2(x * GameScale.BaseTileSize, y * GameScale.BaseTileSize);
 	}
 
 	public virtual void StartAnimations()

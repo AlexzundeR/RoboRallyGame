@@ -33,7 +33,7 @@ public class ExecutionPhaseTests
 {
     private static void BindEngineToDispatcher(GameRunner runner, MessageDispatcher dispatcher)
     {
-        var engine = runner.Engine as AiTest.Core.Engine.GameEngine;
+        var engine = runner.Engine;
         if (engine == null) return;
         
         engine.OnMove += e => dispatcher.Publish(e);
@@ -51,7 +51,7 @@ public class ExecutionPhaseTests
         engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
         engine.OnRegisterExecuted += e => dispatcher.Publish(e);
         engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
-        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AiTest.Core.Messages.AllRegistersCompleteEvent());
+        engine.OnAllRegistersComplete += () => dispatcher.Publish(new AllRegistersCompleteEvent());
         engine.OnGameOver += e => dispatcher.Publish(e);
         engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
     }

@@ -409,8 +409,8 @@ public class UpgradeSystemTests
     public void Player_GetLaserStrategy_ShouldCombineUpgrades()
     {
         var player = new Player();
-        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.DoubleBarrelLaser());
-        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.RearFiringLaser());
+        player.AddUpgrade(new DoubleBarrelLaser());
+        player.AddUpgrade(new RearFiringLaser());
         
         var strategy = player.GetLaserStrategy();
         var robot = new Robot(Direction.North);
@@ -426,7 +426,7 @@ public class UpgradeSystemTests
     public void Player_GetMovementStrategy_ShouldCombineUpgrades()
     {
         var player = new Player();
-        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.Brakes());
+        player.AddUpgrade(new Brakes());
         
         var strategy = player.GetMovementStrategy();
         var robot = new Robot();
@@ -438,7 +438,7 @@ public class UpgradeSystemTests
     public void Player_GetDamageStrategy_ShouldCombineUpgrades()
     {
         var player = new Player();
-        player.AddUpgrade(new AiTest.Core.Upgrades.Permanent.RammingGear());
+        player.AddUpgrade(new RammingGear());
         
         var strategy = player.GetDamageStrategy();
         var robot = new Robot();

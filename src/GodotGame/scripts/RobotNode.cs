@@ -1,8 +1,6 @@
 namespace AiTest.Godot;
 
 using Godot;
-using AiTest.Core.Entities;
-using AiTest.Core.Models;
 using AiTest.Godot.Services;
 
 public partial class RobotNode : Node2D
@@ -17,8 +15,9 @@ public partial class RobotNode : Node2D
 	
 	private int _playerId;
 	private Color _playerColor;
-	private Core.Models.Position _gridPosition;
-	private Direction _direction;
+	private int _gridX;
+	private int _gridY;
+	private int _directionIndex;
 	private int _damage;
 	private bool _isAlive = true;
 	private bool _isPowerDown = false;
@@ -34,31 +33,33 @@ public partial class RobotNode : Node2D
 		_directionIndicator.Color = Colors.Yellow;
 	}
 
-	public void Initialize(Player player)
+	public void Initialize(PlayerViewModel player)
 	{
 		_playerId = player.Id;
 		_playerColor = player.Id == 1 ? Colors.DodgerBlue : Colors.Red;
-		_gridPosition = player.Robot.Position;
-		_direction = player.Robot.Direction;
-		_damage = player.Robot.Damage;
-		_isAlive = player.Robot.IsAlive;
-		_isPowerDown = player.Robot.IsPowerDown;
+		_gridX = player.X;
+		_gridY = player.Y;
+		_directionIndex = (int)player.Direction;
+		_damage = player.Damage;
+		_isAlive = player.IsAlive;
+		_isPowerDown = player.IsPowerDown;
 
 		if (IsInsideTree())
 		{
 			Position = GetWorldPosition();
-			RotationDegrees = DirectionToAngle(_direction);
+			RotationDegrees = DirectionIndexToAngle(_directionIndex);
 			UpdateVisuals();
 		}
 	}
 
-	public void UpdateFromPlayer(Player player)
+	public void UpdateFromPlayer(PlayerViewModel player)
 	{
-		_gridPosition = player.Robot.Position;
-		_direction = player.Robot.Direction;
-		_damage = player.Robot.Damage;
-		_isAlive = player.Robot.IsAlive;
-		_isPowerDown = player.Robot.IsPowerDown;
+		_gridX = player.X;
+		_gridY = player.Y;
+		_directionIndex = (int)player.Direction;
+		_damage = player.Damage;
+		_isAlive = player.IsAlive;
+		_isPowerDown = player.IsPowerDown;
 
 		if (IsInsideTree())
 			UpdateVisuals();
@@ -71,7 +72,7 @@ public partial class RobotNode : Node2D
 		if (!_isAnimating)
 			Position = GetWorldPosition();
 
-		AnimateRotation(_direction);
+		AnimateRotation(_directionIndex);
 
 		_body.Color = _playerColor;
 		
@@ -94,9 +95,9 @@ public partial class RobotNode : Node2D
 		UpdateHealthBar();
 	}
 
-	private void AnimateRotation(Direction to)
+	private void AnimateRotation(int toIndex)
 	{
-		float targetAngle = DirectionToAngle(to);
+		float targetAngle = DirectionIndexToAngle(toIndex);
 		float currentAngle = RotationDegrees;
 		
 		float shortestAngle = CalculateShortestAngle(currentAngle, targetAngle);
@@ -138,13 +139,13 @@ public partial class RobotNode : Node2D
 			_healthBar.Color = Colors.Red;
 	}
 
-	public void SetDirection(Direction direction)
+	public void SetDirection(int directionIndex)
 	{
-		_direction = direction;
+		_directionIndex = directionIndex;
 	}
 
-	public Core.Models.Position GetGridPosition() => _gridPosition;
-	public Direction GetDirection() => _direction;
+	public (int X, int Y) GetGridPosition() => (_gridX, _gridY);
+	public int GetDirection() => _directionIndex;
 	public bool IsAlive() => _isAlive;
 
 	public Vector2 GetWorldPosition()
@@ -152,17 +153,17 @@ public partial class RobotNode : Node2D
 		var tileSize = GameScale.BaseTileSize;
 		var halfTile = tileSize / 2f;
 		return new Vector2(
-			_gridPosition.X * tileSize + halfTile,
-			_gridPosition.Y * tileSize + halfTile
+			_gridX * tileSize + halfTile,
+			_gridY * tileSize + halfTile
 		);
 	}
 
-	private float DirectionToAngle(Direction dir) => dir switch
+	private float DirectionIndexToAngle(int dirIndex) => dirIndex switch
 	{
-		Direction.North => 0f,
-		Direction.East => 90f,
-		Direction.South => 180f,
-		Direction.West => 270f,
+		0 => 0f,
+		1 => 90f,
+		2 => 180f,
+		3 => 270f,
 		_ => 0f
 	};
 

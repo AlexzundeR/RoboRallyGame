@@ -49,7 +49,7 @@ public sealed class Tile
         if (components == null) return;
         
         var componentList = components.ToList();
-        var behaviors = componentList.OfType<Components.ITileBehaviorComponent>().ToList();
+        var behaviors = componentList.OfType<ITileBehaviorComponent>().ToList();
         if (behaviors.Count > 1)
             throw new InvalidOperationException("Tile can have only one behavior component");
         

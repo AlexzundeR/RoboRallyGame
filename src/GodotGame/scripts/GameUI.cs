@@ -1,7 +1,6 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Core.Entities;
 using AiTest.Godot.UI;
 
 namespace AiTest.Godot;
@@ -22,7 +21,6 @@ public partial class GameUI : CanvasLayer
 
 	private HBoxContainer _playerPanelsContainer = null!;
 	private readonly List<PlayerPanel> _playerPanels = new();
-	private List<Player> _allPlayers = new();
 
 	public override void _Ready()
 	{
@@ -90,8 +88,7 @@ public partial class GameUI : CanvasLayer
 
 	public void OpenPlayerStatusModal()
 	{
-		if (_playerStatusModal == null || _allPlayers.Count == 0) return;
-		_playerStatusModal.SetPlayers(_allPlayers);
+		if (_playerStatusModal == null) return;
 		_playerStatusModal.Visible = true;
 	}
 
@@ -157,11 +154,9 @@ public partial class GameUI : CanvasLayer
 		}
 	}
 
-	public void UpdatePlayerInfo(Player p1, Player p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
+	public void UpdatePlayerInfo(PlayerViewModel p1, PlayerViewModel p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
 	{
 		if (!IsInsideTree()) return;
-
-		_allPlayers = new List<Player> { p1, p2 };
 
 		if (_playerPanels.Count >= 2)
 		{
@@ -180,13 +175,9 @@ public partial class GameUI : CanvasLayer
 		}
 	}
 
-	public void ShowGameOver(IReadOnlyList<int> winnerIds, bool isTie, IReadOnlyList<Player> allPlayers)
+	public void ShowGameOver(IReadOnlyList<string> winnerNames, bool isTie)
 	{
 		if (_winModal == null) return;
-
-		var winnerNames = winnerIds
-			.Select(id => allPlayers.FirstOrDefault(p => p.Id == id)?.Name ?? $"Player {id}")
-			.ToList();
 
 		var message = isTie
 			? $"TIE! {string.Join(" & ", winnerNames)}"

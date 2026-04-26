@@ -1,8 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using AiTest.Core.Cards;
-using AiTest.Core.Entities;
+using AiTest.Godot;
 
 public partial class PlayerPanel : PanelContainer
 {
@@ -71,7 +70,7 @@ public partial class PlayerPanel : PanelContainer
 		}
 	}
 
-	public void Update(Player player, bool isCurrentPlayer, bool isProgramming,
+	public void Update(PlayerViewModel player, bool isCurrentPlayer, bool isProgramming,
 					   int currentRegister, int selectedRegister)
 	{
 		if (!IsInsideTree()) return;
@@ -81,13 +80,13 @@ public partial class PlayerPanel : PanelContainer
 		UpdateStatus(player);
 	}
 
-	private void UpdateHeader(Player player)
+	private void UpdateHeader(PlayerViewModel player)
 	{
 		var icon = player.Id == 1 ? "🔵" : "🔴";
 		_header.Text = $"{icon} {player.Name}";
 	}
 
-	private void UpdateHand(Player player, bool isSelectable)
+	private void UpdateHand(PlayerViewModel player, bool isSelectable)
 	{
 		for (int i = 0; i < 9; i++)
 		{
@@ -106,10 +105,10 @@ public partial class PlayerPanel : PanelContainer
 		}
 	}
 
-	private void UpdateRegisters(Player player, int currentRegister, bool isProgramming,
+	private void UpdateRegisters(PlayerViewModel player, int currentRegister, bool isProgramming,
 							   bool isCurrentPlayer, int selectedRegister)
 	{
-		bool isPowerDown = player.Robot.IsPowerDown;
+		bool isPowerDown = player.IsPowerDown;
 
 		for (int i = 0; i < 5; i++)
 		{
@@ -145,7 +144,7 @@ public partial class PlayerPanel : PanelContainer
 				}
 			}
 
-			var registerCard = player.GetRegister(i);
+			var registerCard = player.Registers[i];
 			if (registerCard == null || isPowerDown)
 			{
 				card.SetEmpty();
@@ -159,13 +158,13 @@ public partial class PlayerPanel : PanelContainer
 		}
 	}
 
-	private void UpdateStatus(Player player)
+	private void UpdateStatus(PlayerViewModel player)
 	{
-		var hp = player.Robot.LifeTokens;
-		var damage = player.Robot.Damage;
-		var checkpoints = player.Robot.CheckpointsReached;
+		var hp = player.LifeTokens;
+		var damage = player.Damage;
+		var checkpoints = player.CheckpointsReached;
 		var upgrades = player.AllUpgrades.ToList();
-		var powerDown = player.Robot.IsPowerDown ? " | ⚡ OFF" : "";
+		var powerDown = player.IsPowerDown ? " | ⚡ OFF" : "";
 		
 		string upgradeText;
 		if (upgrades.Count == 0)
@@ -174,7 +173,7 @@ public partial class PlayerPanel : PanelContainer
 		}
 		else if (upgrades.Count == 1)
 		{
-			upgradeText = $" | ⚙ {upgrades[0].Name}";
+			upgradeText = $" | ⚙ {upgrades[0]}";
 		}
 		else
 		{
@@ -190,5 +189,5 @@ public partial class PlayerPanel : PanelContainer
 		_status.Text = _status.Text.Replace($"⭐ {checkpointsReached - 1}", $"⭐ {checkpointsReached}");
 	}
 
-	private string GetCardSymbol(ProgramCard card) => card.Symbol;
+	private string GetCardSymbol(CardViewModel card) => card.Symbol;
 }

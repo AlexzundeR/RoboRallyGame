@@ -17,9 +17,9 @@ public partial class CheckpointTile : Tile
 		_label = GetNode<Label>("LabelAnchor/CheckpointLabel");
 	}
 
-	public void Initialize(Core.Models.Position pos, Core.Models.TileType type, int checkpointNumber)
+	public void Initialize(int x, int y, int type, int checkpointNumber)
 	{
-		base.Initialize(pos, type);
+        Initialize(x, y, type);
 		_checkpointNumber = checkpointNumber;
 		
 		if (_label != null)

@@ -1,7 +1,5 @@
 using Godot;
 using System.Collections.Generic;
-using AiTest.Core.Entities;
-using AiTest.Core.Models;
 using AiTest.Godot.Services;
 
 namespace AiTest.Godot;
@@ -16,7 +14,7 @@ public partial class RobotRenderer : Node2D
         _robotScene = GD.Load<PackedScene>("res://RobotNode.tscn");
     }
 
-    public void CreateRobots(IEnumerable<Player> players)
+    public void CreateRobots(IEnumerable<PlayerViewModel> players)
     {
         foreach (var player in players)
         {
@@ -24,7 +22,7 @@ public partial class RobotRenderer : Node2D
         }
     }
 
-    private void CreateRobot(Player player)
+    private void CreateRobot(PlayerViewModel player)
     {
         var robot = _robotScene.Instantiate<RobotNode>();
         robot.Name = $"Robot_{player.Id}";
@@ -33,7 +31,7 @@ public partial class RobotRenderer : Node2D
         _robots[player.Id] = robot;
     }
 
-    public void UpdatePositions(IEnumerable<Player> players)
+    public void UpdatePositions(IEnumerable<PlayerViewModel> players)
     {
         foreach (var player in players)
         {

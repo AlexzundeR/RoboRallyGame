@@ -4,7 +4,6 @@ using Godot;
 using System;
 using AiTest.Core.Engine;
 using AiTest.Core.Messages;
-using AiTest.Core.Entities;
 
 public interface IInputService
 {

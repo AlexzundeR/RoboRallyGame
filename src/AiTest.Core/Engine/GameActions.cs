@@ -28,7 +28,7 @@ public abstract class GameAction
 
 public sealed class CardAction : GameAction
 {
-    public required Action<Entities.Robot, Models.GameMap> ExecuteCard { get; init; }
+    public required Action<Robot, Models.GameMap> ExecuteCard { get; init; }
     
     public override void Execute(IGameEngine engine)
     {
@@ -42,7 +42,7 @@ public sealed class CardAction : GameAction
 
 public sealed class BoardElementAction : GameAction
 {
-    public required Action<Entities.Robot, Models.GameMap> ExecuteElement { get; init; }
+    public required Action<Robot, Models.GameMap> ExecuteElement { get; init; }
     
     public override void Execute(IGameEngine engine)
     {
@@ -56,7 +56,7 @@ public sealed class BoardElementAction : GameAction
 
 public sealed class LaserAction : GameAction
 {
-    public required Action<Entities.Robot, IGameEngine> FireLaser { get; init; }
+    public required Action<Robot, IGameEngine> FireLaser { get; init; }
     
     public override void Execute(IGameEngine engine)
     {

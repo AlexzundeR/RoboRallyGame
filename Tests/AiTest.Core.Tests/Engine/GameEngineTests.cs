@@ -572,7 +572,7 @@ public class GameEngineTests
         var map = new GameMap(10, 10);
         map.SetTile(2, 2, TileFactory.RepairSite());
         
-        var repairTile = (AiTest.Core.Models.Components.RepairSiteBehaviorComponent?)map.GetTile(2, 2).GetComponent<AiTest.Core.Models.Components.IEndOfRoundComponent>();
+        var repairTile = (Core.Models.Components.RepairSiteBehaviorComponent?)map.GetTile(2, 2).GetComponent<Core.Models.Components.IEndOfRoundComponent>();
         Assert.NotNull(repairTile);
         
         robot.TakeDamage(3);
@@ -645,8 +645,8 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         
         var map = new GameMap(10, 10);
-        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
-        map.SetTile(4, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
+        map.SetTile(4, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(5, 3, TileFactory.Floor());
         
         var state = new GameState(new List<Player> { player }, map);
@@ -664,9 +664,9 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         
         var map = new GameMap(10, 10);
-        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
-        map.SetTile(4, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
-        map.SetTile(5, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.North, express: false));
+        map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
+        map.SetTile(4, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
+        map.SetTile(5, 3, TileFactory.Conveyor(ConveyorDirection.North, express: false));
         
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
@@ -683,7 +683,7 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         
         var map = new GameMap(10, 10);
-        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: true));
+        map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(4, 3, TileFactory.Floor());
         map.SetTile(5, 3, TileFactory.Wall());
         
@@ -702,7 +702,7 @@ public class GameEngineTests
         player.Robot.SetPosition(new Position(3, 3));
         
         var map = new GameMap(10, 10);
-        map.SetTile(3, 3, TileFactory.Conveyor(Core.Models.ConveyorDirection.East, express: false));
+        map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: false));
         map.SetTile(4, 3, TileFactory.Floor());
         
         var state = new GameState(new List<Player> { player }, map);

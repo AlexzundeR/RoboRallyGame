@@ -1,11 +1,10 @@
 namespace AiTest.Tests.GdUnit.Robot;
 
-using AiTest.Core.Models;
 using GdUnit4;
 using static GdUnit4.Assertions;
 using Godot;
 
-using RobotNode = AiTest.Godot.RobotNode;
+using RobotNode = Godot.RobotNode;
 
 [TestSuite]
 public class RobotVisualTests
@@ -16,7 +15,7 @@ public class RobotVisualTests
     {
         var robot = new RobotNode();
         
-        AssertThat(robot.GetDirection()).IsEqual(Direction.North);
+        AssertThat(robot.GetDirection()).IsEqual(0);
         
         robot.QueueFree();
     }
@@ -27,11 +26,11 @@ public class RobotVisualTests
     {
         var robot = new RobotNode();
         
-        robot.SetDirection(Direction.North);
-        AssertThat(robot.GetDirection()).IsEqual(Direction.North);
+        robot.SetDirection(0);
+        AssertThat(robot.GetDirection()).IsEqual(0);
         
-        robot.SetDirection(Direction.East);
-        AssertThat(robot.GetDirection()).IsEqual(Direction.East);
+        robot.SetDirection(1);
+        AssertThat(robot.GetDirection()).IsEqual(1);
         
         robot.QueueFree();
     }
