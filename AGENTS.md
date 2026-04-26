@@ -1,4 +1,4 @@
-﻿# AGENTS.md - AI Test Project
+﻿# AGENTS.md
 
 ## CRITICAL RULES
 

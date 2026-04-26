@@ -21,12 +21,7 @@ public partial class AnimationService : Node, IAnimationService
 
     public static Vector2 PositionToVector(Position pos)
     {
-        var tileSize = GameScale.BaseTileSize;
-        var halfTile = tileSize / 2f;
-        return new Vector2(
-            pos.X * tileSize + halfTile,
-            pos.Y * tileSize + halfTile
-        );
+        return GameScale.GridToWorldCentered(pos.X, pos.Y);
     }
 
     public static Vector2 PositionToVectorCentered(Position pos)

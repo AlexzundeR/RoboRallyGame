@@ -343,8 +343,15 @@ public partial class GameManager : Node2D
 		if (_camera == null)
 			return;
 
-		var tileSize = GameScale.BaseTileSize;
-		_camera.Position = new Vector2(mapWidth * tileSize / 2f, mapHeight * tileSize / 2f);
+		var worldCenter = GameScale.GridToWorldCentered(mapWidth / 2, mapHeight / 2);
+		_camera.Position = worldCenter;
+	}
+	
+	private void OnGameScaleChanged()
+	{
+		var map = _gameProvider!.GetMapData();
+		_gameScale!.Recalculate();
+		CenterCamera(map.Width, map.Height);
 	}
 
 	public override void _Process(double delta)

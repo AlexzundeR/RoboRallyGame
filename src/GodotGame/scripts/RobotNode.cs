@@ -43,6 +43,8 @@ public partial class RobotNode : Node2D
 		_damage = player.Damage;
 		_isAlive = player.IsAlive;
 		_isPowerDown = player.IsPowerDown;
+		
+		Scale = new Vector2(GameScale.GetMapScale(), GameScale.GetMapScale());
 
 		if (IsInsideTree())
 		{
@@ -150,12 +152,7 @@ public partial class RobotNode : Node2D
 
 	public Vector2 GetWorldPosition()
 	{
-		var tileSize = GameScale.BaseTileSize;
-		var halfTile = tileSize / 2f;
-		return new Vector2(
-			_gridX * tileSize + halfTile,
-			_gridY * tileSize + halfTile
-		);
+		return GameScale.GridToWorldCentered(_gridX, _gridY);
 	}
 
 	private float DirectionIndexToAngle(int dirIndex) => dirIndex switch

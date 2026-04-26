@@ -4,9 +4,9 @@ using Godot;
 using RoboRallyGame.Godot.Services;
 
 public abstract partial class Tile : Node2D
-{	
-	protected int GridX { get; private set; }
-	protected int GridY { get; private set; }
+{
+	public int GridX { get; private set; }
+	public int GridY { get; private set; }
 	protected int TileTypeIndex { get; private set; }
 	protected abstract Color BaseColor { get; }
 	protected abstract Color BorderColor { get; }
@@ -20,10 +20,6 @@ public abstract partial class Tile : Node2D
 		
 		baseTile.Color = BaseColor;
 		borderTile.Color = BorderColor;
-		
-		var tileSize = GameScale.Instance?.TileSize ?? GameScale.BaseTileSize;
-		baseTile.Size = new Vector2(tileSize, tileSize);
-		borderTile.Size = new Vector2(tileSize, tileSize);
 	}
 
 	protected virtual void OnReady()
@@ -35,7 +31,9 @@ public abstract partial class Tile : Node2D
 		GridX = x;
 		GridY = y;
 		TileTypeIndex = type;
-		Position = new Vector2(x * GameScale.BaseTileSize, y * GameScale.BaseTileSize);
+		
+		Position = GameScale.GridToWorld(x, y);
+		Scale = new Vector2(GameScale.GetMapScale(), GameScale.GetMapScale());
 	}
 
 	public virtual void StartAnimations()
