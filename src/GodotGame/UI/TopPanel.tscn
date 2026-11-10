@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://top_panel_scene"]
 
-[ext_resource type="Script" uid="uid://top_panel_script" path="res://UI/TopPanel.cs" id="1"]
+[ext_resource type="Script" path="res://UI/TopPanel.cs" id="1"]
 
 [node name="TopPanel" type="PanelContainer"]
 script = ExtResource("1")

@@ -1,13 +1,55 @@
 ﻿namespace RoboRallyGame.Core.Entities;
 
 using System.Collections.Generic;
+
 using RoboRallyGame.Core.Cards;
 using RoboRallyGame.Core.Upgrades;
 
-public sealed record RegisterCard(ProgramCard Card, int HandIndex);
+public sealed class RegisterCard
+{
+    public ProgramCard? Card { get; private set; }
+    public int HandIndex { get; private set; }
+    public bool IsLocked { get; private set; } = false;
+
+    public RegisterCard()
+    {
+        this.Card = null;
+    }
+
+    public RegisterCard(ProgramCard card, int handIndex)
+    {
+        SetCard(card, handIndex);
+    }
+
+    public void Lock()
+    {
+        IsLocked = true;
+    }
+
+    public void Unlock()
+    {
+        IsLocked = false;
+    }
+
+    public void SetCard(ProgramCard card, int handIndex)
+    {
+        if (IsLocked) throw new Exception("Cannot set card on locked register");
+
+        Card = card;
+        HandIndex = handIndex;
+    }
+
+    public void Clear()
+    {
+        if (IsLocked) throw new Exception("Cannot clean locked register");
+
+        Card = null;
+    }
+}
 
 public sealed class Player
 {
+    //TODO: не должны ли регистры уйти в Robot?
     private readonly RegisterCard?[] _registers;
     private readonly ProgramCard?[] _hand;
 
@@ -18,13 +60,30 @@ public sealed class Player
     public IReadOnlyList<ProgramCard?> Hand => _hand;
     public List<UpgradeEffect> PermanentUpgrades { get; } = new();
     public List<UpgradeEffect> TemporaryUpgrades { get; } = new();
+    public int LockedRegisters => _registers.Count(e => e.IsLocked);
 
     public Player() : this(null, null) { }
 
     public Player(RegisterCard?[]? registers, ProgramCard?[]? hand)
     {
-        _registers = registers ?? new RegisterCard?[5];
-        _hand = hand ?? new ProgramCard?[9];
+        _registers = new RegisterCard?[5];
+        _hand = new ProgramCard?[9];
+
+        for (int i = 0; i < _registers.Length; i++)
+        {
+            if (registers != null && i < registers?.Length && registers[i] != null)
+                _registers[i] = new RegisterCard(registers[i].Card, registers[i].HandIndex);
+            else
+                _registers[i] = new RegisterCard();
+        }
+
+        if (hand != null)
+        {
+            for (int i = 0; i < (hand?.Length ?? 0); i++)
+            {
+                _hand[i] = hand[i];
+            }
+        }
     }
 
     public IEnumerable<UpgradeEffect> AllUpgrades => PermanentUpgrades.Concat(TemporaryUpgrades);
@@ -35,7 +94,7 @@ public sealed class Player
     {
         for (int i = 0; i < 9; i++)
             _hand[i] = null;
-        
+
         int index = 0;
         foreach (var card in cards)
         {
@@ -49,12 +108,12 @@ public sealed class Player
 
     public RegisterCard? GetRegister(int index)
     {
-        return index >= 0 && index < 5 ? _registers[index] : null;
+        return index >= 0 && index < 5 ? _registers[index] : throw new Exception($"Register with index {index} was not found");
     }
 
     public ProgramCard? GetHandCard(int index)
     {
-        return index >= 0 && index < 9 ? _hand[index] : null;
+        return index >= 0 && index < 9 ? _hand[index] : throw new Exception($"Hand card with index {index} was not found");
     }
 
     public void AssignCardToRegister(int handIndex, int registerIndex)
@@ -66,15 +125,15 @@ public sealed class Player
         if (card == null) return;
 
         var registerCard = _registers[registerIndex];
-        
+
         _hand[handIndex] = null;
-        
-        if (registerCard != null)
+
+        if (registerCard.Card != null)
         {
             _hand[registerCard.HandIndex] = registerCard.Card;
         }
-        
-        _registers[registerIndex] = new RegisterCard(card, handIndex);
+
+        _registers[registerIndex].SetCard(card, handIndex);
     }
 
     public void ClearRegisters()
@@ -82,11 +141,13 @@ public sealed class Player
         for (int i = 0; i < 5; i++)
         {
             var registerCard = _registers[i];
-            if (registerCard != null)
+            if (registerCard.IsLocked) continue;
+
+            if (registerCard.Card != null)
             {
                 _hand[registerCard.HandIndex] = registerCard.Card;
             }
-            _registers[i] = null;
+            _registers[i].Clear();
         }
     }
 
@@ -109,14 +170,14 @@ public sealed class Player
 
     public void ClearTemporaryUpgrades() => TemporaryUpgrades.Clear();
 
-    public int FilledRegisterCount => _registers.Count(r => r != null);
+    public int FilledRegisterCount => _registers.Count(r => r.Card != null);
 
     public bool CanConfirmRegistration()
     {
-        if (Robot.IsPowerDown)
-            return FilledRegisterCount == 0;
+        if (Robot.IsPowerDown || Robot.IsRebooting)
+            return true;
 
-        int availableRegisters = 5 - Robot.LockedRegisters;
+        int availableRegisters = 5 - LockedRegisters;
         int availableCards = AvailableCardCount;
         int maxFillable = Math.Min(availableRegisters, availableCards);
 
@@ -133,6 +194,19 @@ public sealed class Player
         {
             ClearRegisters();
             Robot.PowerDown();
+        }
+    }
+
+    internal void TakeDamage(int damage)
+    {
+        Robot.TakeDamage(damage);
+
+        if (_hand.Length - Robot.Damage < _registers.Length)
+        {
+            for (var i = 1; i <= _registers.Length - (_hand.Length - Robot.Damage); i++)
+            {
+                _registers[_registers.Length - i].Lock();
+            }
         }
     }
 }

@@ -33,7 +33,7 @@ public static class CardDealerHelper
 public sealed class RandomDealer : IDealer
 {
     private readonly Random _random = new();
-    
+
     public void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck)
     {
         foreach (var player in players)
@@ -49,20 +49,20 @@ public sealed class FixedDealer : IDealer
 {
     private readonly IReadOnlyList<IReadOnlyList<ProgramCard>> _hands;
     private int _currentHand;
-    
+
     public FixedDealer(params IReadOnlyList<ProgramCard>[] hands)
     {
         _hands = hands;
         _currentHand = 0;
     }
-    
+
     public void Deal(IEnumerable<Player> players, IReadOnlyList<ProgramCard> deck)
     {
         foreach (var player in players)
         {
             var cardCount = CardDealerHelper.GetCardCountForDamage(player.Robot.Damage);
-            var hand = _currentHand < _hands.Count 
-                ? _hands[_currentHand].Take(cardCount).ToList() 
+            var hand = _currentHand < _hands.Count
+                ? _hands[_currentHand].Take(cardCount).ToList()
                 : deck.Take(cardCount).ToList();
             player.DealCards(hand);
             _currentHand++;
@@ -172,11 +172,30 @@ public sealed class GameState
 public interface IGameEngine
 {
     GameState State { get; }
+    public event Action<MoveEvent>? OnMove;
+    public event Action<RotateEvent>? OnRotate;
+    public event Action<LaserFireEvent>? OnLaserFire;
+    public event Action<DamageEvent>? OnDamage;
+    public event Action<ConveyorMoveEvent>? OnConveyorMove;
+    public event Action<CheckpointEvent>? OnCheckpoint;
+    public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
+    public event Action<RobotRebootingEvent>? OnRobotRebooting;
+    public event Action<RobotRebootedEvent>? OnRobotRebooted;
+    public event Action<RobotRepairedEvent>? OnRobotRepaired;
+    public event Action<LifeTokenLostEvent>? OnLifeTokenLost;
+    public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
+    public event Action<ConveyorPhaseStartedEvent>? OnConveyorPhaseStarted;
+    public event Action<LaserPhaseStartedEvent>? OnLaserPhaseStarted;
+    public event Action<RegisterExecutedEvent>? OnRegisterExecuted;
+    public event Action<PhaseExecutionCompleteEvent>? OnPhaseExecutionComplete;
+    public event Action? OnAllRegistersComplete;
+    public event Action<GameOverEvent>? OnGameOver;
+    public event Action<UpgradeAcquiredEvent>? OnUpgradeAcquired;
     bool IsGameOver();
     IReadOnlyList<Player> GetWinners();
 
     void Initialize(GameMap map);
-    void AddPlayer(string name);
+    void AddPlayer(string name, Position startPosition, Direction startDirection);
     void StartGame();
     void GrantDamage(int playerId, int amount);
     void GrantRandomUpgrade(int playerId);
@@ -209,7 +228,8 @@ public sealed class GameEngine : IGameEngine
     public event Action<ConveyorMoveEvent>? OnConveyorMove;
     public event Action<CheckpointEvent>? OnCheckpoint;
     public event Action<RobotDestroyedEvent>? OnRobotDestroyed;
-    public event Action<RobotRebootEvent>? OnRobotReboot;
+    public event Action<RobotRebootingEvent>? OnRobotRebooting;
+    public event Action<RobotRebootedEvent>? OnRobotRebooted;
     public event Action<RobotRepairedEvent>? OnRobotRepaired;
     public event Action<LifeTokenLostEvent>? OnLifeTokenLost;
     public event Action<MovementPhaseStartedEvent>? OnMovementPhaseStarted;
@@ -222,7 +242,7 @@ public sealed class GameEngine : IGameEngine
     public event Action<UpgradeAcquiredEvent>? OnUpgradeAcquired;
 
     public GameEngine() : this(new RandomDealer(), new GameState()) { }
-    
+
     public GameEngine(IDealer dealer) : this(dealer, new GameState()) { }
 
     public GameEngine(IDealer dealer, GameState state)
@@ -260,22 +280,10 @@ public sealed class GameEngine : IGameEngine
     {
         var player = GetPlayer(playerId);
         if (player == null) return;
-        
-        var beforeTokens = player.Robot.LifeTokens;
-        player.Robot.TakeDamage(amount);
-        
-        if (player.Robot.LifeTokens != beforeTokens)
-        {
-            OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
-            if (player.Robot.LifeTokens == 0)
-            {
-                OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
-            }
-            else
-            {
-                OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
-            }
-        }
+
+        var statusBefore = CaptureRobotStates();
+        player.TakeDamage(amount);
+        CheckDamageOrDestroy(statusBefore);
     }
 
     public void Initialize(GameMap map)
@@ -284,7 +292,7 @@ public sealed class GameEngine : IGameEngine
         State.SetPhase(GamePhase.Programming);
     }
 
-    public void AddPlayer(string name)
+    public void AddPlayer(string name, Position startPosition, Direction startDirection)
     {
         var player = new Player
         {
@@ -297,14 +305,15 @@ public sealed class GameEngine : IGameEngine
             }
         };
         State.AddPlayer(player);
-        
-        var startTiles = FindStartTiles();
-        if (startTiles.Count > player.Id - 1)
+
+        var startTile = State.Map.GetTile(startPosition);
+        if (startTile.Type != TileType.Start)
         {
-            var startPos = startTiles[player.Id - 1];
-            player.Robot.SetPosition(startPos);
-            player.Robot.SetStartPosition(startPos);
+            throw new Exception($"Can't place player on tile that is not of Start type on {startPosition}, but have {startTile.Type}");
         }
+
+        player.Robot.SetPosition(startPosition);
+        player.Robot.SetStartPosition(startPosition);
     }
 
     public void StartGame()
@@ -367,7 +376,7 @@ public sealed class GameEngine : IGameEngine
     private void BeginRegisterExecution()
     {
         var registerIndex = State.CurrentRegister;
-        
+
         _currentRegister = registerIndex;
         _alivePlayers = State.Players.Where(p => p.Robot.IsAlive).ToList();
         _movementStepIndex = 0;
@@ -382,7 +391,7 @@ public sealed class GameEngine : IGameEngine
         {
             BeginRegisterExecution();
         }
-        
+
         var totalSteps = GetTotalSteps();
         if (_currentStep >= totalSteps)
         {
@@ -431,19 +440,19 @@ public sealed class GameEngine : IGameEngine
     {
         var before = CaptureRobotStates();
         var shots = _laserResolver.PrepareShots(State.Map, State.Players);
-        
+
         foreach (var shot in shots)
         {
             var hitPlayerId = State.Players
-                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id && 
-                    p.Robot.IsAlive && 
+                .FirstOrDefault(p => p.Robot.Id != shot.Source.Id &&
+                    p.Robot.IsAlive &&
                     shot.Path.Contains(p.Robot.Position))
                 ?.Robot.Id;
-            
+
             var damage = hitPlayerId.HasValue ? 1 : 0;
             OnLaserFire?.Invoke(new LaserFireEvent(shot.Source.Id, shot.Source.Position, shot.Direction, shot.Path, hitPlayerId, damage));
         }
-        
+
         _laserResolver.Fire(shots, State.Players);
         CheckDamageOrDestroy(before);
     }
@@ -468,25 +477,21 @@ public sealed class GameEngine : IGameEngine
         return states;
     }
 
-    private Dictionary<int, int> CaptureDamageStates()
-    {
-        return State.Players.ToDictionary(p => p.Robot.Id, p => p.Robot.Damage);
-    }
-
     private void CheckDamageOrDestroy(Dictionary<int, (RobotStatus Status, int Damage, int LifeTokens)> before)
     {
+        //TODO: change this stategy to event collection in robot and player
         foreach (var player in State.Players)
         {
             var id = player.Robot.Id;
             if (before.TryGetValue(id, out var prev))
             {
                 var currentDamage = player.Robot.Damage;
-                
+
                 if (currentDamage != prev.Damage)
                 {
                     OnDamage?.Invoke(new DamageEvent(id, currentDamage - prev.Damage, currentDamage));
                 }
-                
+
                 if (prev.LifeTokens > player.Robot.LifeTokens)
                 {
                     if (player.Robot.LifeTokens == 0)
@@ -495,14 +500,14 @@ public sealed class GameEngine : IGameEngine
                     }
                     else
                     {
-                        OnRobotReboot?.Invoke(new RobotRebootEvent(id, player.Robot.Position));
+                        OnRobotRebooting?.Invoke(new RobotRebootingEvent(id));
                     }
                     OnLifeTokenLost?.Invoke(new LifeTokenLostEvent(player.Robot.Id, player.Robot.LifeTokens));
                 }
             }
         }
     }
-    
+
     private void FireMoveAndRotateEvents(
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> before,
         Dictionary<int, (Position Pos, Direction Dir, int Damage)> after)
@@ -523,23 +528,20 @@ public sealed class GameEngine : IGameEngine
             }
         }
     }
-    
+
     private void ExecuteCards(int registerIndex)
     {
         var before = CaptureStates();
         var statusBefore = CaptureRobotStates();
         var moveIntents = new List<MoveIntent>();
-        
+
         foreach (var player in State.Players)
         {
-            if (!player.Robot.IsAlive || player.Robot.NeedsReboot)
-                continue;
-
-            if (registerIndex < player.Robot.LockedRegisters)
+            if (!player.Robot.IsAlive || player.Robot.IsRebooting || player.Robot.IsPowerDown)
                 continue;
 
             var card = player.GetRegister(registerIndex);
-            if (card == null)
+            if (card?.Card == null)
                 continue;
 
             var intent = card.Card.CreateMoveIntent(player.Robot, State.Map, registerIndex);
@@ -548,26 +550,26 @@ public sealed class GameEngine : IGameEngine
                 moveIntents.Add(intent);
             }
         }
-        
+
         if (moveIntents.Count > 0)
         {
             var resolver = new CollisionResolver();
             foreach (var intent in moveIntents)
                 resolver.AddIntent(intent);
-            
+
             resolver.Resolve(State.Map, State.Players.Select(p => p.Robot).ToList());
         }
-        
+
         for (int i = 0; i < State.Players.Count; i++)
         {
             var player = State.Players[i];
-            var card = player.GetRegister(registerIndex);
-            if (card != null && player.Robot.IsAlive)
+            var register = player.GetRegister(registerIndex);
+            if (register?.Card != null && player.Robot.IsAlive)
             {
                 OnRegisterExecuted?.Invoke(new RegisterExecutedEvent(registerIndex, i));
             }
         }
-        
+
         var after = CaptureStates();
         FireMoveAndRotateEvents(before, after);
         CheckDamageOrDestroy(statusBefore);
@@ -674,14 +676,18 @@ public sealed class GameEngine : IGameEngine
         State.SetCurrentRegister(0);
         State.SetCurrentPlayerIndex(0);
         State.SetPhase(GamePhase.Programming);
-        
+
         foreach (var player in State.Players)
         {
-            if (player.Robot.Status == RobotStatus.PowerDown)
+            if (player.Robot.Status == RobotStatus.PowerDown || player.Robot.Status == RobotStatus.Rebooting)
             {
+                foreach(var reg in player.Registers)
+                {
+                    reg.Unlock();
+                }
                 player.ClearRegisters();
             }
-            
+
             var result = player.Robot.PrepareForRound(player.Robot.StartPosition);
             switch (result)
             {
@@ -689,7 +695,7 @@ public sealed class GameEngine : IGameEngine
                     OnRobotRepaired?.Invoke(new RobotRepairedEvent(player.Robot.Id, player.Robot.Damage, 0));
                     break;
                 case RoundPreparationResult.Rebooted:
-                    OnRobotReboot?.Invoke(new RobotRebootEvent(player.Robot.Id, player.Robot.Position));
+                    OnRobotRebooted?.Invoke(new RobotRebootedEvent(player.Robot.Id, player.Robot.Position));
                     break;
                 case RoundPreparationResult.Destroyed:
                     OnRobotDestroyed?.Invoke(new RobotDestroyedEvent(player.Robot.Id, player.Robot.Position));
@@ -713,7 +719,7 @@ public sealed class GameEngine : IGameEngine
 
     public bool IsGameOver()
     {
-        var isOnlyOneRemainsOrAllDead = State.Players.Count(p=>p.Robot.IsAlive) <= 1;
+        var isOnlyOneRemainsOrAllDead = State.Players.Count(p => p.Robot.IsAlive) <= 1;
         if (isOnlyOneRemainsOrAllDead) return true;
 
         var totalCheckpoints = State.Map.GetTotalCheckpoints();
@@ -722,7 +728,7 @@ public sealed class GameEngine : IGameEngine
 
     public IReadOnlyList<Player> GetWinners()
     {
-        var livePlayers = State.Players.Where(p=>p.Robot.IsAlive).ToArray();
+        var livePlayers = State.Players.Where(p => p.Robot.IsAlive).ToArray();
         if (livePlayers.Length == 1)
         {
             return [livePlayers[0]];
@@ -732,20 +738,6 @@ public sealed class GameEngine : IGameEngine
         return State.Players
             .Where(p => p.Robot.CheckpointsReached >= totalCheckpoints)
             .ToList();
-    }
-
-    private List<Position> FindStartTiles()
-    {
-        var starts = new List<Position>();
-        for (int x = 0; x < State.Map.Width; x++)
-        {
-            for (int y = 0; y < State.Map.Height; y++)
-            {
-                if (State.Map.GetTile(x, y).Type == TileType.Start)
-                    starts.Add(new Position(x, y));
-            }
-        }
-        return starts;
     }
 
     private void DealCardsToAllPlayers()
@@ -760,16 +752,16 @@ public sealed class GameEngine : IGameEngine
 
         for (int i = 0; i < 18; i++)
             deck.Add(new MoveCard { Priority = 100 + i, Spaces = 1 });
-        
+
         for (int i = 0; i < 12; i++)
             deck.Add(new MoveCard { Priority = 200 + i, Spaces = 2 });
-        
+
         for (int i = 0; i < 6; i++)
             deck.Add(new MoveCard { Priority = 300 + i, Spaces = 3 });
 
         for (int i = 0; i < 18; i++)
             deck.Add(new TurnCard { Priority = 50 + i * 10, IsLeft = true });
-        
+
         for (int i = 0; i < 18; i++)
             deck.Add(new TurnCard { Priority = 60 + i * 10, IsLeft = false });
 

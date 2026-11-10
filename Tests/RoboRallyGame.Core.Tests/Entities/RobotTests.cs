@@ -115,25 +115,6 @@ public class RobotTests
         Assert.Equal(RobotStatus.Active, robot.Status);
     }
 
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(1, 0)]
-    [InlineData(2, 0)]
-    [InlineData(3, 0)]
-    [InlineData(4, 0)]
-    [InlineData(5, 1)]
-    [InlineData(6, 2)]
-    [InlineData(7, 3)]
-    [InlineData(8, 4)]
-    [InlineData(9, 5)]
-    public void LockedRegisters_ShouldReturnCorrectCount(int damage, int expected)
-    {
-        var robot = new Robot();
-        robot.TakeDamage(damage);
-        
-        Assert.Equal(expected, robot.LockedRegisters);
-    }
-
     [Fact]
     public void IsPowerDown_WhenPoweredDown_ShouldReturnTrue()
     {
@@ -149,7 +130,7 @@ public class RobotTests
         var robot = new Robot();
         robot.SetStatus(RobotStatus.Rebooting);
         
-        Assert.True(robot.NeedsReboot);
+        Assert.True(robot.IsRebooting);
     }
 
     [Fact]

@@ -25,7 +25,7 @@ public class PlayerTests
         for (int i = 0; i < 9; i++)
             Assert.Null(player.Hand[i]);
         for (int i = 0; i < 5; i++)
-            Assert.Null(player.GetRegister(i));
+            Assert.Null(player.GetRegister(i).Card);
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class PlayerTests
     {
         var player = new Player();
         
-        Assert.Null(player.GetRegister(-1));
-        Assert.Null(player.GetRegister(5));
+        Assert.Throws<Exception>(()=>player.GetRegister(-1));
+        Assert.Throws<Exception>(()=>player.GetRegister(5));
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public class PlayerTests
         
         player.ClearRegisters();
         
-        Assert.Null(player.GetRegister(0));
-        Assert.Null(player.GetRegister(2));
+        Assert.Null(player.GetRegister(0).Card);
+        Assert.Null(player.GetRegister(2).Card);
         Assert.Equal(2, player.AvailableCardCount);
     }
 
@@ -80,7 +80,7 @@ public class PlayerTests
         player.AssignCardToRegister(0, 0);
         
         var registerCard = player.GetRegister(0);
-        Assert.NotNull(registerCard);
+        Assert.NotNull(registerCard.Card);
         Assert.Equal(100, registerCard.Card.Priority);
         Assert.Equal(0, registerCard.HandIndex);
         Assert.Null(player.Hand[0]);
@@ -138,8 +138,8 @@ public class PlayerTests
         player.AssignCardToRegister(0, 0);
         player.AssignCardToRegister(1, 1);
         
-        Assert.NotNull(player.GetRegister(0));
-        Assert.NotNull(player.GetRegister(1));
+        Assert.NotNull(player.GetRegister(0).Card);
+        Assert.NotNull(player.GetRegister(1).Card);
         Assert.Equal(100, player.GetRegister(0)!.Card.Priority);
         Assert.Equal(0, player.GetRegister(0)!.HandIndex);
         Assert.Equal(200, player.GetRegister(1)!.Card.Priority);
@@ -178,8 +178,8 @@ public class PlayerTests
         
         Assert.Null(player.Hand[0]);
         Assert.Null(player.Hand[1]);
-        Assert.NotNull(player.GetRegister(0));
-        Assert.NotNull(player.GetRegister(1));
+        Assert.NotNull(player.GetRegister(0).Card);
+        Assert.NotNull(player.GetRegister(1).Card);
     }
 
     [Fact]
@@ -204,5 +204,25 @@ public class PlayerTests
         player.SpendEnergy(5);
         
         Assert.Equal(0, player.Robot.Energy);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 0)]
+    [InlineData(2, 0)]
+    [InlineData(3, 0)]
+    [InlineData(4, 0)]
+    [InlineData(5, 1)]
+    [InlineData(6, 2)]
+    [InlineData(7, 3)]
+    [InlineData(8, 4)]
+    [InlineData(9, 5)]
+    public void LockedRegisters_ShouldReturnCorrectCount(int damage, int expected)
+    {
+        var robot = new Robot();
+        var player = new Player { Robot = robot };
+        player.TakeDamage(damage);
+        
+        Assert.Equal(expected, player.LockedRegisters);
     }
 }

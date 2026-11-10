@@ -6,6 +6,7 @@ using RoboRallyGame.Core.Entities;
 using RoboRallyGame.Core.Messages;
 using RoboRallyGame.Core.Models;
 using RoboRallyGame.Core.Upgrades;
+
 using Xunit;
 
 public class GameEngineTests
@@ -55,7 +56,7 @@ public class GameEngineTests
         engine.Initialize(state.Map);
         return engine;
     }
-    
+
     private GameEngine CreateEngine()
     {
         var map = new GameMap(10, 10);
@@ -83,7 +84,7 @@ public class GameEngineTests
         engine.Initialize(map);
         for (int i = 0; i < playerCount; i++)
         {
-            engine.AddPlayer($"Player{i + 1}");
+            engine.AddPlayer($"Player{i + 1}", new Position(1 + i * 2, 1), Direction.West);
         }
         return engine;
     }
@@ -93,9 +94,9 @@ public class GameEngineTests
     {
         var engine = new GameEngine();
         var map = new GameMap(10, 10, "Test");
-        
+
         engine.Initialize(map);
-        
+
         Assert.Equal(map, engine.State.Map);
         Assert.Equal(GamePhase.Programming, engine.State.Phase);
     }
@@ -104,9 +105,9 @@ public class GameEngineTests
     public void AddPlayer_ShouldCreatePlayerWithRobot()
     {
         var engine = CreateEngine();
-        
-        engine.AddPlayer("TestPlayer");
-        
+
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+
         Assert.Single(engine.State.Players);
         var player = engine.State.Players[0];
         Assert.Equal("TestPlayer", player.Name);
@@ -118,10 +119,10 @@ public class GameEngineTests
     public void StartGame_ShouldSetPhaseAndRound()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+
         engine.StartGame();
-        
+
         Assert.Equal(GamePhase.Programming, engine.State.Phase);
         Assert.Equal(1, engine.State.Round);
     }
@@ -130,10 +131,10 @@ public class GameEngineTests
     public void StartGame_ShouldDealCardsToPlayers()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+
         engine.StartGame();
-        
+
         Assert.Equal(9, engine.State.Players[0].AvailableCardCount);
     }
 
@@ -143,12 +144,12 @@ public class GameEngineTests
         var moveCard = new MoveCard { Priority = 100, Spaces = 1 };
         var player = CreateWithRegisters((moveCard, 0));
         player.Robot.SetPosition(new Position(1, 1));
-        
+
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        
+
         var startPos = player.Robot.Position;
         ExecuteFullRegister(engine);
-        
+
         Assert.NotEqual(startPos, player.Robot.Position);
     }
 
@@ -159,11 +160,11 @@ public class GameEngineTests
         var player = CreateWithRegisters((turnCard, 0));
         player.Robot.SetPosition(new Position(1, 1));
         player.Robot.SetDirection(Direction.North);
-        
+
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        
+
         ExecuteFullRegister(engine);
-        
+
         Assert.Equal(Direction.West, player.Robot.Direction);
     }
 
@@ -174,11 +175,11 @@ public class GameEngineTests
         var player = CreateWithRegisters((backUpCard, 0));
         player.Robot.SetPosition(new Position(5, 5));
         player.Robot.SetDirection(Direction.North);
-        
+
         var engine = CreateEngine(new GameState(new List<Player> { player }));
-        
+
         ExecuteFullRegister(engine);
-        
+
         Assert.Equal(new Position(5, 6), player.Robot.Position);
     }
 
@@ -187,13 +188,13 @@ public class GameEngineTests
     {
         var engine = CreateEngine();
         engine.State.Map.SetTile(3, 3, TileFactory.Gear(true));
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
-        
+
         ExecuteRegister(engine, 0);
-        
+
         Assert.Equal(Direction.East, player.Robot.Direction);
     }
 
@@ -201,26 +202,26 @@ public class GameEngineTests
     public void ProcessBoardElements_Checkpoint_ShouldAdvanceCheckpoint()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(5, 5));
-        
+
         ExecuteRegister(engine, 0);
-        
+
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
 
-[Fact]
+    [Fact]
     public void ProcessBoardElements_Pit_ShouldSetRobotToRebooting()
     {
         var engine = CreateEngine();
         engine.State.Map.SetTile(3, 3, TileFactory.Pit());
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetPosition(new Position(3, 3));
-        
+
         ExecuteRegister(engine, 0);
-        
+
         // Robot falls into pit: loses life token, status becomes Rebooting, damage cleared
         Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
         Assert.Equal(2, player.Robot.LifeTokens);
@@ -234,24 +235,24 @@ public class GameEngineTests
         engine.State.Map.SetTile(5, 5, TileFactory.Checkpoint(1));
         engine.State.Map.SetTile(7, 7, TileFactory.Checkpoint(2));
         engine.State.Map.SetTile(3, 3, TileFactory.Pit());
-        
-        engine.AddPlayer("Player1");
+
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
-        
+
         // Register 0: move to checkpoint 1 and confirm
         player.Robot.SetPosition(new Position(5, 5));
         ExecuteRegister(engine, 0);
-        
+
         // Next register: fall into pit
         player.Robot.SetPosition(new Position(3, 3));
         ExecuteRegister(engine, 0);
-        
+
         // Robot should be in Rebooting state after falling into pit
         Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
-        
+
         // Next round: robot should respawn at last checkpoint 1
         engine.NextRound();
-        
+
         Assert.Equal(RobotStatus.Active, player.Robot.Status);
         Assert.Equal(new Position(5, 5), player.Robot.Position);
         Assert.Equal(2, player.Robot.Damage);
@@ -262,41 +263,41 @@ public class GameEngineTests
     {
         var engine = CreateEngine();
         engine.State.Map.SetTile(3, 3, TileFactory.Pit());
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetLifeTokens(1); // Only 1 life token left
-        
+
         // Fall into pit
         player.Robot.SetPosition(new Position(3, 3));
         ExecuteRegister(engine, 0);
-        
+
         // Robot in Rebooting state with 0 life tokens
         Assert.Equal(RobotStatus.Rebooting, player.Robot.Status);
         Assert.Equal(0, player.Robot.LifeTokens);
-        
+
         // Next round: robot should stay destroyed (no respawn)
         engine.NextRound();
-        
+
         Assert.Equal(RobotStatus.Destroyed, player.Robot.Status);
-}
+    }
 
     [Fact]
     public void ExecuteMovementStep_PushRobot_ShouldPushRobot()
     {
         var p1 = CreatePlayerWithRobot(1, new Position(3, 3), Direction.East, (new MoveCard { Priority = 100, Spaces = 1 }, 0));
         var p2 = CreatePlayerWithRobot(2, new Position(4, 3), Direction.North, (new MoveCard { Priority = 101, Spaces = 1 }, 0));
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(1, 1, TileFactory.Start());
         map.SetTile(3, 3, TileFactory.Floor());
         map.SetTile(4, 3, TileFactory.Floor());
         map.SetTile(5, 3, TileFactory.Floor());
-        
+
         var engine = new GameEngine(new RandomDealer(), new GameState(new List<Player> { p1, p2 }));
         engine.Initialize(map);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(new Position(4, 3), p1.Robot.Position);
         Assert.Equal(new Position(4, 2), p2.Robot.Position);
     }
@@ -305,9 +306,9 @@ public class GameEngineTests
     public void IsGameOver_WhenNoCheckpoints_ShouldReturnFalse()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        engine.AddPlayer("Player2");
-        
+        engine.AddPlayer("Player1", new Position(1, 1), Direction.West);
+        engine.AddPlayer("Player2", new Position(8, 1), Direction.West);
+
         Assert.False(engine.IsGameOver());
     }
 
@@ -315,10 +316,10 @@ public class GameEngineTests
     public void IsGameOver_WhenAllCheckpointsReached_ShouldReturnTrue()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetCheckpointsReached(4);
-        
+
         Assert.True(engine.IsGameOver());
     }
 
@@ -326,12 +327,12 @@ public class GameEngineTests
     public void GetWinners_WhenPlayerWins_ShouldReturnPlayer()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         var player = engine.State.Players[0];
         player.Robot.SetCheckpointsReached(4);
-        
+
         var winners = engine.GetWinners();
-        
+
         Assert.Single(winners);
         Assert.Equal(player, winners[0]);
     }
@@ -340,13 +341,13 @@ public class GameEngineTests
     public void NextRound_ShouldIncrementRoundAndClearRegisters()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
         engine.StartGame();
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(2, engine.State.Round);
-        Assert.Null(engine.State.Players[0].GetRegister(0));
+        Assert.Null(engine.State.Players[0].GetRegister(0).Card);
     }
 
     [Fact]
@@ -359,24 +360,24 @@ public class GameEngineTests
         );
         player.Robot.SetPosition(new Position(2, 2));
         player.Robot.SetDirection(Direction.East);
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(1, 1, TileFactory.Start());
         map.SetTile(2, 2, TileFactory.Floor());
         map.SetTile(5, 5, TileFactory.Checkpoint(1));
         var engine = CreateEngine(new GameState(new List<Player> { player }, map));
-        
+
         ExecuteFullRegister(engine);
-        
+
         Assert.Equal(new Position(5, 2), player.Robot.Position);
-        
+
         ExecuteRegister(engine, 1);
-        
+
         Assert.Equal(Direction.North, player.Robot.Direction);
-        
+
         player.Robot.SetPosition(new Position(5, 5));
         ExecuteRegister(engine, 1);
-        
+
         Assert.Equal(1, player.Robot.CheckpointsReached);
     }
 
@@ -385,11 +386,11 @@ public class GameEngineTests
     {
         var p1 = CreatePlayerWithRobot(1, new Position(3, 1), Direction.East, (new MoveCard { Priority = 100, Spaces = 2 }, 0));
         var p2 = CreatePlayerWithRobot(2, new Position(5, 1), Direction.West, (new MoveCard { Priority = 101, Spaces = 2 }, 0));
-        
+
         var engine = CreateEngine(new GameState(new List<Player> { p1, p2 }));
-        
+
         ExecuteFullRegister(engine);
-        
+
         Assert.True(p1.Robot.IsAlive);
         Assert.True(p2.Robot.IsAlive);
     }
@@ -398,19 +399,19 @@ public class GameEngineTests
     public void FullRound_LaserFiring_ShouldDamageRobots()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        engine.AddPlayer("Player2");
-        
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+        engine.AddPlayer("TestPlayer", new Position(8, 1), Direction.West);
+
         var p1 = engine.State.Players[0];
         var p2 = engine.State.Players[1];
-        
+
         p1.Robot.SetPosition(new Position(2, 2));
         p1.Robot.SetDirection(Direction.East);
         p2.Robot.SetPosition(new Position(4, 2));
         p2.Robot.SetDirection(Direction.North);
-        
+
         ExecuteFullRegister(engine);
-        
+
         Assert.Equal(1, p2.Robot.Damage);
     }
 
@@ -418,11 +419,11 @@ public class GameEngineTests
     public void FullRound_PlayerWinsAfter4Checkpoints_ShouldEndGame()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+
         var player = engine.State.Players[0];
         player.Robot.SetCheckpointsReached(4);
-        
+
         Assert.True(engine.IsGameOver());
         var winners = engine.GetWinners();
         Assert.Single(winners);
@@ -433,14 +434,14 @@ public class GameEngineTests
     public void GetWinners_WhenMultiplePlayersWin_ShouldReturnAll()
     {
         var engine = CreateEngine();
-        engine.AddPlayer("Player1");
-        engine.AddPlayer("Player2");
-        
+        engine.AddPlayer("TestPlayer", new Position(1, 1), Direction.West);
+        engine.AddPlayer("TestPlayer", new Position(8, 1), Direction.West);
+
         engine.State.Players[0].Robot.SetCheckpointsReached(4);
         engine.State.Players[1].Robot.SetCheckpointsReached(4);
-        
+
         var winners = engine.GetWinners();
-        
+
         Assert.Equal(2, winners.Count);
         Assert.Contains(engine.State.Players[0], winners);
         Assert.Contains(engine.State.Players[1], winners);
@@ -451,14 +452,16 @@ public class GameEngineTests
     {
         var map = new GameMap(10, 10);
         map.SetTile(5, 5, TileFactory.Checkpoint(1));
+        map.SetTile(1, 1, TileFactory.Start());
+        map.SetTile(8, 1, TileFactory.Start());
         var state = new GameState(new List<Player>(), map);
         var engine = new GameEngine(new RandomDealer(), state);
-        engine.AddPlayer("Player1");
-        engine.AddPlayer("Player2");
-        
+        engine.AddPlayer("Player1", new Position(1, 1), Direction.West);
+        engine.AddPlayer("Player2", new Position(8, 1), Direction.West);
+
         var player = engine.State.Players[0];
         Assert.False(engine.IsGameOver());
-        
+
         player.Robot.SetCheckpointsReached(1);
         Assert.True(engine.IsGameOver());
     }
@@ -468,13 +471,13 @@ public class GameEngineTests
     {
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
-        
+
         var robot = new Robot { Id = 1 };
         robot.TakeDamage(5);
         var player = new Player { Robot = robot };
-        
+
         dealer.Deal(new[] { player }, deck);
-        
+
         Assert.Equal(4, player.AvailableCardCount);
     }
 
@@ -483,13 +486,13 @@ public class GameEngineTests
     {
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
-        
+
         var robot = new Robot { Id = 1 };
         robot.TakeDamage(9);
         var player = new Player { Robot = robot };
-        
+
         dealer.Deal(new[] { player }, deck);
-        
+
         Assert.Equal(0, player.AvailableCardCount);
     }
 
@@ -498,11 +501,11 @@ public class GameEngineTests
     {
         var dealer = new RandomDealer();
         var deck = CreateDefaultDeck();
-        
+
         var player = new Player();
-        
+
         dealer.Deal(new[] { player }, deck);
-        
+
         Assert.Equal(9, player.AvailableCardCount);
     }
 
@@ -511,17 +514,17 @@ public class GameEngineTests
     {
         var robot = new Robot { Id = 1 };
         robot.SetStatus(RobotStatus.PowerDown);
-        
+
         var hand = new ProgramCard?[9];
         hand[0] = new MoveCard { Priority = 100, Spaces = 1 };
         var player = new Player(null, hand) { Robot = robot };
-        
+
         var map = new GameMap(10, 10);
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(RobotStatus.Active, robot.Status);
         Assert.Equal(9, player.AvailableCardCount);
         Assert.NotEqual(1, player.AvailableCardCount);
@@ -534,13 +537,13 @@ public class GameEngineTests
         var hand = new ProgramCard?[9];
         hand[0] = new MoveCard { Priority = 100, Spaces = 1 };
         var player = new Player(null, hand) { Robot = robot };
-        
+
         var map = new GameMap(10, 10);
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(RobotStatus.Active, robot.Status);
         Assert.Equal(9, player.AvailableCardCount);
     }
@@ -551,14 +554,14 @@ public class GameEngineTests
         var robot = new Robot { Id = 1 };
         robot.TakeDamage(5);
         robot.SetStatus(RobotStatus.PowerDown);
-        
+
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(0, robot.Damage);
     }
 
@@ -567,21 +570,21 @@ public class GameEngineTests
     {
         var robot = new Robot { Id = 1 };
         robot.SetPosition(new Position(2, 2));
-        
+
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);
         map.SetTile(2, 2, TileFactory.RepairSite());
-        
+
         var repairTile = (Core.Models.Components.RepairSiteBehaviorComponent?)map.GetTile(2, 2).GetComponent<Core.Models.Components.IEndOfRoundComponent>();
         Assert.NotNull(repairTile);
-        
+
         robot.TakeDamage(3);
-        
+
         var state = new GameState(new List<Player> { player }, map);
         var engine = new GameEngine(new RandomDealer(), state);
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(2, robot.Damage);
     }
 
@@ -590,15 +593,15 @@ public class GameEngineTests
     {
         var robot = new Robot { Id = 1 };
         robot.SetPosition(new Position(2, 2));
-        
+
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);
         map.SetTile(2, 2, TileFactory.RepairSite());
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.Equal(0, robot.Damage);
     }
 
@@ -607,15 +610,15 @@ public class GameEngineTests
     {
         var robot = new Robot { Id = 1 };
         robot.SetPosition(new Position(2, 2));
-        
+
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);
         map.SetTile(2, 2, TileFactory.RepairSitePlus());
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.NotEmpty(player.AllUpgrades);
     }
 
@@ -625,15 +628,15 @@ public class GameEngineTests
         var robot = new Robot { Id = 1 };
         robot.SetPosition(new Position(2, 2));
         robot.TakeDamage(1);
-        
+
         var player = new Player { Robot = robot };
         var map = new GameMap(10, 10);
         map.SetTile(2, 2, TileFactory.RepairSite());
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         engine.NextRound();
-        
+
         Assert.Empty(player.AllUpgrades);
         Assert.Equal(0, robot.Damage);
     }
@@ -643,17 +646,17 @@ public class GameEngineTests
     {
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(4, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(5, 3, TileFactory.Floor());
-        
+
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(new Position(5, 3), player.Robot.Position);
     }
 
@@ -662,17 +665,17 @@ public class GameEngineTests
     {
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(4, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(5, 3, TileFactory.Conveyor(ConveyorDirection.North, express: false));
-        
+
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(new Position(5, 3), player.Robot.Position);
     }
 
@@ -681,17 +684,17 @@ public class GameEngineTests
     {
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: true));
         map.SetTile(4, 3, TileFactory.Floor());
         map.SetTile(5, 3, TileFactory.Wall());
-        
+
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(new Position(4, 3), player.Robot.Position);
     }
 
@@ -700,23 +703,69 @@ public class GameEngineTests
     {
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Conveyor(ConveyorDirection.East, express: false));
         map.SetTile(4, 3, TileFactory.Floor());
-        
+
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         ConveyorMoveEvent? capturedEvent = null;
         engine.OnConveyorMove += e => capturedEvent = e;
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.NotNull(capturedEvent);
         Assert.Equal(1, capturedEvent!.PlayerId);
         Assert.Equal(new Position(3, 3), capturedEvent.From);
         Assert.Equal(new Position(4, 3), capturedEvent.To);
+    }
+
+    [Fact]
+    public void Conveyor_TwoRobots_ShouldPush()
+    {
+        var player1 = CreatePlayerWithRobot(1, new Position(3, 3), Direction.East, (new MoveCard() { Spaces = 1, Priority = 100 }, 0));
+        var player2 = CreatePlayerWithRobot(2, new Position(4, 3), Direction.North, (new TurnCard() { IsLeft = false, Priority = 200 }, 0));
+
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Floor());
+        map.SetTile(4, 3, TileFactory.Floor());
+        map.SetTile(5, 3, TileFactory.Floor());
+        map.SetTile(6, 3, TileFactory.Floor());
+        map.SetTile(7, 3, TileFactory.Floor());
+        map.SetTile(8, 3, TileFactory.Wall());
+
+        var state = new GameState(new List<Player> { player1, player2 }, map);
+        var engine = CreateEngine(state);
+
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+
+        Assert.Equal(new Position(4, 3), player1.Robot.Position);
+        Assert.Equal(new Position(5, 3), player2.Robot.Position);
+    }
+
+    [Fact]
+    public void Conveyor_TwoRobotsBehindConveyor_ShouldStayAfterPushOnConveyor()
+    {
+        var player1 = CreatePlayerWithRobot(1, new Position(3, 3), Direction.East, (new MoveCard() { Spaces = 1, Priority = 100 }, 0));
+        var player2 = CreatePlayerWithRobot(2, new Position(4, 3), Direction.North, (new TurnCard() { IsLeft = false, Priority = 200 }, 0));
+
+        var map = new GameMap(10, 10);
+        map.SetTile(3, 3, TileFactory.Floor());
+        map.SetTile(4, 3, TileFactory.Floor());
+        map.SetTile(5, 3, TileFactory.Conveyor(ConveyorDirection.West, express: false));
+        map.SetTile(6, 3, TileFactory.Conveyor(ConveyorDirection.West, express: false));
+        map.SetTile(7, 3, TileFactory.Floor());
+        map.SetTile(8, 3, TileFactory.Wall());
+
+        var state = new GameState(new List<Player> { player1, player2 }, map);
+        var engine = CreateEngine(state);
+
+        while (engine.TryExecuteNextStep() == StepResult.Executed) { }
+
+        Assert.Equal(new Position(3, 3), player1.Robot.Position);
+        Assert.Equal(new Position(4, 3), player2.Robot.Position);
     }
 
     [Fact]
@@ -725,14 +774,14 @@ public class GameEngineTests
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Gear(clockwise: true));
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(Direction.East, player.Robot.Direction);
     }
 
@@ -742,14 +791,14 @@ public class GameEngineTests
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Gear(clockwise: false));
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.Equal(Direction.West, player.Robot.Direction);
     }
 
@@ -759,23 +808,23 @@ public class GameEngineTests
         var player = new Player { Robot = new Robot { Id = 1 } };
         player.Robot.SetPosition(new Position(3, 3));
         player.Robot.SetDirection(Direction.North);
-        
+
         var map = new GameMap(10, 10);
         map.SetTile(3, 3, TileFactory.Gear(clockwise: true));
         var state = new GameState(new List<Player> { player }, map);
         var engine = CreateEngine(state);
-        
+
         RotateEvent? capturedEvent = null;
         engine.OnRotate += e => capturedEvent = e;
-        
+
         while (engine.TryExecuteNextStep() == StepResult.Executed) { }
-        
+
         Assert.NotNull(capturedEvent);
         Assert.Equal(1, capturedEvent!.PlayerId);
         Assert.Equal(Direction.North, capturedEvent.From);
         Assert.Equal(Direction.East, capturedEvent.To);
     }
-    
+
     private static List<ProgramCard> CreateDefaultDeck()
     {
         var deck = new List<ProgramCard>();
@@ -820,7 +869,7 @@ public class GameEngineTests
 
         engine.State.Players[0].AssignCardToRegister(0, 0);
         ExecuteRegister(engine, 0);
-        
+
         Assert.Equal(2, engine.State.Players[0].Robot.Position.Y);
     }
 }

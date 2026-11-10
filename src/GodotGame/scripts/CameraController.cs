@@ -6,12 +6,16 @@ using RoboRallyGame.Godot.Services;
 public partial class CameraController : Camera2D
 {
     [Export] private float _zoomSpeed = 0.1f;
-    [Export] private float _minZoom = 0.5f;
-    [Export] private float _maxZoom = 2f;
+    [Export] private float _minZoom = 0.1f;
+    [Export] private float _maxZoom = 5f;
 
     private Vector2 _dragStart;
     private bool _isDragging;
     private bool _dragEnabled = true;
+
+	private Vector2 _dragStartMousePos;
+	private Vector2 _dragStartCameraPos;
+
 
     public override void _Ready()
     {
@@ -53,27 +57,28 @@ public partial class CameraController : Camera2D
             return;
 
         if (@event is InputEventMouseButton mouseButton)
-        {
-            if (mouseButton.ButtonIndex == MouseButton.Middle || mouseButton.ButtonIndex == MouseButton.Left)
-            {
-                if (mouseButton.Pressed)
-                {
-                    _isDragging = true;
-                    _dragStart = GetGlobalMousePosition();
-                }
-                else
-                {
-                    _isDragging = false;
-                }
-            }
-        }
+		{
+			if (mouseButton.ButtonIndex == MouseButton.Left || mouseButton.ButtonIndex == MouseButton.Middle)
+			{
+				if (mouseButton.Pressed)
+				{
+					_isDragging = true;
+					_dragStartMousePos = GetViewport().GetMousePosition();
+					_dragStartCameraPos = Position;
+				}
+				else
+				{
+					_isDragging = false;
+				}
+			}
+		}
 
-        if (@event is InputEventMouseMotion motion && _isDragging)
-        {
-            var delta = _dragStart - motion.GlobalPosition;
-            Position += delta;
-            _dragStart = motion.GlobalPosition;
-        }
+		if (@event is InputEventMouseMotion motion && _isDragging)
+		{
+			var currentMousePos = GetViewport().GetMousePosition();
+			var delta = currentMousePos - _dragStartMousePos;
+			Position = _dragStartCameraPos - delta / Zoom;
+		}
     }
 
     public override void _Process(double delta)

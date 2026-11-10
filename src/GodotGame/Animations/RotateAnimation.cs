@@ -13,10 +13,13 @@ public class RotateAnimation : Animation
 	public override Task PlayAsync(Node context)
 	{
 		var tcs = new TaskCompletionSource<bool>();
+
+		Robot.SetAnimating(true);
 		
 		var tween = context.CreateTween();
 		if (tween == null)
 		{
+			Robot.SetAnimating(false);
 			tcs.SetResult(false);
 			return tcs.Task;
 		}
@@ -27,7 +30,12 @@ public class RotateAnimation : Animation
 		var toAngle = DirectionIndexToAngle(ToIndex);
 		var targetAngle = CalculateShortestAngle(Robot.RotationDegrees, toAngle);
 		tween.TweenProperty(Robot, "rotation_degrees", targetAngle, Duration);
-		tween.Finished += () => tcs.SetResult(true);
+		tween.Finished += () =>
+		{
+			Robot.SetDirection(ToIndex);
+            Robot.SetAnimating(false);
+            tcs.SetResult(true);
+		};
 		tween.Play();
 		
 		return tcs.Task;
@@ -51,4 +59,23 @@ public class RotateAnimation : Animation
 		
 		return fromAngle + diff;
 	}
+
+	// private void AnimateRotation(int toIndex)
+	// {
+	// 	float targetAngle = DirectionIndexToAngle(toIndex);
+	// 	float currentAngle = RotationDegrees;
+		
+	// 	float shortestAngle = CalculateShortestAngle(currentAngle, targetAngle);
+		
+	// 	if (System.Math.Abs(shortestAngle - currentAngle) < 1f)
+	// 		return;
+		
+	// 	if (_rotationTween?.IsRunning() == true)
+	// 		_rotationTween.Kill();
+		
+	// 	_rotationTween = CreateTween();
+	// 	_rotationTween.SetTrans(Tween.TransitionType.Sine);
+	// 	_rotationTween.SetEase(Tween.EaseType.InOut);
+	// 	_rotationTween.TweenProperty(this, "rotation_degrees", shortestAngle, RotationDuration);
+	// }
 }

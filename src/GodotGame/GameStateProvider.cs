@@ -9,6 +9,7 @@ using RoboRallyGame.Core.Engine;
 using RoboRallyGame.Core.Models;
 using RoboRallyGame.Core.Cards;
 using RoboRallyGame.Godot.Models;
+using RoboRallyGame.Core.Messages;
 
 public sealed record CardViewModel(string Symbol, int Priority, int CardNumber);
 
@@ -21,6 +22,7 @@ public sealed record PlayerViewModel(
     int Damage,
     int LifeTokens,
     bool IsPowerDown,
+    bool IsRebooting,
     bool IsAlive,
     int CheckpointsReached,
     int LockedRegisters,
@@ -31,14 +33,14 @@ public sealed record PlayerViewModel(
     IReadOnlyList<string> AllUpgrades
 );
 
-public sealed record RegisterCardViewModel(CardViewModel Card, int HandIndex);
+public sealed record RegisterCardViewModel(CardViewModel Card, int HandIndex, bool IsLocked);
 
 public sealed record StateViewModel(
     IReadOnlyList<PlayerViewModel> Players,
     int CurrentPlayerIndex,
     int CurrentRegister,
     int Round,
-    GamePhaseType Phase,
+    Godot.Messages.GamePhaseType Phase,
     int MapWidth,
     int MapHeight
 );
@@ -65,12 +67,13 @@ public interface IGameProvider
     void AssignCardToRegister(int handIndex, int registerIndex);
     bool CanConfirmRegistration();
     void TogglePowerDown();
+    void SubscribeToEngineEvents(IMessageDispatcher dispatcher);
 }
 
 public sealed class LocalGameProvider : IGameProvider
 {
     private static CardViewModel? ToCardViewModel(ProgramCard? card) => card == null ? null : new CardViewModel(card.Symbol, card.Priority, 0);
-    private static RegisterCardViewModel? ToRegisterCardViewModel(RegisterCard? rc) => rc == null ? null : new RegisterCardViewModel(ToCardViewModel(rc.Card)!, rc.HandIndex);
+    private static RegisterCardViewModel? ToRegisterCardViewModel(RegisterCard? rc) => rc == null ? null : new RegisterCardViewModel(ToCardViewModel(rc.Card)!, rc.HandIndex, rc.IsLocked);
     
     private static Models.Direction ToGodotDirection(Core.Models.Direction dir) => dir switch
     {
@@ -104,7 +107,7 @@ public sealed class LocalGameProvider : IGameProvider
         _ => Models.ConveyorDirection.North
     };
     
-    private static Messages.GamePhaseType ToGodotPhase(Core.Engine.GamePhase phase) => phase switch
+    private static Godot.Messages.GamePhaseType ToGodotPhase(Core.Engine.GamePhase phase) => phase switch
     {
         Core.Engine.GamePhase.Setup => Messages.GamePhaseType.Programming,
         Core.Engine.GamePhase.Programming => Messages.GamePhaseType.Programming,
@@ -117,7 +120,7 @@ public sealed class LocalGameProvider : IGameProvider
     private static PlayerViewModel ToPlayerViewModel(Player p) => new PlayerViewModel(
         p.Id, p.Name, p.Robot.Position.X, p.Robot.Position.Y, ToGodotDirection(p.Robot.Direction), 
         p.Robot.Damage, p.Robot.LifeTokens,
-        p.Robot.IsPowerDown, p.Robot.IsAlive, p.Robot.CheckpointsReached, p.Robot.LockedRegisters,
+        p.Robot.IsPowerDown, p.Robot.IsRebooting, p.Robot.IsAlive, p.Robot.CheckpointsReached, p.LockedRegisters,
         p.Hand.Select(ToCardViewModel).ToList(), p.Registers.Select(ToRegisterCardViewModel).ToList(),
         p.FilledRegisterCount, p.AvailableCardCount,
         p.AllUpgrades.Select(u => u.ToString()).ToList());
@@ -154,20 +157,46 @@ public sealed class LocalGameProvider : IGameProvider
         );
     }
 
+    public void SubscribeToEngineEvents(IMessageDispatcher dispatcher)
+	{
+		_engine.OnMove += e => dispatcher.Publish(e);
+		_engine.OnRotate += e => dispatcher.Publish(e);
+		_engine.OnLaserFire += e => dispatcher.Publish(e);
+		_engine.OnDamage += e => dispatcher.Publish(e);
+		_engine.OnConveyorMove += e => dispatcher.Publish(e);
+		_engine.OnCheckpoint += e => dispatcher.Publish(e);
+		_engine.OnRobotDestroyed += e => dispatcher.Publish(e);
+		_engine.OnRobotRebooting += e => dispatcher.Publish(e);
+        _engine.OnRobotRebooted += e => dispatcher.Publish(e);
+		_engine.OnRobotRepaired += e => dispatcher.Publish(e);
+		_engine.OnLifeTokenLost += e => dispatcher.Publish(e);
+		_engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
+		_engine.OnConveyorPhaseStarted += e => dispatcher.Publish(e);
+		_engine.OnLaserPhaseStarted += e => dispatcher.Publish(e);
+		_engine.OnRegisterExecuted += e => dispatcher.Publish(e);
+		_engine.OnPhaseExecutionComplete += e => dispatcher.Publish(e);
+		_engine.OnAllRegistersComplete += () => dispatcher.Publish(new AllRegistersCompleteEvent());
+		_engine.OnGameOver += e => dispatcher.Publish(e);
+		_engine.OnUpgradeAcquired += e => dispatcher.Publish(e);
+	}
+
     public MapData GetMapData()
     {
         var map = _engine.State.Map;
         var tiles = new TileData[map.Width, map.Height];
+        int checkpointsCount = 0;
 
         for (int x = 0; x < map.Width; x++)
         {
             for (int y = 0; y < map.Height; y++)
-            {
-                tiles[x, y] = ToTileData(map.GetTile(new Position(x, y)));
+            { 
+                var tile = map.GetTile(new Position(x, y));
+                if (tile.Type == Core.Models.TileType.Checkpoint) checkpointsCount ++;
+                tiles[x, y] = ToTileData(tile);
             }
         }
 
-        return new MapData(map.Width, map.Height, tiles);
+        return new MapData(map.Width, map.Height, tiles, checkpointsCount);
     }
 
     public StateViewModel GetState()

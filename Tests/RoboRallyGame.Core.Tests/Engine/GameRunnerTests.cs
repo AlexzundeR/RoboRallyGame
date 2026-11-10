@@ -79,7 +79,8 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
-                    new() { X = 3, Y = 3, Type = TileType.Wall }
+                    new() { X = 3, Y = 3, Type = TileType.Wall },
+                    new() { X = 0, Y = 0, Type = TileType.Start },
                 }
             }
         };
@@ -156,6 +157,7 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
+                    new() { X = 0, Y = 0, Type = TileType.Start },
                     new() { X = 3, Y = 3, Type = TileType.Wall, BlockedDirections = new List<Direction> { Direction.North, Direction.South } }
                 }
             }
@@ -184,6 +186,7 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
+                    new() { X = 0, Y = 0, Type = TileType.Start },
                     // Тоннель Север-Юг (проход только сверху и снизу)
                     new() { X = 4, Y = 4, Type = TileType.Wall, BlockedDirections = new List<Direction> { Direction.East, Direction.West } }
                 }
@@ -213,6 +216,7 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
+                    new() { X = 0, Y = 0, Type = TileType.Start },
                     new() { X = 3, Y = 3, Type = TileType.Conveyor, ConveyorDir = Direction.East }
                 }
             }
@@ -238,6 +242,7 @@ public class GameRunnerTests
             {
                 Tiles = new List<TilePlacement>
                 {
+                    new() { X = 0, Y = 0, Type = TileType.Start },
                     new() { X = 3, Y = 3, Type = TileType.Gear, IsClockwise = true },
                     new() { X = 4, Y = 3, Type = TileType.Gear, IsClockwise = false }
                 }

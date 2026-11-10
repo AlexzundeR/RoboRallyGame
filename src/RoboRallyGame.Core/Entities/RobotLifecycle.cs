@@ -15,7 +15,7 @@ public interface IRobotLifecycleComponent
     void OnTakeDamage(Robot robot, int damage);
     void OnAfterDamage(Robot robot, int damage);
     void OnLoseLifeToken(Robot robot);
-    void OnReboot(Robot robot, Position spawnPos);  
+    void OnReboot(Robot robot, Position spawnPos);
     RoundPreparationResult PrepareForRound(Robot robot, Position defaultSpawn);
     void OnPowerDown(Robot robot);
     void OnWakeUp(Robot robot);
@@ -25,7 +25,7 @@ public interface IRobotLifecycleComponent
 public sealed class DefaultRobotLifecycle : IRobotLifecycleComponent
 {
     public static readonly DefaultRobotLifecycle Instance = new();
-    
+
     public void OnTakeDamage(Robot robot, int damage)
     {
         if (damage < 0)
@@ -41,7 +41,9 @@ public sealed class DefaultRobotLifecycle : IRobotLifecycleComponent
         if (robot.Damage >= 10)
         {
             if (robot.LifeTokens > 0)
+            {
                 robot.LoseLifeToken();
+            }
             else
                 robot.SetStatus(RobotStatus.Destroyed);
         }
@@ -71,7 +73,7 @@ public sealed class DefaultRobotLifecycle : IRobotLifecycleComponent
             robot.SetDamage(0);
             return RoundPreparationResult.WokeUp;
         }
-        
+
         if (robot.Status == RobotStatus.Rebooting)
         {
             if (robot.LifeTokens <= 0)
@@ -79,12 +81,12 @@ public sealed class DefaultRobotLifecycle : IRobotLifecycleComponent
                 robot.SetStatus(RobotStatus.Destroyed);
                 return RoundPreparationResult.Destroyed;
             }
-            
+
             var spawnPos = robot.LastCheckpointPosition ?? defaultSpawn;
             robot.Reboot(spawnPos);
             return RoundPreparationResult.Rebooted;
         }
-        
+
         return RoundPreparationResult.None;
     }
 

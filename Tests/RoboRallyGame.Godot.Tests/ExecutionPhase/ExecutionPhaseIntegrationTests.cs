@@ -24,7 +24,8 @@ public class ExecutionPhaseIntegrationTests
         engine.OnConveyorMove += e => dispatcher.Publish(e);
         engine.OnCheckpoint += e => dispatcher.Publish(e);
         engine.OnRobotDestroyed += e => dispatcher.Publish(e);
-        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRebooted += e => dispatcher.Publish(e);
+        engine.OnRobotRebooting += e => dispatcher.Publish(e);
         engine.OnRobotRepaired += e => dispatcher.Publish(e);
         engine.OnLifeTokenLost += e => dispatcher.Publish(e);
         engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
@@ -223,7 +224,7 @@ public class ExecutionPhaseIntegrationTests
         
         phase.ExecuteRegister();
 
-        player.Registers.Should().AllSatisfy(r => r.Should().BeNull());
+        player.Registers.Should().AllSatisfy(r => r.Card.Should().BeNull());
     }
 
     [Fact]

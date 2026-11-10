@@ -19,16 +19,6 @@ public partial class AnimationService : Node, IAnimationService
         await Task.WhenAll(tasks);
     }
 
-    public static Vector2 PositionToVector(Position pos)
-    {
-        return GameScale.GridToWorldCentered(pos.X, pos.Y);
-    }
-
-    public static Vector2 PositionToVectorCentered(Position pos)
-    {
-        return PositionToVector(pos);
-    }
-
     public static float DirectionToAngle(Direction dir) => dir switch
     {
         Direction.North => 0f,

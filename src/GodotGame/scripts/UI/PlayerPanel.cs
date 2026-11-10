@@ -14,6 +14,7 @@ public partial class PlayerPanel : PanelContainer
 	private Label _status;
 	private Theme _cardTheme;
 	private PackedScene _cardScene;
+	private bool _initialized;
 
 	private readonly List<RegisterActionCard> _handCards = new();
 	private readonly List<RegisterActionCard> _registerCards = new();
@@ -31,6 +32,8 @@ public partial class PlayerPanel : PanelContainer
 		_status.GuiInput += OnStatusClicked;
 		
 		InitializeCards();
+
+		_initialized = true;
 	}
 
 	private void OnStatusClicked(InputEvent @event)
@@ -71,18 +74,25 @@ public partial class PlayerPanel : PanelContainer
 	}
 
 	public void Update(PlayerViewModel player, bool isCurrentPlayer, bool isProgramming,
-					   int currentRegister, int selectedRegister)
+					   int currentRegister, int selectedRegister, int totalCheckpoints)
 	{
 		if (!IsInsideTree()) return;
 		UpdateHeader(player);
 		UpdateHand(player, isCurrentPlayer && isProgramming);
 		UpdateRegisters(player, currentRegister, isProgramming, isCurrentPlayer, selectedRegister);
 		UpdateStatus(player);
+		UpdateCheckpoints(player.CheckpointsReached, totalCheckpoints);
 	}
 
 	private void UpdateHeader(PlayerViewModel player)
 	{
-		var icon = player.Id == 1 ? "🔵" : "🔴";
+		var icon = player.Id switch
+		{
+			1 => "🔵",
+			2 => "🔴",
+			3 => "🟡",
+			4 => "⚪",
+		};
 		_header.Text = $"{icon} {player.Name}";
 	}
 
@@ -108,10 +118,11 @@ public partial class PlayerPanel : PanelContainer
 	private void UpdateRegisters(PlayerViewModel player, int currentRegister, bool isProgramming,
 							   bool isCurrentPlayer, int selectedRegister)
 	{
-		bool isPowerDown = player.IsPowerDown;
+		if (!_initialized) return;
 
 		for (int i = 0; i < 5; i++)
 		{
+			var cardData = player.Registers[i];
 			var card = _registerCards[i];
 
 			if (!isProgramming && i == currentRegister)
@@ -127,7 +138,7 @@ public partial class PlayerPanel : PanelContainer
 				card.SetSelected(false);
 			}
 
-			if (isPowerDown)
+			if (player.IsPowerDown || player.IsRebooting || cardData.IsLocked)
 			{
 				card.SetLocked(true);
 			}
@@ -145,7 +156,7 @@ public partial class PlayerPanel : PanelContainer
 			}
 
 			var registerCard = player.Registers[i];
-			if (registerCard == null || isPowerDown)
+			if (registerCard?.Card == null || player.IsPowerDown || player.IsRebooting)
 			{
 				card.SetEmpty();
 			}
@@ -165,6 +176,7 @@ public partial class PlayerPanel : PanelContainer
 		var checkpoints = player.CheckpointsReached;
 		var upgrades = player.AllUpgrades.ToList();
 		var powerDown = player.IsPowerDown ? " | ⚡ OFF" : "";
+		var rebooting = player.IsRebooting ? " | ⚡ REBOOT" : "";
 		
 		string upgradeText;
 		if (upgrades.Count == 0)
@@ -180,10 +192,10 @@ public partial class PlayerPanel : PanelContainer
 			upgradeText = $" | ⚙ {upgrades.Count} upgrades";
 		}
 		
-		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage} | ⭐ {checkpoints}{upgradeText}{powerDown}";
+		_status.Text = $"❤️ HP: {hp}/3 | 💥 DMG: {damage} | ⭐ {checkpoints}{upgradeText}{powerDown}{rebooting}";
 	}
 
-	public void UpdateCheckpoints(int checkpointsReached, int totalCheckpoints)
+	private void UpdateCheckpoints(int checkpointsReached, int totalCheckpoints)
 	{
 		if (!IsInsideTree()) return;
 		_status.Text = _status.Text.Replace($"⭐ {checkpointsReached - 1}", $"⭐ {checkpointsReached}");

@@ -68,7 +68,7 @@ public class ProgrammingPhase : IGamePhase
 		}
 
 		var player = _gameProvider.GetState().Players[CurrentPlayerIndex];
-		if (player.IsPowerDown)
+		if (player.IsPowerDown || player.IsRebooting)
 		{
 			ConfirmPlayer();
 			return;
@@ -118,6 +118,10 @@ public class ProgrammingPhase : IGamePhase
 		{
 			var card = _gameProvider.GetHandCard(cardIndex);
 			if (card == null) return;
+
+			var register = _gameProvider.GetCurrentPlayer().Registers[registerIndex];
+
+			if (register.IsLocked) return;
 			
 			_gameProvider.AssignCardToRegister(cardIndex, registerIndex);
 			

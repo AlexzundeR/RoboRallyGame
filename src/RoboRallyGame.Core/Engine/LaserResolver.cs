@@ -39,7 +39,7 @@ public sealed class LaserResolver
         foreach (var player in players)
         {
             var robot = player.Robot;
-            if (!robot.IsAlive)
+            if (!robot.IsAlive || robot.IsPowerDown || robot.IsRebooting)
                 continue;
             
             var laserStrategy = GetLaserStrategy(player);
@@ -137,7 +137,7 @@ public sealed class LaserResolver
         foreach (var (robotId, damage) in hits)
         {
             var player = players.FirstOrDefault(p => p.Robot.Id == robotId);
-            player?.Robot.TakeDamage(damage);
+            player?.TakeDamage(damage);
         }
     }
     

@@ -9,6 +9,7 @@ using RoboRallyGame.Core.Models;
 using RoboRallyGame.Core.Upgrades;
 using RoboRallyGame.Godot;
 using RoboRallyGame.Godot.Animations;
+using RoboRallyGame.Godot.Services;
 
 public class ExecutionPhase : IGamePhase
 {
@@ -36,7 +37,7 @@ public class ExecutionPhase : IGamePhase
 			var player = state.Players[CurrentPlayerIndex];
 			if (player.LockedRegisters > CurrentRegister) return 0;
 			var register = player.Registers[CurrentRegister];
-			return register?.Card.Priority ?? 0;
+			return register?.Card?.Priority ?? 0;
 		}
 	}
 
@@ -72,7 +73,8 @@ public class ExecutionPhase : IGamePhase
 		dispatcher.Subscribe<PhaseExecutionCompleteEvent>(OnPhaseExecutionComplete);
 		dispatcher.Subscribe<AllRegistersCompleteEvent>(_ => CompleteExecutionPhase());
 		dispatcher.Subscribe<LifeTokenLostEvent>(OnLifeTokenLost);
-		dispatcher.Subscribe<RobotRebootEvent>(OnRobotReboot);
+		dispatcher.Subscribe<RobotRebootedEvent>(OnRobotRebooted);
+		dispatcher.Subscribe<RobotRebootingEvent>(OnRobotRebooting);
 		dispatcher.Subscribe<RobotRepairedEvent>(OnRobotRepaired);
 		dispatcher.Subscribe<UpgradeAcquiredEvent>(OnUpgradeAcquired);
 		dispatcher.Subscribe<MoveEvent>(OnMove);
@@ -98,7 +100,12 @@ public class ExecutionPhase : IGamePhase
 		Log($"[color=red]{GetPlayerName(e.PlayerId)} lost a life token! ({e.RemainingTokens} remaining)[/color]");
 	}
 
-	private void OnRobotReboot(RobotRebootEvent e)
+	private void OnRobotRebooting(RobotRebootingEvent e)
+	{
+		Log($"[color=orange]Robot {GetPlayerName(e.PlayerId)} rebooting [/color]");
+	}
+
+	private void OnRobotRebooted(RobotRebootedEvent e)
 	{
 		Log($"[color=orange]Robot {GetPlayerName(e.PlayerId)} rebooted at ({e.SpawnPosition.X},{e.SpawnPosition.Y})[/color]");
 	}
@@ -145,8 +152,8 @@ public class ExecutionPhase : IGamePhase
 			_animations.Add(new MoveAnimation
 			{
 				Robot = robot,
-				From = e.From,
-				To = e.To
+				GridFrom = e.From,
+				GridTo = e.To
 			});
 		}
 	}
@@ -183,8 +190,8 @@ public class ExecutionPhase : IGamePhase
 			_animations.Add(new ConveyorAnimation
 			{
 				Robot = robot,
-				From = e.From,
-				To = e.To
+				GridFrom = e.From,
+				GridTo = e.To
 			});
 		}
 	}

@@ -109,7 +109,7 @@ public class ProgrammingPhaseTests
         phase.SelectCard(0, 2);
         
         var registerCard = player.GetRegister(2);
-        Assert.NotNull(registerCard);
+        Assert.NotNull(registerCard.Card);
         Assert.Equal(999, registerCard.Card.Priority);
         Assert.Equal(0, registerCard.HandIndex);
         Assert.Equal(initialCount - 1, player.AvailableCardCount);

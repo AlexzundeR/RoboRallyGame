@@ -125,4 +125,9 @@ public sealed class Tile
             _ => '?'
         };
     }
+
+    public override string ToString()
+    {
+        return $"{ToChar()}";
+    }
 }

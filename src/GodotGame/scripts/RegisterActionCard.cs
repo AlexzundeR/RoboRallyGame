@@ -15,7 +15,8 @@ public partial class RegisterActionCard : PanelContainer
 	private Label _numberLabel;
 	private Label _symbolLabel;
 	private Label _priorityLabel;
-	private ColorRect _background;
+    private Label _lockerLabel;
+    private ColorRect _background;
 	private Panel _border;
 
 	private AnimationPlayer _animationPlayer;
@@ -25,6 +26,7 @@ public partial class RegisterActionCard : PanelContainer
 		_numberLabel = GetNode<Label>("GridContainer/Number");
 		_symbolLabel = GetNode<Label>("GridContainer/Symbol");
 		_priorityLabel = GetNode<Label>("GridContainer/Priority");
+		_lockerLabel = GetNode<Label>("Locker");
 		_background = GetNode<ColorRect>("Background");
 		_animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
 		_border = GetNode<Panel>("Border");
@@ -52,13 +54,9 @@ public partial class RegisterActionCard : PanelContainer
 		_background.Color = styles.BackgroundColor;
 		_border.AddThemeStyleboxOverride("panel", styles.BorderStyle);
 
-		if (_isLocked)
-		{
-			_symbolLabel.Text = "🔒";
-			_numberLabel.Text = "";
-			_priorityLabel.Text = "";
-		}
-		else if (CardSymbol != null)
+		_lockerLabel.Visible = _isLocked;
+
+		if (CardSymbol != null)
 		{
 			_symbolLabel.Text = CardSymbol;
 			_numberLabel.Text = CardNumber.ToString();
@@ -124,7 +122,8 @@ public partial class RegisterActionCard : PanelContainer
 		{
 			string styleName = "normal";
 			if (isLocked)
-				styleName = "locked";
+				if (isSelected) styleName = "selected_locked";
+				else styleName = "locked";
 			else if (isFixed && isSelected)
 				styleName = "selected_fixed";
 			else if (isFixed)

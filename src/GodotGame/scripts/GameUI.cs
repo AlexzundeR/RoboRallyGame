@@ -1,6 +1,8 @@
 ﻿using Godot;
+
 using System.Collections.Generic;
 using System.Linq;
+
 using RoboRallyGame.Godot.UI;
 
 namespace RoboRallyGame.Godot;
@@ -20,10 +22,12 @@ public partial class GameUI : CanvasLayer
 	private WinModal _winModal = null!;
 
 	private HBoxContainer _playerPanelsContainer = null!;
-	private readonly List<PlayerPanel> _playerPanels = new();
+	private PlayerPanel _currentPlayerPanel = new();
+	private readonly List<PlayerPanel> _playerPanels = new List<PlayerPanel>();
 
 	public override void _Ready()
 	{
+
 		_topPanel = GetNode<TopPanel>("UIRoot/MainContainer/MainHBox/LeftContent/TopSection/TopPanel");
 		_topPanel.InfoPressed += OnInfoPressed;
 
@@ -51,17 +55,9 @@ public partial class GameUI : CanvasLayer
 		if (!IsInsideTree() || PlayerPanelScene == null) return;
 
 		_playerPanelsContainer = GetNode<HBoxContainer>("UIRoot/MainContainer/MainHBox/LeftContent/BottomSection/BottomPanel/PlayerHBox");
-
-		for (int i = 0; i < 2; i++)
-		{
-			var panel = PlayerPanelScene.Instantiate<PlayerPanel>();
-			panel.RegisterClicked += OnRegisterClicked;
-			panel.UpgradesClicked += OnUpgradesClicked;
-			panel.LayoutMode = 2;
-			panel.SizeFlagsHorizontal = (Control.SizeFlags)3;
-			_playerPanelsContainer.AddChild(panel);
-			_playerPanels.Add(panel);
-		}
+		var panel = CreatePlayerPanel();
+		_currentPlayerPanel = panel;
+		_playerPanelsContainer.AddChild(panel);
 	}
 
 	private void OnRegisterClicked(int registerIndex)
@@ -106,6 +102,7 @@ public partial class GameUI : CanvasLayer
 		{
 			if (keyEvent.Keycode == Key.Escape)
 			{
+				//TODO: модалки не закрываются по Esc
 				if (_winModal?.Visible == true) return;
 				CloseAllModals();
 			}
@@ -118,7 +115,7 @@ public partial class GameUI : CanvasLayer
 			{
 				EmitSignal(SignalName.GiveUpgrade);
 			}
-			else if (keyEvent.Keycode == Key.D)
+			else if (keyEvent.Keycode == Key.H)
 			{
 				EmitSignal(SignalName.GiveDamage);
 			}
@@ -154,24 +151,47 @@ public partial class GameUI : CanvasLayer
 		}
 	}
 
-	public void UpdatePlayerInfo(PlayerViewModel p1, PlayerViewModel p2, int currentRegister, bool programming, int currentPlayerIndex, int selectedRegister = 0)
+	private PlayerPanel CreatePlayerPanel()
 	{
-		if (!IsInsideTree()) return;
-
-		if (_playerPanels.Count >= 2)
-		{
-			_playerPanels[0].Update(p1, currentPlayerIndex == 0, programming, currentRegister, selectedRegister);
-			_playerPanels[1].Update(p2, currentPlayerIndex == 1, programming, currentRegister, selectedRegister);
-		}
+		var panel = PlayerPanelScene.Instantiate<PlayerPanel>();
+		panel.RegisterClicked += OnRegisterClicked;
+		panel.UpgradesClicked += OnUpgradesClicked;
+		panel.LayoutMode = 2;
+		panel.SizeFlagsHorizontal = (Control.SizeFlags)3;
+		return panel;
 	}
 
-	public void UpdateCheckpointProgress(int playerId, int checkpointsReached, int totalCheckpoints)
+	public void UpdatePlayerInfo(IReadOnlyList<PlayerViewModel> players, int currentRegister, bool programming, int currentPlayerIndex, int totalCheckpoints, int selectedRegister = 0)
 	{
 		if (!IsInsideTree()) return;
-		var panelIndex = playerId - 1;
-		if (panelIndex >= 0 && panelIndex < _playerPanels.Count)
+
+		if (programming)
 		{
-			_playerPanels[panelIndex].UpdateCheckpoints(checkpointsReached, totalCheckpoints);
+			_currentPlayerPanel.Update(players[currentPlayerIndex], true, programming, currentRegister, selectedRegister, totalCheckpoints);
+			_currentPlayerPanel.Visible = true;
+			foreach (var panel in _playerPanels)
+			{
+				panel.Visible = false;
+			}
+		}
+		else
+		{
+			for (var i = 0; i < players.Count; i++)
+			{
+				if (_playerPanels.Count <= i)
+				{
+					var panel = CreatePlayerPanel();
+					_playerPanelsContainer.AddChild(panel);
+					_playerPanels.Add(panel);
+				}
+
+				_playerPanels[i].Update(players[i], currentPlayerIndex == i, programming, currentRegister, selectedRegister, totalCheckpoints);
+			}
+			_currentPlayerPanel.Visible = false;
+			foreach (var panel in _playerPanels)
+			{
+				panel.Visible = true;
+			}
 		}
 	}
 

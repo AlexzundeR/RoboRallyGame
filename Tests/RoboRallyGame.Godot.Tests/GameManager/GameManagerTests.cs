@@ -22,12 +22,12 @@ public class GameManagerTests
         player.AssignCardToRegister(0, 0);
         player.AssignCardToRegister(1, 1);
         
-        player.Registers[0].Should().NotBeNull();
-        player.Registers[1].Should().NotBeNull();
+        player.Registers[0].Card.Should().NotBeNull();
+        player.Registers[1].Card.Should().NotBeNull();
         
         player.ClearRegisters();
         
-        player.Registers.Should().AllSatisfy(r => r.Should().BeNull());
+        player.Registers.Should().AllSatisfy(r => r.Card.Should().BeNull());
     }
 
     [Fact]
@@ -74,7 +74,8 @@ public class GameManagerTests
         engine.OnConveyorMove += e => dispatcher.Publish(e);
         engine.OnCheckpoint += e => dispatcher.Publish(e);
         engine.OnRobotDestroyed += e => dispatcher.Publish(e);
-        engine.OnRobotReboot += e => dispatcher.Publish(e);
+        engine.OnRobotRebooted += e => dispatcher.Publish(e);
+        engine.OnRobotRebooting += e => dispatcher.Publish(e);
         engine.OnRobotRepaired += e => dispatcher.Publish(e);
         engine.OnLifeTokenLost += e => dispatcher.Publish(e);
         engine.OnMovementPhaseStarted += e => dispatcher.Publish(e);
@@ -103,12 +104,12 @@ public class GameManagerTests
             player.AssignCardToRegister(i, i);
         }
         
-        player.Registers[0].Should().NotBeNull();
-        player.Registers[4].Should().NotBeNull();
+        player.Registers[0].Card.Should().NotBeNull();
+        player.Registers[4].Card.Should().NotBeNull();
         
         player.ClearRegisters();
         
-        player.Registers.Should().AllSatisfy(r => r.Should().BeNull());
+        player.Registers.Should().AllSatisfy(r => r.Card.Should().BeNull());
     }
 
     private static Player CreatePlayerWithRegisters()

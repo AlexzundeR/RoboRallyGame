@@ -1,13 +1,16 @@
 ﻿using Godot;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using RoboRallyGame.Core.Engine;
 using RoboRallyGame.Godot;
 using RoboRallyGame.Godot.Animations;
 using RoboRallyGame.Godot.Phases;
 using RoboRallyGame.Godot.Services;
 using RoboRallyGame.Core.Messages;
+using RoboRallyGame.Core.Models;
 
 public partial class GameManager : Node2D
 {
@@ -27,10 +30,6 @@ public partial class GameManager : Node2D
 	private GamePhaseType _phaseType = GamePhaseType.Programming;
 	private int _roundNumber = 1;
 
-	private bool _isDragging;
-	private Vector2 _dragStartMousePos;
-	private Vector2 _dragStartCameraPos;
-
 	public override void _Ready()
 	{
 		GD.Print("=== RoboRally Game Starting ===");
@@ -45,9 +44,17 @@ public partial class GameManager : Node2D
 		GD.Print("=== Game Ready! ===");
 	}
 
+	private void CreateTestLevel()
+	{
+		var map = _gameProvider!.GetMapData();
+		CenterCamera(map.Width, map.Height);
+		_mapRenderer!.RenderMap(map);
+		_robotRenderer!.CreateRobots(_gameProvider!.GetPlayers());
+		UpdateUI();
+	}
+
 	public override void _Input(InputEvent @event)
 	{
-		HandleCameraInput(@event);
 		HandleSecretKeyInput(@event);
 	}
 
@@ -59,11 +66,16 @@ public partial class GameManager : Node2D
 			{
 				GiveRandomUpgradeToCurrentPlayer();
 			}
-			else if (keyEvent.Keycode == Key.I)
+			else if (keyEvent.Keycode == Key.H)
 			{
 				GiveDamageToCurrentPlayer();
 			}
+			else if (keyEvent.Keycode == Key.O)
+			{
+				OpenDebug();
+			}
 		}
+
 	}
 
 	private void GiveRandomUpgradeToCurrentPlayer()
@@ -76,6 +88,11 @@ public partial class GameManager : Node2D
 			return;
 
 		_runner.Engine.GrantRandomUpgrade(player.Id);
+	}
+
+	private void OpenDebug()
+	{
+		_gameUI.OpenDebugMenu();
 	}
 
 	private void GiveDamageToCurrentPlayer()
@@ -91,42 +108,12 @@ public partial class GameManager : Node2D
 		GD.Print($"[SECRET] Player {player.Id} took 1 damage");
 	}
 
-	private void HandleCameraInput(InputEvent @event)
-	{
-		if (_camera == null)
-			return;
-
-		if (@event is InputEventMouseButton mouseButton)
-		{
-			if (mouseButton.ButtonIndex == MouseButton.Left || mouseButton.ButtonIndex == MouseButton.Middle)
-			{
-				if (mouseButton.Pressed)
-				{
-					_isDragging = true;
-					_dragStartMousePos = GetViewport().GetMousePosition();
-					_dragStartCameraPos = _camera.Position;
-				}
-				else
-				{
-					_isDragging = false;
-				}
-			}
-		}
-
-		if (@event is InputEventMouseMotion motion && _isDragging)
-		{
-			var currentMousePos = GetViewport().GetMousePosition();
-			var delta = currentMousePos - _dragStartMousePos;
-			_camera.Position = _dragStartCameraPos - delta / _camera.Zoom;
-		}
-	}
-
 	private void InitializeGame()
 	{
-		_runner = new GameRunner(GameMapConfigs.CreateDefault2Player());
+		_runner = new GameRunner(GameMapConfigs.CreateDefault2Player2());
 		_runner.Initialize();
 		_gameProvider = new LocalGameProvider(_runner.Engine);
-		SubscribeToEngineEvents();
+		_gameProvider.SubscribeToEngineEvents(_dispatcher);
 	}
 
 	public void Initialize(GameRunner runner, IMessageDispatcher dispatcher)
@@ -134,7 +121,7 @@ public partial class GameManager : Node2D
 		_runner = runner;
 		_gameProvider = new LocalGameProvider(_runner.Engine);
 		_dispatcher = dispatcher;
-		SubscribeToEngineEvents();
+		_gameProvider.SubscribeToEngineEvents(_dispatcher);
 	}
 
 	private void InitializePhases()
@@ -163,33 +150,8 @@ public partial class GameManager : Node2D
 		_dispatcher.Subscribe<GameOverEvent>(OnGameOver);
 	}
 
-	private void SubscribeToEngineEvents()
-	{
-		var engine = _runner!.Engine;
-		
-		engine.OnMove += e => _dispatcher.Publish(e);
-		engine.OnRotate += e => _dispatcher.Publish(e);
-		engine.OnLaserFire += e => _dispatcher.Publish(e);
-		engine.OnDamage += e => _dispatcher.Publish(e);
-		engine.OnConveyorMove += e => _dispatcher.Publish(e);
-		engine.OnCheckpoint += e => _dispatcher.Publish(e);
-		engine.OnRobotDestroyed += e => _dispatcher.Publish(e);
-		engine.OnRobotReboot += e => _dispatcher.Publish(e);
-		engine.OnRobotRepaired += e => _dispatcher.Publish(e);
-		engine.OnLifeTokenLost += e => _dispatcher.Publish(e);
-		engine.OnMovementPhaseStarted += e => _dispatcher.Publish(e);
-		engine.OnConveyorPhaseStarted += e => _dispatcher.Publish(e);
-		engine.OnLaserPhaseStarted += e => _dispatcher.Publish(e);
-		engine.OnRegisterExecuted += e => _dispatcher.Publish(e);
-		engine.OnPhaseExecutionComplete += e => _dispatcher.Publish(e);
-		engine.OnAllRegistersComplete += () => _dispatcher.Publish(new AllRegistersCompleteEvent());
-		engine.OnGameOver += e => _dispatcher.Publish(e);
-		engine.OnUpgradeAcquired += e => _dispatcher.Publish(e);
-	}
-
 	private void OnCheckpoint(CheckpointEvent e)
 	{
-		_gameUI?.UpdateCheckpointProgress(e.PlayerId, e.CheckpointNumber, e.TotalCheckpoints);
 	}
 
 	private void OnGameOver(GameOverEvent e)
@@ -224,7 +186,6 @@ public partial class GameManager : Node2D
 
 	private void OnRegisterExecuted(RegisterExecutedEvent e)
 	{
-		_robotRenderer!.UpdatePositions(_gameProvider!.GetPlayers());
 		UpdateUI();
 	}
 
@@ -268,11 +229,12 @@ public partial class GameManager : Node2D
 
 	private void SetupLayers()
 	{
+		var mapLayer = GetNodeOrNull<Node2D>("MapLayer");
 		_gameScale = new GameScale { Name = "GameScale" };
-		AddChild(_gameScale);
+		mapLayer.AddChild(_gameScale);
 
 		var mapContainer = new Node2D { Name = "MapContainer" };
-		AddChild(mapContainer);
+		mapLayer.AddChild(mapContainer);
 
 		_mapRenderer = new MapRenderer { Name = "MapLayer" };
 		mapContainer.AddChild(_mapRenderer);
@@ -284,14 +246,14 @@ public partial class GameManager : Node2D
 		mapContainer.AddChild(_camera);
 
 		var effectsLayer = new Node2D { Name = "EffectsLayer" };
-		AddChild(effectsLayer);
+		mapLayer.AddChild(effectsLayer);
 
 		_animationService = new AnimationService { Name = "AnimationService" };
-		AddChild(_animationService);
+		mapLayer.AddChild(_animationService);
 
 		_gameUI = GetNodeOrNull<GameUI>("UILayer/GameUI");
 		GD.Print("[GameManager] GameUI loaded from scene: " + (_gameUI != null));
-		
+
 		if (_gameUI != null)
 		{
 			_gameUI.GiveUpgrade += OnGiveUpgrade;
@@ -317,25 +279,16 @@ public partial class GameManager : Node2D
 			GD.PrintErr("[GameManager] InitializeAnimationController: missing dependencies");
 			return;
 		}
-		
+
 		GD.Print("[GameManager] AnimationService initialized");
-		
+
 		if (_gameUI != null)
 		{
 			_executionPhase.SetLogAction(_gameUI.Log);
 			GD.Print("[GameManager] ActionLog connected to ExecutionPhase");
 		}
-		
-		GD.Print("[GameManager] Animation setup complete");
-	}
 
-	private void CreateTestLevel()
-	{
-		var map = _gameProvider!.GetMapData();
-		CenterCamera(map.Width, map.Height);
-		_mapRenderer!.RenderMap(map);
-		_robotRenderer!.CreateRobots(_gameProvider!.GetPlayers());
-		UpdateUI();
+		GD.Print("[GameManager] Animation setup complete");
 	}
 
 	private void CenterCamera(int mapWidth, int mapHeight)
@@ -343,10 +296,9 @@ public partial class GameManager : Node2D
 		if (_camera == null)
 			return;
 
-		var worldCenter = GameScale.GridToWorldCentered(mapWidth / 2, mapHeight / 2);
-		_camera.Position = worldCenter;
+		_camera.CenterOn(new Position(mapWidth / 2, mapHeight / 2).ToTilePosition());
 	}
-	
+
 	private void OnGameScaleChanged()
 	{
 		var map = _gameProvider!.GetMapData();
@@ -354,35 +306,20 @@ public partial class GameManager : Node2D
 		CenterCamera(map.Width, map.Height);
 	}
 
+	private double _UIUpdateTimeCount;
 	public override void _Process(double delta)
 	{
-		HandleCameraKeyboardPan(delta);
+		//TODO: слишком много моделей перехвата ввода, нужно всё стандартизировать
 		HandleInput();
 		_currentPhase?.Update(delta);
 		_robotRenderer!.UpdatePositions(_gameProvider!.GetPlayers());
-		UpdateUI();
-	}
 
-	private void HandleCameraKeyboardPan(double delta)
-	{
-		if (_camera == null)
-			return;
-
-		const float panSpeed = 400f;
-		Vector2 moveDir = Vector2.Zero;
-
-		if (Input.IsKeyPressed(Key.W))
-			moveDir.Y -= 1;
-		if (Input.IsKeyPressed(Key.S))
-			moveDir.Y += 1;
-		if (Input.IsKeyPressed(Key.A))
-			moveDir.X -= 1;
-		if (Input.IsKeyPressed(Key.D))
-			moveDir.X += 1;
-
-		if (moveDir != Vector2.Zero)
+		_UIUpdateTimeCount += delta;
+		if (_UIUpdateTimeCount > 0.5)
 		{
-			_camera.Position -= moveDir.Normalized() * panSpeed * (float)delta;
+			_UIUpdateTimeCount = 0;
+			//TODO: так часто обновлять нельзя, нужно обновлять по сигналам или под флагом
+			UpdateUI();
 		}
 	}
 
@@ -393,62 +330,68 @@ public partial class GameManager : Node2D
 			GD.Print("[GameManager] HandleInput: _currentPhase is null, returning");
 			return;
 		}
-		
+
 		_currentPhase.HandleInput();
 
 		if (Input.IsActionJustPressed("ui_cancel"))
 		{
-			GetTree().ReloadCurrentScene();
+			//GetTree().ReloadCurrentScene();
 		}
 	}
 
+	private object _lock = new Object();
 	private void UpdateUI()
 	{
-		if (_runner == null || _gameUI == null) 
+		if (_runner == null || _gameUI == null)
 		{
 			GD.Print($"[GameManager] UpdateUI: runner={_runner != null}, gameUI={_gameUI != null}, returning");
 			return;
 		}
 
-		var players = _gameProvider!.GetPlayers();
-		var p1 = players[0];
-		var p2 = players[1];
-
-		_gameUI.UpdateRound(_roundNumber);
-		_gameUI.UpdatePhase(_phaseType == GamePhaseType.Programming);
-
-		if (_phaseType == GamePhaseType.Programming && _programmingPhase != null)
+		lock (_lock)
 		{
-			_gameUI.UpdateRegisterPrompt(
-				_programmingPhase.CurrentRegister,
-				_programmingPhase.SelectedRegister,
-				_programmingPhase.CurrentPlayerName
+
+			var players = _gameProvider!.GetPlayers();
+
+			_gameUI.UpdateRound(_roundNumber);
+			_gameUI.UpdatePhase(_phaseType == GamePhaseType.Programming);
+
+			if (_phaseType == GamePhaseType.Programming && _programmingPhase != null)
+			{
+				_gameUI.UpdateRegisterPrompt(
+					_programmingPhase.CurrentRegister,
+					_programmingPhase.SelectedRegister,
+					_programmingPhase.CurrentPlayerName
+				);
+			}
+			else if (_phaseType == GamePhaseType.Execution && _executionPhase != null)
+			{
+				_gameUI.UpdateExecutionPrompt(
+					_executionPhase.CurrentRegister,
+					_executionPhase.CurrentPlayerName
+				);
+				_gameUI.PriorityText = $"Priority: {_executionPhase.CurrentPriority}";
+			}
+
+			int currentPlayerIdx = _phaseType == GamePhaseType.Programming
+				? _programmingPhase?.CurrentPlayerIndex ?? 0
+				: _executionPhase?.CurrentPlayerIndex ?? 0;
+
+			int selectedReg = _phaseType == GamePhaseType.Programming
+				? (_programmingPhase?.SelectedRegister ?? 0)
+				: 0;
+
+			var totalCheckpoints = _gameProvider.GetMapData().TotalCheckpoints;
+
+			_gameUI.UpdatePlayerInfo(players,
+				_phaseType == GamePhaseType.Programming
+					? (_programmingPhase?.CurrentRegister ?? 0)
+					: (_executionPhase?.CurrentRegister ?? 0),
+				_phaseType == GamePhaseType.Programming,
+				currentPlayerIdx,
+				totalCheckpoints,
+				selectedReg
 			);
 		}
-		else if (_phaseType == GamePhaseType.Execution && _executionPhase != null)
-		{
-			_gameUI.UpdateExecutionPrompt(
-				_executionPhase.CurrentRegister,
-				_executionPhase.CurrentPlayerName
-			);
-			_gameUI.PriorityText = $"Priority: {_executionPhase.CurrentPriority}";
-		}
-		
-		int currentPlayerIdx = _phaseType == GamePhaseType.Programming
-			? _programmingPhase?.CurrentPlayerIndex ?? 0
-			: _executionPhase?.CurrentPlayerIndex ?? 0;
-			
-		int selectedReg = _phaseType == GamePhaseType.Programming
-			? (_programmingPhase?.SelectedRegister ?? 0)
-			: 0;
-			
-		_gameUI.UpdatePlayerInfo(p1, p2, 
-			_phaseType == GamePhaseType.Programming 
-				? (_programmingPhase?.CurrentRegister ?? 0)
-				: (_executionPhase?.CurrentRegister ?? 0),
-			_phaseType == GamePhaseType.Programming,
-			currentPlayerIdx,
-			selectedReg
-		);
 	}
 }

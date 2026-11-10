@@ -1,6 +1,9 @@
 ﻿namespace RoboRallyGame.Godot.Services;
 
 using Godot;
+
+using RoboRallyGame.Core.Models;
+
 using System;
 
 public partial class GameScale : Node
@@ -13,29 +16,15 @@ public partial class GameScale : Node
     public const float BaseActionLogWidth = 280f;
     public const float BasePanSpeed = 400f;
 
-    private float _scaleFactor = 1f;
     private Vector2 _viewportSize;
+
+    private float _scaleFactor = 1f;
 
     public float ScaleFactor => _scaleFactor;
     public float TileSize => BaseTileSize * _scaleFactor;
     public float ActionLogWidth => BaseActionLogWidth * _scaleFactor;
     public float PanSpeed => BasePanSpeed * _scaleFactor;
     public Vector2 ViewportSize => _viewportSize;
-
-    public static Vector2 GridToWorld(int gridX, int gridY)
-    {
-        var tileSize = Instance?.TileSize ?? BaseTileSize;
-        return new Vector2(gridX * tileSize, gridY * tileSize);
-    }
-
-    public static Vector2 GridToWorldCentered(int gridX, int gridY)
-    {
-        var tileSize = Instance?.TileSize ?? BaseTileSize;
-        var half = tileSize / 2f;
-        return new Vector2(gridX * tileSize + half, gridY * tileSize + half);
-    }
-
-    public static float GetMapScale() => Instance?.ScaleFactor ?? 1f;
 
     public override void _Ready()
     {

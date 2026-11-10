@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 using RoboRallyGame.Core.Models;
+using RoboRallyGame.Godot.Services;
 
 public class LaserAnimation : Animation
 {
@@ -23,11 +24,11 @@ public class LaserAnimation : Animation
         }
         
         var points = new List<Vector2>();
-        points.Add(AnimationService.PositionToVectorCentered(Source));
+        points.Add(Source.ToTilePositionCentered());
         
         foreach (var pos in Path)
         {
-            points.Add(AnimationService.PositionToVectorCentered(pos));
+            points.Add(pos.ToTilePositionCentered());
         }
 
         var endPos = points[points.Count - 1];

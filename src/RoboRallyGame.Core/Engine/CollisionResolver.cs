@@ -55,11 +55,11 @@ public sealed class CollisionResolver
             
             var result = TryMove(intent, map, robotsById, resolvedPositions);
             
-            if (result.Result != CollisionResult.Blocked)
+            if (result.Result != CollisionResult.Blocked && intent.Type != MoveType.Rotation)
             {
                 resolvedPositions[intent.Robot.Id] = intent.Robot.Position;
-                movements.Add(result);
             }
+            movements.Add(result);
         }
         
         return new CollisionResolutionResult(movements);
@@ -101,7 +101,7 @@ public sealed class CollisionResolver
             var touchResult = tile.GetComponent<ITileBehaviorComponent>()?.ApplyOnTouch(intent.Robot, map);
             
             if (touchResult == TileActionResult.ReadyToFall)
-            {
+            { //TODO:What?
                 intent.Robot.SetPosition(nextPos);
                 return new RobotMovement(intent.Robot.Id, intent.From, nextPos, CollisionResult.Success);
             }
@@ -117,6 +117,7 @@ public sealed class CollisionResolver
             
             if (robotOnTile != null)
             {
+                //TODO: Робот, которого мы двигаем не перемещается плавно, нужна анимация.
                 if (i < steps)
                     return new RobotMovement(intent.Robot.Id, intent.From, from, CollisionResult.Blocked);
                 

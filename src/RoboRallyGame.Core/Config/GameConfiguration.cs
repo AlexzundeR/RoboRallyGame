@@ -16,7 +16,7 @@ public class GameConfiguration
 public class PlayerConfig
 {
     public string Name { get; init; } = "Player";
-    public Position? StartPosition { get; init; }
+    public Position StartPosition { get; init; }
     public Direction StartDirection { get; init; } = Direction.North;
 }
 

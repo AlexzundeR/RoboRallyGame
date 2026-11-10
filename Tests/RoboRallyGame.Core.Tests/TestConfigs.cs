@@ -14,7 +14,7 @@ public static class TestConfigs
             MapHeight = 8,
             Players = new List<PlayerConfig>
             {
-                new() { Name = "Player1" }
+                new() { Name = "Player1", StartPosition = new Position(1, 1) }
             },
             Map = new MapConfig
             {

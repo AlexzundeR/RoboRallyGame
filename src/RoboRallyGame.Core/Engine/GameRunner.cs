@@ -58,7 +58,7 @@ public class GameRunner
 
         foreach (var playerConfig in _config.Players)
         {
-            _engine.AddPlayer(playerConfig.Name);
+            _engine.AddPlayer(playerConfig.Name, playerConfig.StartPosition, playerConfig.StartDirection);
         }
 
         _engine.StartGame();

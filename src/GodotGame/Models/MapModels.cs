@@ -42,7 +42,7 @@ public sealed record TileData(
     IReadOnlyList<int>? BlockedDirections = null
 );
 
-public sealed record MapData(int Width, int Height, TileData[,] Tiles)
+public sealed record MapData(int Width, int Height, TileData[,] Tiles, int TotalCheckpoints)
 {
     public TileData GetTile(int x, int y) => Tiles[x, y];
 }

@@ -45,7 +45,8 @@ public sealed record CheckpointEvent(int PlayerId, int CheckpointNumber, int Tot
 
 public sealed record RobotDestroyedEvent(int PlayerId, Position LastPosition) : IEvent;
 
-public sealed record RobotRebootEvent(int PlayerId, Position SpawnPosition) : IEvent;
+public sealed record RobotRebootingEvent(int PlayerId) : IEvent;
+public sealed record RobotRebootedEvent(int PlayerId, Position SpawnPosition) : IEvent;
 
 public sealed record RobotRepairedEvent(int PlayerId, int RepairAmount, int NewDamage) : IEvent;
 

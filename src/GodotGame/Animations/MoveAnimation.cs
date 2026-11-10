@@ -3,12 +3,13 @@
 using System.Threading.Tasks;
 using Godot;
 using RoboRallyGame.Core.Models;
+using RoboRallyGame.Godot.Services;
 
 public class MoveAnimation : Animation
 {
     public RobotNode Robot { get; init; } = null!;
-    public Position From { get; init; }
-    public Position To { get; init; }
+    public Position GridFrom { get; init; }
+    public Position GridTo { get; init; }
     public float Duration { get; init; } = 0.6f;
 
     public override Task PlayAsync(Node context)
@@ -17,9 +18,7 @@ public class MoveAnimation : Animation
         
         Robot.SetAnimating(true);
         
-        var fromVec = AnimationService.PositionToVector(From);
-        var toVec = AnimationService.PositionToVector(To);
-        Robot.Position = fromVec;
+        Robot.Position = GridFrom.ToTilePositionCentered();
         
         var tween = context.CreateTween();
         if (tween == null)
@@ -31,9 +30,10 @@ public class MoveAnimation : Animation
         
         tween.SetTrans(Tween.TransitionType.Sine);
         tween.SetEase(Tween.EaseType.InOut);
-        tween.TweenProperty(Robot, "position", toVec, Duration);
+        tween.TweenProperty(Robot, "position", GridTo.ToTilePositionCentered(), Duration);
         tween.Finished += () => 
         {
+            Robot.SetGridPosition(GridTo);
             Robot.SetAnimating(false);
             tcs.SetResult(true);
         };

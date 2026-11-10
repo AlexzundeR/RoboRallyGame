@@ -1,6 +1,10 @@
 ﻿namespace RoboRallyGame.Godot;
 
+using System;
+
 using Godot;
+
+using RoboRallyGame.Core.Models;
 using RoboRallyGame.Godot.Services;
 
 public partial class RobotNode : Node2D
@@ -21,8 +25,9 @@ public partial class RobotNode : Node2D
 	private int _damage;
 	private bool _isAlive = true;
 	private bool _isPowerDown = false;
+    private bool _isRebooting;
 
-	public int PlayerId => _playerId;
+    public int PlayerId => _playerId;
 
 	public override void _Ready()
 	{
@@ -33,25 +38,32 @@ public partial class RobotNode : Node2D
 		_directionIndicator.Color = Colors.Yellow;
 	}
 
+    internal void SetGridPosition(Position position)
+    {
+        _gridX = position.X;
+		_gridY = position.Y;
+    }
+
 	public void Initialize(PlayerViewModel player)
 	{
 		_playerId = player.Id;
-		_playerColor = player.Id == 1 ? Colors.DodgerBlue : Colors.Red;
+		//TODO: сделать цветовую схему игрока вместе с иконками в PlayerPanel отдельно
+		_playerColor = player.Id switch
+		{
+			1 => Colors.DodgerBlue,
+			2 => Colors.Red,
+			3 => Colors.Yellow,
+			4 => Colors.WhiteSmoke
+		};
 		_gridX = player.X;
 		_gridY = player.Y;
 		_directionIndex = (int)player.Direction;
 		_damage = player.Damage;
 		_isAlive = player.IsAlive;
 		_isPowerDown = player.IsPowerDown;
-		
-		Scale = new Vector2(GameScale.GetMapScale(), GameScale.GetMapScale());
+		_isRebooting = player.IsRebooting;
 
-		if (IsInsideTree())
-		{
-			Position = GetWorldPosition();
-			RotationDegrees = DirectionIndexToAngle(_directionIndex);
-			UpdateVisuals();
-		}
+		UpdateVisuals();
 	}
 
 	public void UpdateFromPlayer(PlayerViewModel player)
@@ -62,9 +74,9 @@ public partial class RobotNode : Node2D
 		_damage = player.Damage;
 		_isAlive = player.IsAlive;
 		_isPowerDown = player.IsPowerDown;
+		_isRebooting = player.IsRebooting;
 
-		if (IsInsideTree())
-			UpdateVisuals();
+		UpdateVisuals();
 	}
 
 	private void UpdateVisuals()
@@ -72,9 +84,10 @@ public partial class RobotNode : Node2D
 		if (!IsInsideTree()) return;
 		
 		if (!_isAnimating)
+		{
 			Position = GetWorldPosition();
-
-		AnimateRotation(_directionIndex);
+			RotationDegrees = DirectionIndexToAngle(_directionIndex);
+		}
 
 		_body.Color = _playerColor;
 		
@@ -83,7 +96,7 @@ public partial class RobotNode : Node2D
 			_body.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 			_directionIndicator.Modulate = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 		}
-		else if (_isPowerDown)
+		else if (_isPowerDown || _isRebooting)
 		{
 			_body.Modulate = new Color(0.5f, 0.5f, 0.6f, 0.8f);
 			_directionIndicator.Modulate = new Color(0.5f, 0.5f, 0.6f, 0.8f);
@@ -95,25 +108,6 @@ public partial class RobotNode : Node2D
 		}
 
 		UpdateHealthBar();
-	}
-
-	private void AnimateRotation(int toIndex)
-	{
-		float targetAngle = DirectionIndexToAngle(toIndex);
-		float currentAngle = RotationDegrees;
-		
-		float shortestAngle = CalculateShortestAngle(currentAngle, targetAngle);
-		
-		if (System.Math.Abs(shortestAngle - currentAngle) < 1f)
-			return;
-		
-		if (_rotationTween?.IsRunning() == true)
-			_rotationTween.Kill();
-		
-		_rotationTween = CreateTween();
-		_rotationTween.SetTrans(Tween.TransitionType.Sine);
-		_rotationTween.SetEase(Tween.EaseType.InOut);
-		_rotationTween.TweenProperty(this, "rotation_degrees", shortestAngle, RotationDuration);
 	}
 
 	private float CalculateShortestAngle(float from, float to)
@@ -146,13 +140,12 @@ public partial class RobotNode : Node2D
 		_directionIndex = directionIndex;
 	}
 
-	public (int X, int Y) GetGridPosition() => (_gridX, _gridY);
 	public int GetDirection() => _directionIndex;
 	public bool IsAlive() => _isAlive;
 
 	public Vector2 GetWorldPosition()
 	{
-		return GameScale.GridToWorldCentered(_gridX, _gridY);
+		return new Position(_gridX, _gridY).ToTilePositionCentered();
 	}
 
 	private float DirectionIndexToAngle(int dirIndex) => dirIndex switch
@@ -170,6 +163,7 @@ public partial class RobotNode : Node2D
 		if (_isAnimating) return;
 		
 		Position = GetWorldPosition();
+		RotationDegrees = DirectionIndexToAngle(_directionIndex);
 	}
 
 	public void SetAnimating(bool animating)

@@ -1,13 +1,15 @@
 ﻿namespace RoboRallyGame.Godot;
 
 using Godot;
+
+using RoboRallyGame.Core.Models;
 using RoboRallyGame.Godot.Services;
 
 public abstract partial class Tile : Node2D
 {
-	public int GridX { get; private set; }
-	public int GridY { get; private set; }
-	protected int TileTypeIndex { get; private set; }
+	private int _gridX;
+	private int _gridY;
+	private int _tileTypeIndex;
 	protected abstract Color BaseColor { get; }
 	protected abstract Color BorderColor { get; }
 
@@ -20,6 +22,17 @@ public abstract partial class Tile : Node2D
 		
 		baseTile.Color = BaseColor;
 		borderTile.Color = BorderColor;
+
+		var tileSize = GameScale.BaseTileSize;
+		baseTile.Size = new Vector2(tileSize, tileSize);
+		borderTile.Size = new Vector2(tileSize, tileSize);
+	}
+
+	public override void _Process(double delta)
+	{
+		if (!IsInsideTree()) return;
+		
+		Position = new Position(_gridX, _gridY).ToTilePosition();
 	}
 
 	protected virtual void OnReady()
@@ -28,12 +41,11 @@ public abstract partial class Tile : Node2D
 
 	public void Initialize(int x, int y, int type)
 	{
-		GridX = x;
-		GridY = y;
-		TileTypeIndex = type;
+		_gridX = x;
+		_gridY = y;
+		_tileTypeIndex = type;
 		
-		Position = GameScale.GridToWorld(x, y);
-		Scale = new Vector2(GameScale.GetMapScale(), GameScale.GetMapScale());
+		Position = new Position(x, y).ToTilePosition();
 	}
 
 	public virtual void StartAnimations()
